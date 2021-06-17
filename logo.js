@@ -144,37 +144,24 @@ function LogoInterpreter(turtle, stream, savehook)
   // turn, waiting for its result to resolve before the next is
   // executed. Resolves to an array of results, or rejects if any
   // closure rejects.
-  function serialExecute(funcs) {
-    var results = [];
-    return promiseLoop((loop, resolve, reject) => {
-      if (!funcs.length) {
-        resolve(results);
-        return;
-      }
-      Promise.resolve(funcs.shift()())
-        .then(result => {
-          results.push(result);
-          loop();
-        }, reject);
-    });
+  async function serialExecute(funcs) {
+    const results = [];
+    while (funcs.length) {
+      const func = funcs.shift();
+      results.push(await func());
+    }
+    return results;
   }
 
   // Returns a promise with the same result as the passed promise, but
   // that executes finalBlock before it resolves, regardless of
   // whether it fulfills or rejects.
-  function promiseFinally(promise, finalBlock) {
-    return promise
-      .then(result => {
-        return Promise.resolve(finalBlock())
-          .then(() => {
-            return result;
-          });
-      }, err => {
-        return Promise.resolve(finalBlock())
-          .then(() => {
-            throw err;
-          });
-      });
+  async function promiseFinally(promise, finalBlock) {
+    try {
+      return await promise;
+    } finally {
+      finalBlock();
+    }
   }
 
   // Returns a Promise that will resolve as soon as possible while ensuring
@@ -2184,15 +2171,15 @@ function LogoInterpreter(turtle, stream, savehook)
 
   def("fill", () => { turtle.fill(); });
 
-  def("filled", (fillcolor, statements) => {
+  def("filled", async (fillcolor, statements) => {
     fillcolor = parseColor(fillcolor);
     statements = reparse(lexpr(statements));
     turtle.beginpath();
-    return promiseFinally(
-      this.execute(statements),
-      () => {
-        turtle.fillpath(fillcolor);
-      });
+    try {
+      await this.execute(statements);
+    } finally {
+      turtle.fillpath(fillcolor);
+    }
   });
 
   def("label", function(a) {
@@ -2983,13 +2970,13 @@ function LogoInterpreter(turtle, stream, savehook)
       });
   });
 
-  def("repeat", (count, statements) => {
+  def("repeat", async (count, statements) => {
     count = aexpr(count);
     statements = reparse(lexpr(statements));
     var old_repcount = this.repcount;
     var i = 1;
-    return promiseFinally(
-      promiseLoop((loop, resolve, reject) => {
+    try {
+      await promiseLoop((loop, resolve, reject) => {
         if (i > count) {
           resolve();
           return;
@@ -2998,24 +2985,26 @@ function LogoInterpreter(turtle, stream, savehook)
         this.execute(statements)
           .then(promiseYield)
           .then(loop, reject);
-      }), () => {
-        this.repcount = old_repcount;
       });
+    } finally {
+      this.repcount = old_repcount;
+    }
   });
 
-  def("forever", statements => {
+  def("forever", async statements => {
     statements = reparse(lexpr(statements));
     var old_repcount = this.repcount;
     var i = 1;
-    return promiseFinally(
-      promiseLoop((loop, resolve, reject) => {
+    try {
+      await promiseLoop((loop, resolve, reject) => {
         this.repcount = i++;
         this.execute(statements)
           .then(promiseYield)
           .then(loop, reject);
-      }), () => {
-        this.repcount = old_repcount;
       });
+    } finally {
+      this.repcount = old_repcount;
+    }
   });
 
   def(["repcount", "#"], () => this.repcount);
