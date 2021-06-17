@@ -67,7 +67,7 @@ function LogoInterpreter(turtle, stream, savehook)
   }
 
   // To support localized/customized messages, assign a lookup function:
-  // instance.localize = (s) => {
+  // instance.localize = s => {
   //   return {
   //     'Division by zero': 'Divido per nulo',
   //     'Index out of bounds': 'Indekso ekster limojn',
@@ -108,7 +108,7 @@ function LogoInterpreter(turtle, stream, savehook)
   // a function to keywordAlias. Input will be the uppercased word,
   // output must be one of the keywords (ELSE or END), or undefined.
   // For example:
-  // logo.keywordAlias = (name) => {
+  // logo.keywordAlias = name => {
   //   return {
   //     'ALIE': 'ELSE',
   //     'FINO': 'END'
@@ -152,7 +152,7 @@ function LogoInterpreter(turtle, stream, savehook)
         return;
       }
       Promise.resolve(funcs.shift()())
-        .then((result) => {
+        .then(result => {
           results.push(result);
           loop();
         }, reject);
@@ -164,12 +164,12 @@ function LogoInterpreter(turtle, stream, savehook)
   // whether it fulfills or rejects.
   function promiseFinally(promise, finalBlock) {
     return promise
-      .then((result) => {
+      .then(result => {
         return Promise.resolve(finalBlock())
           .then(() => {
             return result;
           });
-      }, (err) => {
+      }, err => {
         return Promise.resolve(finalBlock())
           .then(() => {
             throw err;
@@ -184,7 +184,7 @@ function LogoInterpreter(turtle, stream, savehook)
     var currentTime = Date.now();
     if (currentTime - lastTimeYielded > 20) {
       lastTimeYielded = currentTime;
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         setTimeout(resolve, 0);
       });
     } else {
@@ -196,7 +196,7 @@ function LogoInterpreter(turtle, stream, savehook)
     // Not adding msec would generally cause a yield right after the wait.
     // Adding msec just once might cause additional tear of animations.
     lastTimeYielded = Date.now() + msec * 2;
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       setTimeout(resolve, msec);
     });
   }
@@ -763,7 +763,7 @@ function LogoInterpreter(turtle, stream, savehook)
   function peek(list, options) {
     if (list.length < 1) { return false; }
     var next = list[0];
-    return options.some((x) => { return next === x; });
+    return options.some(x => next === x);
 
   }
 
@@ -781,7 +781,7 @@ function LogoInterpreter(turtle, stream, savehook)
     while (peek(list, ['=', '<', '>', '<=', '>=', '<>'])) {
       op = list.shift();
 
-      lhs = ((lhs) => {
+      lhs = (lhs => {
         var rhs = additiveExpression(list);
 
         switch (op) {
@@ -808,7 +808,7 @@ function LogoInterpreter(turtle, stream, savehook)
     var input = [].slice.call(arguments, 1);
     return () => {
       return serialExecute(input.slice())
-        .then((args) => {
+        .then(args => {
           return func.apply(null, args);
         });
     };
@@ -820,7 +820,7 @@ function LogoInterpreter(turtle, stream, savehook)
     while (peek(list, ['+', '-'])) {
       op = list.shift();
 
-      lhs = ((lhs) => {
+      lhs = (lhs => {
         var rhs = multiplicativeExpression(list);
         switch (op) {
           case "+": return defer(function(lhs, rhs) { return aexpr(lhs) + aexpr(rhs); }, lhs, rhs);
@@ -839,7 +839,7 @@ function LogoInterpreter(turtle, stream, savehook)
     while (peek(list, ['*', '/', '%'])) {
       op = list.shift();
 
-      lhs = ((lhs) => {
+      lhs = (lhs => {
         var rhs = powerExpression(list);
         switch (op) {
           case "*": return defer(function(lhs, rhs) { return aexpr(lhs) * aexpr(rhs); }, lhs, rhs);
@@ -866,7 +866,7 @@ function LogoInterpreter(turtle, stream, savehook)
     var op;
     while (peek(list, ['^'])) {
       op = list.shift();
-      lhs = ((lhs) => {
+      lhs = (lhs => {
         var rhs = unaryExpression(list);
         return defer(function(lhs, rhs) { return Math.pow(aexpr(lhs), aexpr(rhs)); }, lhs, rhs);
       })(lhs);
@@ -881,7 +881,7 @@ function LogoInterpreter(turtle, stream, savehook)
     if (peek(list, [UNARY_MINUS])) {
       op = list.shift();
       rhs = unaryExpression(list);
-      return defer((rhs) => { return -aexpr(rhs); }, rhs);
+      return defer(rhs => -aexpr(rhs), rhs);
     } else {
       return finalExpression(list);
     }
@@ -898,25 +898,25 @@ function LogoInterpreter(turtle, stream, savehook)
     switch (Type(atom)) {
     case 'array':
     case 'list':
-      return () => { return atom; };
+      return () => atom;
 
     case 'word':
       if (isNumber(atom)) {
         // number literal
         atom = parseFloat(atom);
-        return () => { return atom; };
+        return () => atom;
       }
 
       atom = String(atom);
       if (atom.charAt(0) === '"' || atom.charAt(0) === "'") {
         // string literal
         literal = atom.substring(1);
-        return () => { return literal; };
+        return () => literal;
       }
       if (atom.charAt(0) === ':') {
         // variable
         varname = atom.substring(1);
-        return () => { return getvar(varname); };
+        return () => getvar(varname);
       }
       if (atom === '(') {
         // parenthesized expression/procedure call
@@ -1003,7 +1003,7 @@ function LogoInterpreter(turtle, stream, savehook)
 
     return () => {
       self.stack.push(name);
-      return promiseFinally(serialExecute(args.slice()).then((args) => {
+      return promiseFinally(serialExecute(args.slice()).then(args => {
         return procedure.apply(self, args);
       }), () => { self.stack.pop(); });
     };
@@ -1127,7 +1127,7 @@ function LogoInterpreter(turtle, stream, savehook)
         return;
       }
       Promise.resolve(evaluateExpression(statements))
-        .then((result) => {
+        .then(result => {
           if (result !== undefined && !options.returnResult) {
             reject(err("Don't know what to do with {result}", {result: result},
                   ERRORS.BAD_OUTPUT));
@@ -1149,7 +1149,7 @@ function LogoInterpreter(turtle, stream, savehook)
   // Call to insert an arbitrary task (callback) to be run in sequence
   // with pending calls to run. Useful in tests to do work just before
   // a subsequent assertion.
-  self.queueTask = (task) => {
+  self.queueTask = task => {
     var promise = lastRun.then(() => {
       return Promise.resolve(task());
     });
@@ -1165,7 +1165,7 @@ function LogoInterpreter(turtle, stream, savehook)
 
       // And execute it!
       return self.execute(atoms, options)
-        .catch((err) => {
+        .catch(err => {
           if (!(err instanceof Bye))
             throw err;
         });
@@ -1186,12 +1186,10 @@ function LogoInterpreter(turtle, stream, savehook)
 
     var def = "to " + name;
 
-    def += proc.inputs.map((i) => {
-      return ' :' + i;
-    }).join('');
-    def += proc.optional_inputs.map((op) => {
-      return ' [:' + op[0] + ' ' + op[1].map(defn).join(' ') + ']';
-    }).join('');
+    def += proc.inputs.map(i => ' :' + i).join('');
+    def += proc.optional_inputs.map(op =>
+      ' [:' + op[0] + ' ' + op[1].map(defn).join(' ') + ']'
+    ).join('');
     if (proc.rest)
       def += ' [:' + proc.rest + ']';
     if (proc.def !== undefined)
@@ -1271,13 +1269,13 @@ function LogoInterpreter(turtle, stream, savehook)
   function def(name, fn, props) {
     fn.minimum = fn.default = fn.maximum = fn.length;
     if (props) {
-      Object.keys(props).forEach((key) => {
+      Object.keys(props).forEach(key => {
         fn[key] = props[key];
       });
     }
     fn.primitive = true;
     if (Array.isArray(name)) {
-      name.forEach((name) => {
+      name.forEach(name => {
         self.routines.set(name, fn);
       });
     } else {
@@ -1288,7 +1286,7 @@ function LogoInterpreter(turtle, stream, savehook)
   //
   // Procedures and Flow Control
   //
-  def("to", (list) => {
+  def("to", list => {
     var name = sexpr(list.shift());
     if (isNumber(name) || isOperator(name))
       throw err("TO: Expected identifier", ERRORS.BAD_INPUT);
@@ -1384,7 +1382,7 @@ function LogoInterpreter(turtle, stream, savehook)
       if (rest)
         scope.set(rest, {value: [].slice.call(arguments, i)});
 
-      return promiseFinally(self.execute(block).then(promiseYield, (err) => {
+      return promiseFinally(self.execute(block).then(promiseYield, err => {
         if (err instanceof Output)
           return err.output;
         throw err;
@@ -1411,7 +1409,7 @@ function LogoInterpreter(turtle, stream, savehook)
   }
 
 
-  def("def", (list) => {
+  def("def", list => {
 
     var name = sexpr(list);
     var proc = this.routines.get(name);
@@ -1438,11 +1436,11 @@ function LogoInterpreter(turtle, stream, savehook)
 
   def("word", function(word1, word2) {
     return arguments.length ?
-      Array.from(arguments).map(sexpr).reduce((a, b) => { return a + b; }) : "";
+      Array.from(arguments).map(sexpr).reduce((a, b) => a + b) : "";
   }, {minimum: 0, maximum: -1});
 
   def("list", function(thing1, thing2) {
-    return Array.from(arguments).map((x) => { return x; }); // Make a copy
+    return Array.from(arguments).map(x => x); // Make a copy
   }, {minimum: 0, maximum: -1});
 
   def(["sentence", "se"], function(thing1, thing2) {
@@ -1505,7 +1503,7 @@ function LogoInterpreter(turtle, stream, savehook)
     return LogoArray.from(list, origin);
   }, {maximum: 2});
 
-  def("arraytolist", (array) => {
+  def("arraytolist", array => {
     if (Type(array) !== 'array') {
       throw err("{_PROC_}: Expected array", ERRORS.BAD_INPUT);
     }
@@ -1535,25 +1533,21 @@ function LogoInterpreter(turtle, stream, savehook)
   // 2.2 Data Selectors
   //
 
-  def("first", (list) => { return lexpr(list)[0]; });
+  def("first", list => lexpr(list)[0]);
 
-  def("firsts", (list) => {
-    return lexpr(list).map((x) => { return x[0]; });
-  });
+  def("firsts", list => lexpr(list).map(x => x[0]));
 
-  def("last", (list) => { list = lexpr(list); return list[list.length - 1]; });
+  def("last", list => { list = lexpr(list); return list[list.length - 1]; });
 
-  def(["butfirst", "bf"], (list) => {
-    return sifw(list, lexpr(list).slice(1));
-  });
+  def(["butfirst", "bf"], list => sifw(list, lexpr(list).slice(1)));
 
-  def(["butfirsts", "bfs"], (list) => {
-    return lexpr(list).map((x) => { return sifw(x, lexpr(x).slice(1)); });
-  });
+  def(["butfirsts", "bfs"], list =>
+      lexpr(list).map(x => sifw(x, lexpr(x).slice(1)))
+     );
 
-  def(["butlast", "bl"], (list) => {
-    return Type(list) === 'word' ? String(list).slice(0, -1) : lexpr(list).slice(0, -1);
-  });
+  def(["butlast", "bl"], list =>
+      Type(list) === 'word' ? String(list).slice(0, -1) : lexpr(list).slice(0, -1)
+     );
 
   function item(index, thing) {
     switch (Type(thing)) {
@@ -1577,13 +1571,13 @@ function LogoInterpreter(turtle, stream, savehook)
   });
 
   def("mditem", (indexes, thing) => {
-    indexes = lexpr(indexes).map(aexpr).map((n) => { return n|0; });
+    indexes = lexpr(indexes).map(aexpr).map(n => n|0);
     while (indexes.length)
       thing = item(indexes.shift(), thing);
     return thing;
   });
 
-  def("pick", (list) => {
+  def("pick", list => {
     list = lexpr(list);
     var i = Math.floor(this.prng.next() * list.length);
     return list[i];
@@ -1593,10 +1587,10 @@ function LogoInterpreter(turtle, stream, savehook)
     return sifw(list, lexpr(list).filter(function(x) { return !equal(x, thing); }));
   });
 
-  def("remdup", (list) => {
+  def("remdup", list => {
     // TODO: This only works with JS equality. Use equalp.
     var set = new Set();
-    return sifw(list, lexpr(list).filter((x) => {
+    return sifw(list, lexpr(list).filter(x => {
       if (set.has(x)) { return false; } else { set.add(x); return true; }
     }));
   });
@@ -1604,14 +1598,12 @@ function LogoInterpreter(turtle, stream, savehook)
   def("split", (thing, list) => {
     var l = lexpr(list);
     return lexpr(list)
-      .reduce((ls, i) => {
-        return (equal(i, thing) ? ls.push([]) : ls[ls.length - 1].push(i), ls);
-      }, [[]])
-      .filter((l) => { return l.length > 0; })
-      .map((e) => { return sifw(list, e); });
+      .reduce((ls, i) => (equal(i, thing) ? ls.push([]) : ls[ls.length - 1].push(i), ls), [[]])
+      .filter(l => l.length > 0)
+      .map(e => sifw(list, e));
   });
 
-  def("quoted", (thing) => {
+  def("quoted", thing => {
     if (Type(thing) === 'word')
       return '"' + thing;
     return thing;
@@ -1626,9 +1618,9 @@ function LogoInterpreter(turtle, stream, savehook)
     if (atom === value) return true;
     switch (Type(atom)) {
     case 'list':
-      return atom.some((a) => { return contains(a, value); });
+      return atom.some(a => contains(a, value));
     case 'array':
-      return atom.list.some((a) => { return contains(a, value); });
+      return atom.list.some(a => contains(a, value));
     default:
       return false;
     }
@@ -1644,7 +1636,7 @@ function LogoInterpreter(turtle, stream, savehook)
   });
 
   def("mdsetitem", (indexes, thing, value) => {
-    indexes = lexpr(indexes).map(aexpr).map((n) => { return n|0; });
+    indexes = lexpr(indexes).map(aexpr).map(n => n|0);
     if (Type(thing) !== 'array')
       throw err("{_PROC_}: Expected array", ERRORS.BAD_INPUT);
     if (contains(value, thing))
@@ -1687,7 +1679,7 @@ function LogoInterpreter(turtle, stream, savehook)
     setvar(stackname, sifw(got, stack));
   });
 
-  def("pop", (stackname) => {
+  def("pop", stackname => {
     var got = getvar(stackname);
     var stack = lexpr(got);
     var atom = stack.shift();
@@ -1702,7 +1694,7 @@ function LogoInterpreter(turtle, stream, savehook)
     setvar(stackname, sifw(got, queue));
   });
 
-  def("dequeue", (stackname) => {
+  def("dequeue", stackname => {
     var got = getvar(stackname);
     var queue = lexpr(got);
     var atom = queue.pop();
@@ -1715,69 +1707,69 @@ function LogoInterpreter(turtle, stream, savehook)
   // 2.4 Predicates
   //
 
-  def(["wordp", "word?"], (thing) => { return Type(thing) === 'word' ? 1 : 0; });
-  def(["listp", "list?"], (thing) => { return Type(thing) === 'list' ? 1 : 0; });
-  def(["arrayp", "array?"], (thing) => { return Type(thing) === 'array' ? 1 : 0; });
-  def(["numberp", "number?"], (thing) => {
-    return Type(thing) === 'word' && isNumber(thing) ? 1 : 0;
-  });
-  def(["numberwang"], (thing) => { return this.prng.next() < 0.5 ? 1 : 0; });
+  def(["wordp", "word?"], thing => Type(thing) === 'word' ? 1 : 0);
+  def(["listp", "list?"], thing => Type(thing) === 'list' ? 1 : 0);
+  def(["arrayp", "array?"], thing => Type(thing) === 'array' ? 1 : 0);
+  def(["numberp", "number?"], thing =>
+      Type(thing) === 'word' && isNumber(thing) ? 1 : 0
+  );
+  def(["numberwang"], thing => this.prng.next() < 0.5 ? 1 : 0);
 
-  def(["equalp", "equal?"], (a, b) => { return equal(a, b) ? 1 : 0; });
-  def(["notequalp", "notequal?"], (a, b) => { return !equal(a, b) ? 1 : 0; });
+  def(["equalp", "equal?"], (a, b) => equal(a, b) ? 1 : 0);
+  def(["notequalp", "notequal?"], (a, b) => !equal(a, b) ? 1 : 0);
 
-  def(["emptyp", "empty?"], (thing) => {
+  def(["emptyp", "empty?"], thing => {
     switch (Type(thing)) {
     case 'word': return String(thing).length === 0 ? 1 : 0;
     case 'list': return thing.length === 0 ? 1 : 0;
     default: return 0;
     }
   });
-  def(["beforep", "before?"], (word1, word2) => {
-    return sexpr(word1) < sexpr(word2) ? 1 : 0;
-  });
+  def(["beforep", "before?"], (word1, word2) =>
+      sexpr(word1) < sexpr(word2) ? 1 : 0
+     );
 
-  def(".eq", (a, b) => { return a === b && a && typeof a === 'object'; });
+  def(".eq", (a, b) => a === b && a && typeof a === 'object');
 
   // Not Supported: vbarredp
 
-  def(["memberp", "member?"], (thing, list) => {
-    return lexpr(list).some((x) => { return equal(x, thing); }) ? 1 : 0;
-  });
+  def(["memberp", "member?"], (thing, list) =>
+      lexpr(list).some(x => equal(x, thing)) ? 1 : 0
+     );
 
 
-  def(["substringp", "substring?"], (word1, word2) => {
-    return sexpr(word2).indexOf(sexpr(word1)) !== -1 ? 1 : 0;
-  });
+  def(["substringp", "substring?"], (word1, word2) =>
+      sexpr(word2).indexOf(sexpr(word1)) !== -1 ? 1 : 0
+     );
 
   //
   // 2.5 Queries
   //
 
-  def("count", (thing) => {
+  def("count", thing => {
     if (Type(thing) === 'array')
       return thing.length;
     return lexpr(thing).length;
   });
-  def("ascii", (chr) => { return sexpr(chr).charCodeAt(0); });
+  def("ascii", chr => sexpr(chr).charCodeAt(0));
   // Not Supported: rawascii
-  def("char", (integer) => { return String.fromCharCode(aexpr(integer)); });
+  def("char", integer => String.fromCharCode(aexpr(integer)));
 
   def("member", (thing, input) => {
     var list = lexpr(input);
-    var index = list.findIndex((x) => { return equal(x, thing); });
+    var index = list.findIndex(x => equal(x, thing));
     list = (index === -1) ? [] : list.slice(index);
     return sifw(input, list);
  });
 
-  def("lowercase", (word) => { return sexpr(word).toLowerCase(); });
-  def("uppercase", (word) => { return sexpr(word).toUpperCase(); });
+  def("lowercase", word => sexpr(word).toLowerCase());
+  def("uppercase", word => sexpr(word).toUpperCase());
 
-  def("standout", (word) => {
+  def("standout", word => {
     // Hack: Convert English alphanumerics to Mathematical Bold
     return sexpr(word)
       .split('')
-      .map((c) => {
+      .map(c => {
         var u = c.charCodeAt(0);
         if ('A' <= c && c <= 'Z') {
           u = u - 0x41 + 0x1D400;
@@ -1795,13 +1787,9 @@ function LogoInterpreter(turtle, stream, savehook)
       .join('');
   });
 
-  def("parse", (word) => {
-    return parse('[' + sexpr(word) + ']')[0];
-  });
+  def("parse", word => parse('[' + sexpr(word) + ']')[0]);
 
-  def("runparse", (word) => {
-    return parse(sexpr(word));
-  });
+  def("runparse", word => parse(sexpr(word)));
 
   //----------------------------------------------------------------------
   //
@@ -1878,21 +1866,17 @@ function LogoInterpreter(turtle, stream, savehook)
 
   // Not Supported: keyp
 
-  def(["cleartext", "ct"], () => {
-    return this.stream.clear();
-  });
+  def(["cleartext", "ct"], () => this.stream.clear());
 
   // Not Supported: setcursor
   // Not Supported: cursor
   // Not Supported: setmargins
 
-  def('settextcolor', (color) => {
+  def('settextcolor', color => {
     this.stream.color = parseColor(color);
   });
 
-  def('textcolor', () => {
-    return this.stream.color;
-  });
+  def('textcolor', () => this.stream.color);
 
   def('increasefont', () => {
     this.stream.textsize = Math.round(this.stream.textsize * 1.25);
@@ -1902,21 +1886,17 @@ function LogoInterpreter(turtle, stream, savehook)
     this.stream.textsize = Math.round(this.stream.textsize / 1.25);
   });
 
-  def('settextsize', (size) => {
+  def('settextsize', size => {
     this.stream.textsize = aexpr(size);
   });
 
-  def('textsize', () => {
-    return this.stream.textsize;
-  });
+  def('textsize', () => this.stream.textsize);
 
-  def('setfont', (size) => {
+  def('setfont', size => {
     this.stream.font = sexpr(size);
   });
 
-  def('font', () => {
-    return this.stream.font;
-  });
+  def('font', () => this.stream.font);
 
 
   //----------------------------------------------------------------------
@@ -1931,11 +1911,9 @@ function LogoInterpreter(turtle, stream, savehook)
     return Array.from(arguments).map(aexpr).reduce(function(a, b) { return a + b; }, 0);
   }, {minimum: 0, maximum: -1});
 
-  def("difference", (a, b) => {
-    return aexpr(a) - aexpr(b);
-  });
+  def("difference", (a, b) => aexpr(a) - aexpr(b));
 
-  def("minus", (a) => { return -aexpr(a); });
+  def("minus", a => -aexpr(a));
 
   def("product", function(a, b) {
     return Array.from(arguments).map(aexpr).reduce(function(a, b) { return a * b; }, 1);
@@ -1948,20 +1926,19 @@ function LogoInterpreter(turtle, stream, savehook)
       return 1 / aexpr(a);
   }, {minimum: 1});
 
-  def("remainder", (num1, num2) => {
-    return aexpr(num1) % aexpr(num2);
-  });
+  def("remainder", (num1, num2) => aexpr(num1) % aexpr(num2));
+
   def("modulo", (num1, num2) => {
     num1 = aexpr(num1);
     num2 = aexpr(num2);
     return Math.abs(num1 % num2) * (num2 < 0 ? -1 : 1);
   });
 
-  def("power", (a, b) => { return Math.pow(aexpr(a), aexpr(b)); });
-  def("sqrt", (a) => { return Math.sqrt(aexpr(a)); });
-  def("exp", (a) => { return Math.exp(aexpr(a)); });
-  def("log10", (a) => { return Math.log(aexpr(a)) / Math.LN10; });
-  def("ln", (a) => { return Math.log(aexpr(a)); });
+  def("power", (a, b) => Math.pow(aexpr(a), aexpr(b)));
+  def("sqrt", a => Math.sqrt(aexpr(a)));
+  def("exp", a => Math.exp(aexpr(a)));
+  def("log10", a => Math.log(aexpr(a)) / Math.LN10);
+  def("ln", a => Math.log(aexpr(a)));
 
 
   function deg2rad(d) { return d / 180 * Math.PI; }
@@ -1977,9 +1954,9 @@ function LogoInterpreter(turtle, stream, savehook)
     }
   }, {maximum: 2});
 
-  def("sin", (a) => { return Math.sin(deg2rad(aexpr(a))); });
-  def("cos", (a) => { return Math.cos(deg2rad(aexpr(a))); });
-  def("tan", (a) => { return Math.tan(deg2rad(aexpr(a))); });
+  def("sin", a => Math.sin(deg2rad(aexpr(a))));
+  def("cos", a => Math.cos(deg2rad(aexpr(a))));
+  def("tan", a => Math.tan(deg2rad(aexpr(a))));
 
   def("radarctan", function(a) {
     if (arguments.length > 1) {
@@ -1991,17 +1968,17 @@ function LogoInterpreter(turtle, stream, savehook)
     }
   }, {maximum: 2});
 
-  def("radsin", (a) => { return Math.sin(aexpr(a)); });
-  def("radcos", (a) => { return Math.cos(aexpr(a)); });
-  def("radtan", (a) => { return Math.tan(aexpr(a)); });
+  def("radsin", a => Math.sin(aexpr(a)));
+  def("radcos", a => Math.cos(aexpr(a)));
+  def("radtan", a => Math.tan(aexpr(a)));
 
-  def("abs", (a) => { return Math.abs(aexpr(a)); });
+  def("abs", a => Math.abs(aexpr(a)));
 
 
   function truncate(x) { return parseInt(x, 10); }
 
-  def("int", (a) => { return truncate(aexpr(a)); });
-  def("round", (a) => { return Math.round(aexpr(a)); });
+  def("int", a => truncate(aexpr(a)));
+  def("round", a => Math.round(aexpr(a)));
 
   def("iseq", (a, b) => {
     a = truncate(aexpr(a));
@@ -2029,10 +2006,10 @@ function LogoInterpreter(turtle, stream, savehook)
 
   // 4.2 Numeric Predicates
 
-  def(["greaterp", "greater?"], (a, b) => { return aexpr(a) > aexpr(b) ? 1 : 0; });
-  def(["greaterequalp", "greaterequal?"], (a, b) => { return aexpr(a) >= aexpr(b) ? 1 : 0; });
-  def(["lessp", "less?"], (a, b) => { return aexpr(a) < aexpr(b) ? 1 : 0; });
-  def(["lessequalp", "lessequal?"], (a, b) => { return aexpr(a) <= aexpr(b) ? 1 : 0; });
+  def(["greaterp", "greater?"], (a, b) => aexpr(a) > aexpr(b) ? 1 : 0);
+  def(["greaterequalp", "greaterequal?"], (a, b) => aexpr(a) >= aexpr(b) ? 1 : 0);
+  def(["lessp", "less?"], (a, b) => aexpr(a) < aexpr(b) ? 1 : 0);
+  def(["lessequalp", "lessequal?"], (a, b) => aexpr(a) <= aexpr(b) ? 1 : 0);
 
   // 4.3 Random Numbers
 
@@ -2101,8 +2078,8 @@ function LogoInterpreter(turtle, stream, savehook)
   //
   //----------------------------------------------------------------------
 
-  def("true", () => { return 1; });
-  def("false", () => { return 0; });
+  def("true", () => 1);
+  def("false", () => 0);
 
   def("and", function(a, b) {
     var args = Array.from(arguments);
@@ -2121,7 +2098,7 @@ function LogoInterpreter(turtle, stream, savehook)
         return;
       }
       Promise.resolve(args.shift()())
-        .then((result) => {
+        .then(result => {
           if (!test(result)) {
             resolve(result);
             return;
@@ -2148,49 +2125,49 @@ function LogoInterpreter(turtle, stream, savehook)
   //----------------------------------------------------------------------
   // 6.1 Turtle Motion
 
-  def(["forward", "fd"], (a) => { return turtle.move(aexpr(a)); });
-  def(["back", "bk"], (a) => { return turtle.move(-aexpr(a)); });
-  def(["left", "lt"], (a) => { return turtle.turn(-aexpr(a)); });
-  def(["right", "rt"], (a) => { return turtle.turn(aexpr(a)); });
+  def(["forward", "fd"], a => turtle.move(aexpr(a)));
+  def(["back", "bk"], a => turtle.move(-aexpr(a)));
+  def(["left", "lt"], a => turtle.turn(-aexpr(a)));
+  def(["right", "rt"], a => turtle.turn(aexpr(a)));
 
   // Left arrow:
-  def(["\u2190"], () => { return turtle.turn(-15); });
+  def(["\u2190"], () => turtle.turn(-15));
   // Right arrow:
-  def(["\u2192"], () => { return turtle.turn(15); });
+  def(["\u2192"], () => turtle.turn(15));
   // Up arrow:
-  def(["\u2191"], () => { return turtle.move(10); });
+  def(["\u2191"], () => turtle.move(10));
   // Down arrow:
-  def(["\u2193"], () => { return turtle.move(-10); });
+  def(["\u2193"], () => turtle.move(-10));
 
 
-  def("setpos", (l) => {
+  def("setpos", l => {
     l = lexpr(l);
     if (l.length !== 2) throw err("{_PROC_}: Expected list of length 2", ERRORS.BAD_INPUT);
     turtle.position = [aexpr(l[0]), aexpr(l[1])];
   });
   def("setxy", (x, y) => { turtle.position = [aexpr(x), aexpr(y)]; });
-  def("setx", (x) => { turtle.position = [aexpr(x), undefined]; });
-  def("sety", (y) => { turtle.position = [undefined, aexpr(y)]; });
-  def(["setheading", "seth"], (a) => { turtle.heading = aexpr(a); });
+  def("setx", x => { turtle.position = [aexpr(x), undefined]; });
+  def("sety", y => { turtle.position = [undefined, aexpr(y)]; });
+  def(["setheading", "seth"], a => { turtle.heading = aexpr(a); });
 
-  def("home", () => { return turtle.home(); });
+  def("home", () => turtle.home());
 
-  def("arc", (angle, radius) => { return turtle.arc(aexpr(angle), aexpr(radius)); });
+  def("arc", (angle, radius) => turtle.arc(aexpr(angle), aexpr(radius)));
 
   //
   // 6.2 Turtle Motion Queries
   //
 
-  def("pos", () => { return turtle.position; });
-  def("xcor", () => { return turtle.position[0]; });
-  def("ycor", () => { return turtle.position[1]; });
-  def("heading", () => { return turtle.heading; });
-  def("towards", (l) => {
+  def("pos", () => turtle.position);
+  def("xcor", () => turtle.position[0]);
+  def("ycor", () => turtle.position[1]);
+  def("heading", () => turtle.heading);
+  def("towards", l => {
     l = lexpr(l);
     if (l.length !== 2) throw err("{_PROC_}: Expected list of length 2", ERRORS.BAD_INPUT);
     return turtle.towards(aexpr(l[0]), aexpr(l[1]));
   });
-  def("scrunch", () => { return turtle.scrunch; });
+  def("scrunch", () => turtle.scrunch);
 
   //
   // 6.3 Turtle and Window Control
@@ -2223,9 +2200,9 @@ function LogoInterpreter(turtle, stream, savehook)
     return turtle.drawtext(s);
   }, {maximum: -1});
 
-  def("setlabelheight", (a) => { turtle.fontsize = aexpr(a); });
+  def("setlabelheight", a => { turtle.fontsize = aexpr(a); });
 
-  def("setlabelfont", (a) => { turtle.fontname = sexpr(a); });
+  def("setlabelfont", a => { turtle.fontname = sexpr(a); });
 
   // Not Supported: textscreen
   // Not Supported: fullscreen
@@ -2246,23 +2223,15 @@ function LogoInterpreter(turtle, stream, savehook)
   // 6.4 Turtle and Window Queries
   //
 
-  def(["shownp", "shown?"], () => {
-    return turtle.visible ? 1 : 0;
-  });
+  def(["shownp", "shown?"], () => turtle.visible ? 1 : 0);
 
   // Not Supported: screenmode
 
-  def("turtlemode", () => {
-    return turtle.turtlemode.toUpperCase();
-  });
+  def("turtlemode", () => turtle.turtlemode.toUpperCase());
 
-  def("labelsize", () => {
-    return [turtle.fontsize, turtle.fontsize];
-  });
+  def("labelsize", () => [turtle.fontsize, turtle.fontsize]);
 
-  def("labelfont", () => {
-    return turtle.fontname;
-  });
+  def("labelfont", () => turtle.fontname);
 
   //
   // 6.5 Pen and Background Control
@@ -2322,7 +2291,7 @@ function LogoInterpreter(turtle, stream, savehook)
     PALETTE[colornumber] = parseColor(color);
   });
 
-  def(["setpensize", "setwidth", "setpw"], (a) => {
+  def(["setpensize", "setwidth", "setpw"], a => {
     if (Type(a) === 'list')
       turtle.penwidth = aexpr(a[0]);
     else
@@ -2332,7 +2301,7 @@ function LogoInterpreter(turtle, stream, savehook)
   // Not Supported: setpenpattern
   // Not Supported: setpen
 
-  def(["setbackground", "setbg", "setscreencolor", "setsc"], (color) => {
+  def(["setbackground", "setbg", "setscreencolor", "setsc"], color => {
     turtle.bgcolor = parseColor(color);
   });
 
@@ -2340,31 +2309,19 @@ function LogoInterpreter(turtle, stream, savehook)
   // 6.6 Pen Queries
   //
 
-  def(["pendownp", "pendown?"], () => {
-    return turtle.pendown ? 1 : 0;
-  });
+  def(["pendownp", "pendown?"], () => turtle.pendown ? 1 : 0);
 
-  def("penmode", () => {
-    return turtle.penmode.toUpperCase();
-  });
+  def("penmode", () => turtle.penmode.toUpperCase());
 
-  def(["pencolor", "pc"], () => {
-    return turtle.color;
-  });
+  def(["pencolor", "pc"], () => turtle.color);
 
-  def("palette", (colornumber) => {
-    return PALETTE[aexpr(colornumber)];
-  });
+  def("palette", colornumber => PALETTE[aexpr(colornumber)]);
 
-  def("pensize", () => {
-    return [turtle.penwidth, turtle.penwidth];
-  });
+  def("pensize", () => [turtle.penwidth, turtle.penwidth]);
 
   // Not Supported: pen
 
-  def(["background", "bg", "getscreencolor", "getsc"], () => {
-    return turtle.bgcolor;
-  });
+  def(["background", "bg", "getscreencolor", "getsc"], () => turtle.bgcolor);
 
   // 6.7 Saving and Loading Pictures
 
@@ -2374,25 +2331,15 @@ function LogoInterpreter(turtle, stream, savehook)
 
   // 6.8 Mouse Queries
 
-  def("mousepos", () => {
-    return turtle.mousepos;
-  });
+  def("mousepos", () => turtle.mousepos);
 
-  def("clickpos", () => {
-    return turtle.clickpos;
-  });
+  def("clickpos", () => turtle.clickpos);
 
-  def(["buttonp", "button?"], () => {
-    return turtle.button > 0 ? 1 : 0;
-  });
+  def(["buttonp", "button?"], () => turtle.button > 0 ? 1 : 0);
 
-  def("button", () => {
-    return turtle.button;
-  });
+  def("button", () => turtle.button);
 
-  def("touches", () => {
-    return turtle.touches;
-  });
+  def("touches", () => turtle.touches);
 
   //----------------------------------------------------------------------
   //
@@ -2456,7 +2403,7 @@ function LogoInterpreter(turtle, stream, savehook)
     defineProc(name, inputs, optional_inputs, rest, def, block);
   });
 
-  def("text", (name) => {
+  def("text", name => {
     var proc = this.routines.get(sexpr(name));
     if (!proc)
       throw err("{_PROC_}: Don't know how to {name:U}", { name: name }, ERRORS.BAD_PROC);
@@ -2519,9 +2466,7 @@ function LogoInterpreter(turtle, stream, savehook)
     setlocal(sexpr(varname), value);
   });
 
-  def("thing", (varname) => {
-    return getvar(sexpr(varname));
-  });
+  def("thing", varname => getvar(sexpr(varname)));
 
   def("global", function(varname) {
     var globalscope = this.scopes[0];
@@ -2566,7 +2511,7 @@ function LogoInterpreter(turtle, stream, savehook)
     }
   });
 
-  def("plist", (plistname) => {
+  def("plist", plistname => {
     plistname = sexpr(plistname);
     var plist = this.plists.get(plistname);
     if (!plist)
@@ -2584,24 +2529,24 @@ function LogoInterpreter(turtle, stream, savehook)
   // 7.4 Workspace Predicates
   //
 
-  def(["procedurep", "procedure?"], (name) => {
+  def(["procedurep", "procedure?"], name => {
     name = sexpr(name);
     return this.routines.has(name) ? 1 : 0;
   });
 
-  def(["primitivep", "primitive?"], (name) => {
+  def(["primitivep", "primitive?"], name => {
     name = sexpr(name);
     return (this.routines.has(name) &&
             this.routines.get(name).primitive) ? 1 : 0;
   });
 
-  def(["definedp", "defined?"], (name) => {
+  def(["definedp", "defined?"], name => {
     name = sexpr(name);
     return (this.routines.has(name) &&
             !this.routines.get(name).primitive) ? 1 : 0;
   });
 
-  def(["namep", "name?"], (varname) => {
+  def(["namep", "name?"], varname => {
     try {
       return getvar(sexpr(varname)) !== undefined ? 1 : 0;
     } catch (e) {
@@ -2609,7 +2554,7 @@ function LogoInterpreter(turtle, stream, savehook)
     }
   });
 
-  def(["plistp", "plist?"], (plistname) => {
+  def(["plistp", "plist?"], plistname => {
     plistname = sexpr(plistname);
     return this.plists.has(plistname) ? 1 : 0;
   });
@@ -2618,96 +2563,84 @@ function LogoInterpreter(turtle, stream, savehook)
   // 7.5 Workspace Queries
   //
 
-  def("contents", () => {
-    return [
-      this.routines.keys().filter((x) => {
+  def("contents", () => [
+      this.routines.keys().filter(x => {
         return !this.routines.get(x).primitive && !this.routines.get(x).buried;
       }),
       this.scopes.reduce(
         (list, scope) => {
-          return list.concat(scope.keys().filter((x) => { return !scope.get(x).buried; })); },
+          return list.concat(scope.keys().filter(x => !scope.get(x).buried)); },
         []),
-      this.plists.keys().filter((x) => {
+      this.plists.keys().filter(x => {
         return !this.plists.get(x).buried;
       })
-    ];
-  });
+    ]
+  );
 
-  def("buried", () => {
-    return [
-      this.routines.keys().filter((x) => {
+  def("buried", () => [
+      this.routines.keys().filter(x => {
         return !this.routines.get(x).primitive && this.routines.get(x).buried; }),
       this.scopes.reduce(
         (list, scope) => {
-          return list.concat(scope.keys().filter((x) => { return scope.get(x).buried; })); },
+          return list.concat(scope.keys().filter(x => scope.get(x).buried)); },
         []),
-      this.plists.keys().filter((x) => { return this.plists.get(x).buried; })
-    ];
-  });
+      this.plists.keys().filter(x => this.plists.get(x).buried)
+    ]
+  );
 
-  def("traced", () => {
-    return [
-      this.routines.keys().filter((x) => {
+  def("traced", () => [
+      this.routines.keys().filter(x => {
         return !this.routines.get(x).primitive && this.routines.get(x).traced; }),
       this.scopes.reduce(
         (list, scope) => {
-          return list.concat(scope.keys().filter((x) => { return scope.get(x).traced; })); },
+          return list.concat(scope.keys().filter(x => scope.get(x).traced)); },
         []),
-      this.plists.keys().filter((x) => { return this.plists.get(x).traced; })
-    ];
-  });
+      this.plists.keys().filter(x => this.plists.get(x).traced)
+    ]
+  );
 
-  def(["stepped"], () => {
-    return [
-      this.routines.keys().filter((x) => {
+  def(["stepped"], () => [
+      this.routines.keys().filter(x => {
         return !this.routines.get(x).primitive && this.routines.get(x).stepped; }),
       this.scopes.reduce(
         (list, scope) => {
-          return list.concat(scope.keys().filter((x) => { return scope.get(x).stepped; })); },
+          return list.concat(scope.keys().filter(x => scope.get(x).stepped)); },
         []),
-      this.plists.keys().filter((x) => { return this.plists.get(x).stepped; })
-    ];
-  });
+      this.plists.keys().filter(x => this.plists.get(x).stepped)
+    ]
+  );
 
-  def("procedures", () => {
-    return this.routines.keys().filter((x) => {
-      return !this.routines.get(x).primitive && !this.routines.get(x).buried;
-    });
-  });
+  def("procedures", () => this.routines.keys().filter(
+    x => !this.routines.get(x).primitive && !this.routines.get(x).buried
+  ));
 
-  def("primitives", () => {
-    return this.routines.keys().filter((x) => {
-      return this.routines.get(x).primitive & !this.routines.get(x).buried;
-    });
-  });
+  def("primitives", () => this.routines.keys().filter(
+    x => this.routines.get(x).primitive & !this.routines.get(x).buried
+  ));
 
   def("globals", () => {
     var globalscope = this.scopes[0];
-    return globalscope.keys().filter(function(x) {
-      return !globalscope.get(x).buried;
-    });
+    return globalscope.keys().filter(x => !globalscope.get(x).buried);
   });
 
-  def("names", () => {
-    return [
+  def("names", () => [
       [],
       this.scopes.reduce((list, scope) => {
-        return list.concat(scope.keys().filter((x) => {
+        return list.concat(scope.keys().filter(x => {
           return !scope.get(x).buried; })); }, [])
-    ];
-  });
+    ]
+  );
 
-  def("plists", () => {
-    return [
+  def("plists", () => [
       [],
       [],
-      this.plists.keys().filter((x) => {
+      this.plists.keys().filter(x => {
         return !this.plists.get(x).buried;
       })
-    ];
-  });
+    ]
+  );
 
-  def("namelist", (varname) => {
+  def("namelist", varname => {
     if (Type(varname) === 'list')
       varname = lexpr(varname);
     else
@@ -2715,7 +2648,7 @@ function LogoInterpreter(turtle, stream, savehook)
     return [[], varname];
   });
 
-  def("pllist", (plname) => {
+  def("pllist", plname => {
     if (Type(plname) === 'list') {
       plname = lexpr(plname);
     } else {
@@ -2725,7 +2658,7 @@ function LogoInterpreter(turtle, stream, savehook)
   });
 
 
-  def("arity", (name) => {
+  def("arity", name => {
     name = sexpr(name);
     var proc = this.routines.get(name);
     if (!proc)
@@ -2748,13 +2681,13 @@ function LogoInterpreter(turtle, stream, savehook)
   // 7.7 Workspace Control
   //
 
-  def("erase", (list) => {
+  def("erase", list => {
     list = lexpr(list);
 
     // Delete procedures
     if (list.length) {
       var procs = lexpr(list.shift());
-      procs.forEach((name) => {
+      procs.forEach(name => {
         name = sexpr(name);
         if (this.routines.has(name)) {
           if (this.routines.get(name).special)
@@ -2773,8 +2706,8 @@ function LogoInterpreter(turtle, stream, savehook)
     if (list.length) {
       var vars = lexpr(list.shift());
       // TODO: global only?
-      this.scopes.forEach((scope) => {
-        vars.forEach((name) => {
+      this.scopes.forEach(scope => {
+        vars.forEach(name => {
           name = sexpr(name);
           scope['delete'](name);
         });
@@ -2784,7 +2717,7 @@ function LogoInterpreter(turtle, stream, savehook)
     // Delete property lists
     if (list.length) {
       var plists = lexpr(list.shift());
-      plists.forEach((name) => {
+      plists.forEach(name => {
         name = sexpr(name);
         this.plists['delete'](name);
       });
@@ -2793,71 +2726,71 @@ function LogoInterpreter(turtle, stream, savehook)
 
   // TODO: lots of redundant logic here -- clean this up
   def("erall", () => {
-    this.routines.keys().filter((x) => {
-      return !this.routines.get(x).primitive && !this.routines.get(x).buried;
-    }).forEach((name) => {
-      this.routines['delete'](name);
-      saveproc(name);
-    });
-
-    this.scopes.forEach((scope) => {
-      scope.keys().filter((x) => {
-        return !scope.get(x).buried;
-      }).forEach((name) => {
-        scope['delete'](name);
+    this.routines.keys()
+      .filter(x => !this.routines.get(x).primitive && !this.routines.get(x).buried)
+      .forEach(name => {
+        this.routines['delete'](name);
+        saveproc(name);
       });
+
+    this.scopes.forEach(scope => {
+      scope.keys()
+        .filter(x => !scope.get(x).buried)
+        .forEach(name => {
+          scope['delete'](name);
+        });
     });
 
-    this.plists.keys().filter((x) => {
-      return !this.plists.get(x).buried;
-    }).forEach((name) => {
-      this.plists['delete'](name);
-    });
+    this.plists.keys()
+      .filter(x => !this.plists.get(x).buried)
+      .forEach(name => {
+        this.plists['delete'](name);
+      });
   });
 
   def("erps", () => {
-    this.routines.keys().filter((x) => {
-      return !this.routines.get(x).primitive && !this.routines.get(x).buried;
-    }).forEach((name) => {
-      this.routines['delete'](name);
-      saveproc(name);
-    });
+    this.routines.keys()
+      .filter(x => !this.routines.get(x).primitive && !this.routines.get(x).buried)
+      .forEach(name => {
+        this.routines['delete'](name);
+        saveproc(name);
+      });
   });
 
   def("erns", () => {
-    this.scopes.forEach((scope) => {
-      scope.keys().filter((x) => {
-        return !scope.get(x).buried;
-      }).forEach((name) => {
-        scope['delete'](name);
-      });
+    this.scopes.forEach(scope => {
+      scope.keys()
+        .filter(x => !scope.get(x).buried)
+        .forEach(name => {
+          scope['delete'](name);
+        });
     });
   });
 
   def("erpls", () => {
-    this.plists.keys().filter((x) => {
-      return !this.plists.get(x).buried;
-    }).forEach((key) => {
-      this.plists['delete'](key);
-    });
+    this.plists.keys()
+      .filter(x => !this.plists.get(x).buried)
+      .forEach(key => {
+        this.plists['delete'](key);
+      });
   });
 
-  def("ern", (varname) => {
+  def("ern", varname => {
     var varnamelist;
     if (Type(varname) === 'list')
       varnamelist = lexpr(varname);
     else
       varnamelist = [sexpr(varname)];
 
-    this.scopes.forEach((scope) => {
-      varnamelist.forEach((name) => {
+    this.scopes.forEach(scope => {
+      varnamelist.forEach(name => {
         name = sexpr(name);
         scope['delete'](name);
       });
     });
   });
 
-  def("erpl", (plname) => {
+  def("erpl", plname => {
     var plnamelist;
     if (Type(plname) === 'list') {
       plnamelist = lexpr(plname);
@@ -2865,19 +2798,19 @@ function LogoInterpreter(turtle, stream, savehook)
       plnamelist = [sexpr(plname)];
     }
 
-    plnamelist.forEach((name) => {
+    plnamelist.forEach(name => {
       name = sexpr(name);
       this.plists['delete'](name);
     });
   });
 
-  def("bury", (list) => {
+  def("bury", list => {
     list = lexpr(list);
 
     // Bury procedures
     if (list.length) {
       var procs = lexpr(list.shift());
-      procs.forEach((name) => {
+      procs.forEach(name => {
         name = sexpr(name);
         if (this.routines.has(name))
           this.routines.get(name).buried = true;
@@ -2888,8 +2821,8 @@ function LogoInterpreter(turtle, stream, savehook)
     if (list.length) {
       var vars = lexpr(list.shift());
       // TODO: global only?
-      this.scopes.forEach((scope) => {
-        vars.forEach((name) => {
+      this.scopes.forEach(scope => {
+        vars.forEach(name => {
           name = sexpr(name);
           if (scope.has(name))
             scope.get(name).buried = true;
@@ -2900,7 +2833,7 @@ function LogoInterpreter(turtle, stream, savehook)
     // Bury property lists
     if (list.length) {
       var plists = lexpr(list.shift());
-      plists.forEach((name) => {
+      plists.forEach(name => {
         name = sexpr(name);
         if (this.plists.has(name))
           this.plists.get(name).buried = true;
@@ -2913,7 +2846,7 @@ function LogoInterpreter(turtle, stream, savehook)
       proc.buried = true;
     });
 
-    this.scopes.forEach((scope) => {
+    this.scopes.forEach(scope => {
       scope.forEach((name, entry) => {
         entry.buried = true;
       });
@@ -2924,19 +2857,19 @@ function LogoInterpreter(turtle, stream, savehook)
     });
   });
 
-  def("buryname", (varname) => {
+  def("buryname", varname => {
     var bury = this.routines.get('bury');
     var namelist = this.routines.get('namelist');
     return bury.call(this, namelist.call(this, varname));
   });
 
-  def("unbury", (list) => {
+  def("unbury", list => {
     list = lexpr(list);
 
     // Procedures
     if (list.length) {
       var procs = lexpr(list.shift());
-      procs.forEach((name) => {
+      procs.forEach(name => {
         name = sexpr(name);
         if (this.routines.has(name))
           this.routines.get(name).buried = false;
@@ -2947,8 +2880,8 @@ function LogoInterpreter(turtle, stream, savehook)
     if (list.length) {
       var vars = lexpr(list.shift());
       // TODO: global only?
-      this.scopes.forEach((scope) => {
-        vars.forEach((name) => {
+      this.scopes.forEach(scope => {
+        vars.forEach(name => {
           name = sexpr(name);
           if (scope.has(name))
             scope.get(name).buried = false;
@@ -2959,7 +2892,7 @@ function LogoInterpreter(turtle, stream, savehook)
     // Property lists
     if (list.length) {
       var plists = lexpr(list.shift());
-      plists.forEach((name) => {
+      plists.forEach(name => {
         name = sexpr(name);
         if (this.plists.has(name))
           this.plists.get(name).buried = false;
@@ -2972,7 +2905,7 @@ function LogoInterpreter(turtle, stream, savehook)
       proc.buried = false;
     });
 
-    this.scopes.forEach((scope) => {
+    this.scopes.forEach(scope => {
       scope.forEach((name, entry) => {
         entry.buried = false;
       });
@@ -2989,7 +2922,7 @@ function LogoInterpreter(turtle, stream, savehook)
     return unbury.call(this, namelist.call(this, varname));
   });
 
-  def(["buriedp", "buried?"], (list) => {
+  def(["buriedp", "buried?"], list => {
     list = lexpr(list);
     var name;
 
@@ -3034,15 +2967,15 @@ function LogoInterpreter(turtle, stream, savehook)
   // 8.1 Control
   //
 
-  def("run", (statements) => {
+  def("run", statements => {
     statements = reparse(lexpr(statements));
     return this.execute(statements, {returnResult: true});
   });
 
-  def("runresult", (statements) => {
+  def("runresult", statements => {
     statements = reparse(lexpr(statements));
     return this.execute(statements, {returnResult: true})
-      .then((result) => {
+      .then(result => {
         if (result !== undefined)
           return [result];
         else
@@ -3070,7 +3003,7 @@ function LogoInterpreter(turtle, stream, savehook)
       });
   });
 
-  def("forever", (statements) => {
+  def("forever", statements => {
     statements = reparse(lexpr(statements));
     var old_repcount = this.repcount;
     var i = 1;
@@ -3085,9 +3018,7 @@ function LogoInterpreter(turtle, stream, savehook)
       });
   });
 
-  def(["repcount", "#"], () => {
-    return this.repcount;
-  });
+  def(["repcount", "#"], () => this.repcount);
 
   def("if", function(tf, statements) {
     if (Type(tf) === 'list')
@@ -3096,7 +3027,7 @@ function LogoInterpreter(turtle, stream, savehook)
     var statements2 = arguments[2];
 
     return Promise.resolve(tf)
-      .then((tf) => {
+      .then(tf => {
         tf = aexpr(tf);
         statements = reparse(lexpr(statements));
         if (!statements2) {
@@ -3114,7 +3045,7 @@ function LogoInterpreter(turtle, stream, savehook)
       tf = evaluateExpression(reparse(tf));
 
     return Promise.resolve(tf)
-      .then((tf) => {
+      .then(tf => {
         tf = aexpr(tf);
         statements1 = reparse(lexpr(statements1));
         statements2 = reparse(lexpr(statements2));
@@ -3123,19 +3054,19 @@ function LogoInterpreter(turtle, stream, savehook)
       });
   });
 
-  def("test", (tf) => {
+  def("test", tf => {
     if (Type(tf) === 'list')
       tf = evaluateExpression(reparse(tf));
 
     return Promise.resolve(tf)
-      .then((tf) => {
+      .then(tf => {
         tf = aexpr(tf);
         // NOTE: A property on the scope, not within the scope
         this.scopes[this.scopes.length - 1]._test = tf;
       });
   });
 
-  def(["iftrue", "ift"], (statements) => {
+  def(["iftrue", "ift"], statements => {
     statements = reparse(lexpr(statements));
     var tf = this.scopes[this.scopes.length - 1]._test;
     if (tf === undefined)
@@ -3143,7 +3074,7 @@ function LogoInterpreter(turtle, stream, savehook)
     return tf ? this.execute(statements, {returnResult: true}) : undefined;
   });
 
-  def(["iffalse", "iff"], (statements) => {
+  def(["iffalse", "iff"], statements => {
     statements = reparse(lexpr(statements));
     var tf = this.scopes[this.scopes.length - 1]._test;
     if (tf === undefined)
@@ -3155,7 +3086,7 @@ function LogoInterpreter(turtle, stream, savehook)
     throw new Output();
   });
 
-  def(["output", "op"], (atom) => {
+  def(["output", "op"], atom => {
     throw new Output(atom);
   });
 
@@ -3165,7 +3096,7 @@ function LogoInterpreter(turtle, stream, savehook)
     tag = sexpr(tag).toUpperCase();
     instructionlist = reparse(lexpr(instructionlist));
     return this.execute(instructionlist, {returnResult: true})
-      .catch((error) => {
+      .catch(error => {
         if (!(error instanceof LogoError) || error.tag !== tag)
           throw error;
         this.last_error = error;
@@ -3198,7 +3129,7 @@ function LogoInterpreter(turtle, stream, savehook)
   // Not Supported: pause
   // Not Supported: continue
 
-  def("wait", (time) => {
+  def("wait", time => {
     return promiseYieldTime(Math.ceil(aexpr(time) / 60 * 1000));
   });
 
@@ -3206,17 +3137,17 @@ function LogoInterpreter(turtle, stream, savehook)
     throw new Bye;
   });
 
-  def(".maybeoutput", (value) => {
+  def(".maybeoutput", value => {
     throw new Output(value);
   });
 
   // Not Supported: goto
   // Not Supported: tag
 
-  def("ignore", (value) => {
+  def("ignore", value => {
   });
 
-  def("`", (list) => {
+  def("`", list => {
     list = lexpr(list);
     var out = [];
     return promiseLoop((loop, resolve, reject) => {
@@ -3235,7 +3166,7 @@ function LogoInterpreter(turtle, stream, savehook)
           member = [member];
         instructionlist = reparse(member);
         this.execute(instructionlist, {returnResult: true})
-          .then((result) => {
+          .then(result => {
             out.push(result);
             loop();
           }).catch(reject);
@@ -3245,21 +3176,21 @@ function LogoInterpreter(turtle, stream, savehook)
           member = [member];
         instructionlist = reparse(member);
         this.execute(instructionlist, {returnResult: true})
-          .then((result) => {
+          .then(result => {
             out = out.concat(result);
           })
           .then(loop, reject);
       } else if (Type(member) === 'word' && /^",/.test(member)) {
         instructionlist = reparse(member.substring(2));
         this.execute(instructionlist, {returnResult: true})
-          .then((result) => {
+          .then(result => {
             out.push('"' + (Type(result) === 'list' ? result[0] : result));
           })
           .then(loop, reject);
       } else if (Type(member) === 'word' && /^:,/.test(member)) {
         instructionlist = reparse(member.substring(2));
         this.execute(instructionlist, {returnResult: true})
-          .then((result) => {
+          .then(result => {
             out.push(':' + (Type(result) === 'list' ? result[0] : result));
           })
           .then(loop, reject);
@@ -3280,16 +3211,16 @@ function LogoInterpreter(turtle, stream, savehook)
     var start, limit, step, current;
 
     return Promise.resolve(evaluateExpression(control))
-      .then((r) => {
+      .then(r => {
         current = start = aexpr(r);
         return evaluateExpression(control);
       })
-      .then((r) => {
+      .then(r => {
         limit = aexpr(r);
         return control.length ?
           evaluateExpression(control) : (limit < start ? -1 : 1);
       })
-      .then((r) => {
+      .then(r => {
         step = aexpr(r);
       })
       .then(() => {
@@ -3317,7 +3248,7 @@ function LogoInterpreter(turtle, stream, savehook)
     var times, current = 1;
 
     return Promise.resolve(evaluateExpression(control))
-      .then((r) => {
+      .then(r => {
         times = aexpr(r);
       })
       .then(() => {
@@ -3348,12 +3279,12 @@ function LogoInterpreter(turtle, stream, savehook)
     return promiseLoop((loop, resolve, reject) => {
       this.execute(block)
         .then(tfexpression)
-        .then((tf) => {
+        .then(tf => {
           if (Type(tf) === 'list')
             tf = evaluateExpression(reparse(tf));
           return tf;
         })
-        .then((tf) => {
+        .then(tf => {
           if (!tf) {
             resolve();
             return;
@@ -3367,12 +3298,12 @@ function LogoInterpreter(turtle, stream, savehook)
     block = reparse(lexpr(checkevalblock(block)));
     return promiseLoop((loop, resolve, reject) => {
       Promise.resolve(tfexpression())
-        .then((tf) => {
+        .then(tf => {
           if (Type(tf) === 'list')
             tf = evaluateExpression(reparse(tf));
           return tf;
         })
-        .then((tf) => {
+        .then(tf => {
           if (!tf) {
             resolve();
             return;
@@ -3389,12 +3320,12 @@ function LogoInterpreter(turtle, stream, savehook)
     return promiseLoop((loop, resolve, reject) => {
       this.execute(block)
         .then(tfexpression)
-        .then((tf) => {
+        .then(tf => {
           if (Type(tf) === 'list')
             tf = evaluateExpression(reparse(tf));
           return tf;
         })
-        .then((tf) => {
+        .then(tf => {
           if (tf) {
             resolve();
             return;
@@ -3408,12 +3339,12 @@ function LogoInterpreter(turtle, stream, savehook)
     block = reparse(lexpr(checkevalblock(block)));
     return promiseLoop((loop, resolve, reject) => {
       Promise.resolve(tfexpression())
-        .then((tf) => {
+        .then(tf => {
           if (Type(tf) === 'list')
             tf = evaluateExpression(reparse(tf));
           return tf;
         })
-        .then((tf) => {
+        .then(tf => {
           if (tf) {
             resolve();
             return;
@@ -3433,13 +3364,13 @@ function LogoInterpreter(turtle, stream, savehook)
       var first = clause.shift();
       if (isKeyword(first, 'ELSE'))
         return evaluateExpression(clause);
-      if (lexpr(first).some((x) => { return equal(x, value); }))
+      if (lexpr(first).some(x => equal(x, value)))
         return evaluateExpression(clause);
     }
     return undefined;
   });
 
-  def("cond", (clauses) => {
+  def("cond", clauses => {
     clauses = lexpr(clauses);
     return promiseLoop((loop, resolve, reject) => {
       if (!clauses.length) {
@@ -3453,7 +3384,7 @@ function LogoInterpreter(turtle, stream, savehook)
         return;
       }
       evaluateExpression(reparse(lexpr(first)))
-        .then((result) => {
+        .then(result => {
           if (result) {
             resolve(evaluateExpression(clause));
             return;
@@ -3542,14 +3473,14 @@ function LogoInterpreter(turtle, stream, savehook)
         return;
       }
 
-      var args = lists.map((l) => {
+      var args = lists.map(l => {
         if (!l.length)
           throw err("{_PROC_}: Expected lists of equal length", ERRORS.BAD_INPUT);
         return l.shift();
       });
 
       Promise.resolve(routine.apply(this, args))
-        .then((value) => { mapped.push(value); })
+        .then(value => { mapped.push(value); })
         .then(loop, reject);
     });
   }, {maximum: -1});
@@ -3574,7 +3505,7 @@ function LogoInterpreter(turtle, stream, savehook)
       }
       var item = list.shift();
       Promise.resolve(routine.call(this, item))
-        .then((value) => { if (value) filtered.push(item); })
+        .then(value => { if (value) filtered.push(item); })
         .then(loop, reject);
     });
   });
@@ -3596,7 +3527,7 @@ function LogoInterpreter(turtle, stream, savehook)
       }
       var item = list.shift();
       Promise.resolve(routine.call(this, item))
-        .then((value) => {
+        .then(value => {
           if (value) {
             resolve(item);
             return;
@@ -3681,14 +3612,13 @@ function LogoInterpreter(turtle, stream, savehook)
   // Not Supported: transfer
 
   // Helper for testing that wraps a result in a Promise
-  def(".promise", (value) => {
-    return Promise.resolve(value);
-  });
-  def(".verify_bound_ignore", (value) => {
+  def(".promise", value => Promise.resolve(value));
+
+  def(".verify_bound_ignore", value => {
     if (this === undefined)
       throw new Error("Internal error: Unbound procedure");
   });
-  def(".verify_bound_identity", (value) => {
+  def(".verify_bound_identity", value => {
     if (this === undefined)
       throw new Error("Internal error: Unbound procedure");
     return value;
