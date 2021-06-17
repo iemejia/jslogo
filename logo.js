@@ -3234,86 +3234,56 @@ function LogoInterpreter(turtle, stream, savehook)
     throw err("{_PROC_}: Expected block", ERRORS.BAD_INPUT);
   }
 
-  def("do.while", (block, tfexpression) => {
+  def("do.while", async (block, tfexpression) => {
     block = reparse(lexpr(checkevalblock(block)));
-    return promiseLoop((loop, resolve, reject) => {
-      this.execute(block)
-        .then(tfexpression)
-        .then(tf => {
-          if (Type(tf) === 'list')
-            tf = evaluateExpression(reparse(tf));
-          return tf;
-        })
-        .then(tf => {
-          if (!tf) {
-            resolve();
-            return;
-          }
-          promiseYield().then(loop);
-        }, reject);
-    });
+    for (;;) {
+      await this.execute(block);
+      let tf = await tfexpression();
+      if (Type(tf) === 'list')
+        tf = await evaluateExpression(reparse(tf));
+      if (!tf)
+        break;
+      await promiseYield();
+    }
   }, {noeval: true});
 
-  def("while", (tfexpression, block) => {
+  def("while", async (tfexpression, block) => {
     block = reparse(lexpr(checkevalblock(block)));
-    return promiseLoop((loop, resolve, reject) => {
-      Promise.resolve(tfexpression())
-        .then(tf => {
-          if (Type(tf) === 'list')
-            tf = evaluateExpression(reparse(tf));
-          return tf;
-        })
-        .then(tf => {
-          if (!tf) {
-            resolve();
-            return;
-          }
-          this.execute(block)
-            .then(promiseYield)
-            .then(loop, reject);
-        }, reject);
-    });
+    for (;;) {
+      let tf = await tfexpression();
+      if (Type(tf) === 'list')
+        tf = await evaluateExpression(reparse(tf));
+      if (!tf)
+        break;
+      await this.execute(block);
+      await promiseYield();
+    }
   }, {noeval: true});
 
-  def("do.until", (block, tfexpression) => {
+  def("do.until", async (block, tfexpression) => {
     block = reparse(lexpr(checkevalblock(block)));
-    return promiseLoop((loop, resolve, reject) => {
-      this.execute(block)
-        .then(tfexpression)
-        .then(tf => {
-          if (Type(tf) === 'list')
-            tf = evaluateExpression(reparse(tf));
-          return tf;
-        })
-        .then(tf => {
-          if (tf) {
-            resolve();
-            return;
-          }
-          promiseYield().then(loop);
-        }, reject);
-    });
+    for (;;) {
+      await this.execute(block);
+      let tf = await tfexpression();
+      if (Type(tf) === 'list')
+        tf = await evaluateExpression(reparse(tf));
+      if (tf)
+        break;
+      await promiseYield();
+    }
   }, {noeval: true});
 
-  def("until", (tfexpression, block) => {
+  def("until", async (tfexpression, block) => {
     block = reparse(lexpr(checkevalblock(block)));
-    return promiseLoop((loop, resolve, reject) => {
-      Promise.resolve(tfexpression())
-        .then(tf => {
-          if (Type(tf) === 'list')
-            tf = evaluateExpression(reparse(tf));
-          return tf;
-        })
-        .then(tf => {
-          if (tf) {
-            resolve();
-            return;
-          }
-          this.execute(block)
-            .then(promiseYield)
-            .then(loop, reject);
-        }, reject);
-    });
+    for (;;) {
+      let tf = await tfexpression();
+      if (Type(tf) === 'list')
+        tf = await evaluateExpression(reparse(tf));
+      if (tf)
+        break;
+      await this.execute(block);
+      await promiseYield();
+    }
   }, {noeval: true});
 
   def("case", (value, clauses) => {
