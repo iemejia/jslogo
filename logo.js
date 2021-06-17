@@ -208,107 +208,108 @@ function LogoInterpreter(turtle, stream, savehook)
     this.next();
   }
 
-  function StringMap(case_fold) {
-    this._map = new Map();
-    this._case_fold = case_fold;
-  }
-  Object.defineProperties(StringMap.prototype, {
-    get: {value: function(key) {
+  class StringMap {
+    constructor(case_fold) {
+      this._map = new Map();
+      this._case_fold = case_fold;
+    }
+    get(key) {
       key = this._case_fold ? String(key).toLowerCase() : String(key);
       return this._map.get(key);
-    }},
-    set: {value: function(key, value) {
+    }
+    set(key, value) {
       key = this._case_fold ? String(key).toLowerCase() : String(key);
       this._map.set(key, value);
-    }},
-    has: {value: function(key) {
+    }
+    has(key) {
       key = this._case_fold ? String(key).toLowerCase() : String(key);
       return this._map.has(key);
-    }},
-    delete: {value: function(key) {
+    }
+    delete(key) {
       key = this._case_fold ? String(key).toLowerCase() : String(key);
       return this._map.delete(key);
-    }},
-    keys: {value: function() {
+    }
+    keys() {
       var keys = [];
       this._map.forEach(function(value, key) { keys.push(key); });
       return keys;
-    }},
-    empty: {value: function() {
+    }
+    empty() {
       return this._map.size === 0;
-    }},
-    forEach: {value: function(fn) {
+    }
+    forEach(fn) {
       return this._map.forEach(function(value, key) {
         fn(key, value);
       });
-    }}
-  });
-
-  function LogoArray(size, origin) {
-    this._array = [];
-    this._array.length = size;
-    for (var i = 0; i < this._array.length; ++i)
-      this._array[i] = [];
-    this._origin = origin;
+    }
   }
-  LogoArray.from = function(list, origin) {
-    var array = new LogoArray(0, origin);
-    array._array = Array.from(list);
-    return array;
-  };
-  Object.defineProperties(LogoArray.prototype, {
-    item: {value: function(i) {
+
+  class LogoArray {
+    constructor(size, origin) {
+      this._array = [];
+      this._array.length = size;
+      for (var i = 0; i < this._array.length; ++i)
+        this._array[i] = [];
+      this._origin = origin;
+    }
+    static from(list, origin) {
+      var array = new LogoArray(0, origin);
+      array._array = Array.from(list);
+      return array;
+    }
+
+    item(i) {
       i = Number(i)|0;
       i -= this._origin;
       if (i < 0 || i >= this._array.length)
         throw err("{_PROC_}: Index out of bounds", ERRORS.BAD_INPUT);
       return this._array[i];
-    }},
-    setItem: {value: function(i, v) {
+    }
+    setItem(i, v) {
       i = Number(i)|0;
       i -= this._origin;
       if (i < 0 || i >= this._array.length)
         throw err("{_PROC_}: Index out of bounds", ERRORS.BAD_INPUT);
       this._array[i] = v;
-    }},
-    list: {get: function() {
+    }
+    get list() {
       return this._array;
-    }},
-    origin: {get: function() {
+    }
+    get origin() {
       return this._origin;
-    }},
-    length: {get: function() {
+    }
+    get length() {
       return this._array.length;
-    }}
-  });
-
-  function Stream(string) {
-    this._string = string;
-    this._index = 0;
-    this._skip();
+    }
   }
-  Object.defineProperties(Stream.prototype, {
-    eof: {get: function() {
+
+  class Stream {
+    constructor(string) {
+      this._string = string;
+      this._index = 0;
+      this._skip();
+    }
+    get eof() {
       return this._index >= this._string.length;
-    }},
-    peek: {value: function() {
+    }
+    peek() {
       var c = this._string.charAt(this._index);
       if (c === '\\')
         c += this._string.charAt(this._index + 1);
       return c;
-    }},
-    get: {value: function() {
+    }
+    get() {
       var c = this._next();
       this._skip();
       return c;
-    }},
-    _next: {value: function() {
+    }
+    _next() {
       var c = this._string.charAt(this._index++);
       if (c === '\\')
         c += this._string.charAt(this._index++);
       return c;
-    }},
-    _skip: {value: function() {
+    }
+    _skip() {
       while (!this.eof) {
         var c = this.peek();
         if (c === '~' && this._string.charAt(this._index + 1) === '\n') {
@@ -323,11 +324,11 @@ function LogoInterpreter(turtle, stream, savehook)
           return;
         }
       }
-    }},
-    rest: {get: function() {
+    }
+    rest() {
       return this._string.substring(this._index);
-    }}
-  });
+    }
+  }
 
   //----------------------------------------------------------------------
   //
@@ -350,9 +351,11 @@ function LogoInterpreter(turtle, stream, savehook)
   //----------------------------------------------------------------------
 
   // Used to return values from routines (thrown/caught)
-  function Output(output) { this.output = output; }
-  Output.prototype.toString = function() { return this.output; };
-  Output.prototype.valueOf = function() { return this.output; };
+  class Output {
+    constructor(output) { this.output = output; }
+    toString() { return this.output; }
+    valueOf() { return this.output; }
+  }
 
   // Used to stop processing cleanly
   function Bye() { }
