@@ -125,21 +125,6 @@ function LogoInterpreter(turtle, stream, savehook)
     return atom === match;
   }
 
-  // Returns a promise; calls the passed function with (loop, resolve,
-  // reject). Calling resolve or reject (or throwing) settles the
-  // promise, calling loop repeats.
-  function promiseLoop(func) {
-    return new Promise((resolve, reject) => {
-      (function loop() {
-        try {
-          func(loop, resolve, reject);
-        } catch (e) {
-          reject(e);
-        }
-      }());
-    });
-  }
-
   // Takes a list of (possibly async) closures. Each is called in
   // turn, waiting for its result to resolve before the next is
   // executed. Resolves to an array of results, or rejects if any
@@ -1097,33 +1082,25 @@ function LogoInterpreter(turtle, stream, savehook)
   //----------------------------------------------------------------------
   // Execute a sequence of statements
   //----------------------------------------------------------------------
-  self.execute = (statements, options) => {
+  self.execute = async (statements, options) => {
     options = Object(options);
     // Operate on a copy so the original is not destroyed
     statements = statements.slice();
 
-    var lastResult;
-    return promiseLoop((loop, resolve, reject) => {
+    let lastResult;
+    while (statements.length) {
       if (self.forceBye) {
         self.forceBye = false;
-        reject(new Bye);
-        return;
+        throw new Bye;
       }
-      if (!statements.length) {
-        resolve(lastResult);
-        return;
+      const result = await evaluateExpression(statements);
+      if (result !== undefined && !options.returnResult) {
+        throw err("Don't know what to do with {result}", {result: result},
+                  ERRORS.BAD_OUTPUT);
       }
-      Promise.resolve(evaluateExpression(statements))
-        .then(result => {
-          if (result !== undefined && !options.returnResult) {
-            reject(err("Don't know what to do with {result}", {result: result},
-                  ERRORS.BAD_OUTPUT));
-            return;
-          }
-          lastResult = result;
-          loop();
-        }, reject);
-    });
+      lastResult = result;
+    }
+    return lastResult;
   };
 
   // FIXME: should this confirm that something is running?
@@ -3122,15 +3099,11 @@ function LogoInterpreter(turtle, stream, savehook)
   def("ignore", value => {
   });
 
-  def("`", list => {
+  def("`", async list => {
     list = lexpr(list);
-    var out = [];
-    return promiseLoop((loop, resolve, reject) => {
-      if (!list.length) {
-        resolve(out);
-        return;
-      }
-      var member = list.shift(), instructionlist;
+    let out = [];
+    while (list.length) {
+      let member = list.shift();
 
       // TODO: Nested backquotes: "Substitution is done only for
       // commas at the same depth as the backquote in which they are
@@ -3139,44 +3112,32 @@ function LogoInterpreter(turtle, stream, savehook)
         member = list.shift();
         if (Type(member) === 'word')
           member = [member];
-        instructionlist = reparse(member);
-        this.execute(instructionlist, {returnResult: true})
-          .then(result => {
-            out.push(result);
-            loop();
-          }).catch(reject);
+        const instructionlist = reparse(member);
+        const result = await this.execute(instructionlist, {returnResult: true});
+        out.push(result);
       } else if (member === ',@' && list.length) {
         member = list.shift();
         if (Type(member) === 'word')
           member = [member];
-        instructionlist = reparse(member);
-        this.execute(instructionlist, {returnResult: true})
-          .then(result => {
-            out = out.concat(result);
-          })
-          .then(loop, reject);
+        const instructionlist = reparse(member);
+        const result = await this.execute(instructionlist, {returnResult: true});
+        out = out.concat(result);
       } else if (Type(member) === 'word' && /^",/.test(member)) {
-        instructionlist = reparse(member.substring(2));
-        this.execute(instructionlist, {returnResult: true})
-          .then(result => {
-            out.push('"' + (Type(result) === 'list' ? result[0] : result));
-          })
-          .then(loop, reject);
+        const instructionlist = reparse(member.substring(2));
+        const result = await this.execute(instructionlist, {returnResult: true});
+        out.push('"' + (Type(result) === 'list' ? result[0] : result));
       } else if (Type(member) === 'word' && /^:,/.test(member)) {
-        instructionlist = reparse(member.substring(2));
-        this.execute(instructionlist, {returnResult: true})
-          .then(result => {
-            out.push(':' + (Type(result) === 'list' ? result[0] : result));
-          })
-          .then(loop, reject);
+        const instructionlist = reparse(member.substring(2));
+        const result = await this.execute(instructionlist, {returnResult: true});
+        out.push(':' + (Type(result) === 'list' ? result[0] : result));
       } else {
         out.push(member);
-        loop();
       }
-    });
+    }
+    return out;
   });
 
-  def("for", (control, statements) => {
+  def("for", async (control, statements) => {
     control = reparse(lexpr(control));
     statements = reparse(lexpr(statements));
 
@@ -3185,34 +3146,25 @@ function LogoInterpreter(turtle, stream, savehook)
     var varname = sexpr(control.shift());
     var start, limit, step, current;
 
-    return Promise.resolve(evaluateExpression(control))
-      .then(r => {
-        current = start = aexpr(r);
-        return evaluateExpression(control);
-      })
-      .then(r => {
-        limit = aexpr(r);
-        return control.length ?
-          evaluateExpression(control) : (limit < start ? -1 : 1);
-      })
-      .then(r => {
-        step = aexpr(r);
-      })
-      .then(() => {
-        return promiseLoop((loop, resolve, reject) => {
-          if (sign(current - limit) === sign(step)) {
-            resolve();
-            return;
-          }
-          setlocal(varname, current);
-          this.execute(statements)
-            .then(() => {
-              current += step;
-            })
-            .then(promiseYield)
-            .then(loop, reject);
-        });
-      });
+    let r;
+
+    r = await evaluateExpression(control);
+    current = start = aexpr(r);
+
+    r = await evaluateExpression(control);
+    limit = aexpr(r);
+
+    r = control.length
+      ? await evaluateExpression(control)
+      : (limit < start ? -1 : 1);
+    step = aexpr(r);
+
+    while (sign(current - limit) !== sign(step)) {
+      setlocal(varname, current);
+      await this.execute(statements);
+      current += step;
+      promiseYield();
+    }
   });
 
   def("dotimes", async (control, statements) => {
@@ -3300,28 +3252,18 @@ function LogoInterpreter(turtle, stream, savehook)
     return undefined;
   });
 
-  def("cond", clauses => {
+  def("cond", async clauses => {
     clauses = lexpr(clauses);
-    return promiseLoop((loop, resolve, reject) => {
-      if (!clauses.length) {
-        resolve();
-        return;
-      }
-      var clause = lexpr(clauses.shift());
-      var first = clause.shift();
-      if (isKeyword(first, 'ELSE')) {
-        resolve(evaluateExpression(clause));
-        return;
-      }
-      evaluateExpression(reparse(lexpr(first)))
-        .then(result => {
-          if (result) {
-            resolve(evaluateExpression(clause));
-            return;
-          }
-          loop();
-        }, reject);
-    });
+    while (clauses.length) {
+      const clause = lexpr(clauses.shift());
+      const first = clause.shift();
+      if (isKeyword(first, 'ELSE'))
+        return await evaluateExpression(clause);
+      const result = await evaluateExpression(reparse(lexpr(first)));
+      if (result)
+        return await evaluateExpression(clause);
+    }
+    return undefined;
   });
 
   //
@@ -3363,7 +3305,7 @@ function LogoInterpreter(turtle, stream, savehook)
     return routine.apply(this, args);
   }, {minimum: 1, maximum: -1});
 
-  def("foreach", (list, procname) => {
+  def("foreach", async (list, procname) => {
     procname = sexpr(procname);
 
     var routine = this.routines.get(procname);
@@ -3372,18 +3314,15 @@ function LogoInterpreter(turtle, stream, savehook)
     if (routine.special || routine.noeval)
       throw err("Can't apply {_PROC_} to special {name:U}", { name: procname }, ERRORS.BAD_INPUT);
     list = lexpr(list);
-    return promiseLoop((loop, resolve, reject) => {
-      if (!list.length) {
-        resolve();
-        return;
-      }
-      Promise.resolve(routine.call(this, list.shift()))
-        .then(loop, reject);
-    });
+
+    while (list.length) {
+      await routine.call(this, list.shift());
+      await promiseYield();
+   }
   });
 
 
-  def("map", function(procname, list/*,  ... */) {
+  def("map", async function(procname, list/*,  ... */) {
     procname = sexpr(procname);
 
     var routine = this.routines.get(procname);
@@ -3397,27 +3336,22 @@ function LogoInterpreter(turtle, stream, savehook)
       throw err("{_PROC_}: Expected list", ERRORS.BAD_INPUT);
 
     var mapped = [];
-    return promiseLoop((loop, resolve, reject) => {
-      if (!lists[0].length) {
-        resolve(mapped);
-        return;
-      }
-
-      var args = lists.map(l => {
+    while (lists[0].length) {
+      const args = lists.map(l => {
         if (!l.length)
           throw err("{_PROC_}: Expected lists of equal length", ERRORS.BAD_INPUT);
         return l.shift();
       });
-
-      Promise.resolve(routine.apply(this, args))
-        .then(value => { mapped.push(value); })
-        .then(loop, reject);
-    });
+      const value = await routine.apply(this, args);
+      mapped.push(value);
+      await promiseYield();
+    }
+    return mapped;
   }, {maximum: -1});
 
   // Not Supported: map.se
 
-  def("filter", (procname, list) => {
+  def("filter", async (procname, list) => {
     procname = sexpr(procname);
 
     var routine = this.routines.get(procname);
@@ -3427,20 +3361,18 @@ function LogoInterpreter(turtle, stream, savehook)
       throw err("Can't apply {_PROC_} to special {name:U}", { name: procname }, ERRORS.BAD_INPUT);
 
     list = lexpr(list);
-    var filtered = [];
-    return promiseLoop((loop, resolve, reject) => {
-      if (!list.length) {
-        resolve(filtered);
-        return;
-      }
-      var item = list.shift();
-      Promise.resolve(routine.call(this, item))
-        .then(value => { if (value) filtered.push(item); })
-        .then(loop, reject);
-    });
+    const filtered = [];
+    while (list.length) {
+      const item = list.shift();
+      const value = await routine.call(this, item);
+      if (value)
+        filtered.push(item);
+      await promiseYield();
+   }
+    return filtered;
   });
 
-  def("find", (procname, list) => {
+  def("find", async (procname, list) => {
     procname = sexpr(procname);
 
     var routine = this.routines.get(procname);
@@ -3450,24 +3382,17 @@ function LogoInterpreter(turtle, stream, savehook)
       throw err("Can't apply {_PROC_} to special {name:U}", { name: procname }, ERRORS.BAD_INPUT);
 
     list = lexpr(list);
-    return promiseLoop((loop, resolve, reject) => {
-      if (!list.length) {
-        resolve([]);
-        return;
-      }
-      var item = list.shift();
-      Promise.resolve(routine.call(this, item))
-        .then(value => {
-          if (value) {
-            resolve(item);
-            return;
-          }
-          loop();
-      }, reject);
-    });
+    while (list.length) {
+      const item = list.shift();
+      const value = await routine.call(this, item);
+      if (value)
+        return item;
+      await promiseYield();
+   }
+    return [];
   });
 
-  def("reduce", function(procname, list) {
+  def("reduce", async function(procname, list) {
     procname = sexpr(procname);
     list = lexpr(list);
     var value = arguments[2] !== undefined ? arguments[2] : list.shift();
@@ -3478,19 +3403,15 @@ function LogoInterpreter(turtle, stream, savehook)
     if (procedure.special || procedure.noeval)
       throw err("Can't apply {_PROC_} to special {name:U}", { name: procname }, ERRORS.BAD_INPUT);
 
-    return promiseLoop(function(loop, resolve, reject) {
-      if (!list.length) {
-        resolve(value);
-        return;
-      }
-      Promise.resolve(procedure.call(this, value, list.shift()))
-        .then(function(result) { value = result; })
-        .then(loop, reject);
-    }.bind(this));
+    while (list.length) {
+      value = await procedure.call(this, value, list.shift());
+      await promiseYield();
+    }
+    return value;
   }, {maximum: 3});
 
 
-  def("crossmap", function(procname, list/*,  ... */) {
+  def("crossmap", async function(procname, list/*,  ... */) {
     procname = sexpr(procname);
 
     var routine = this.routines.get(procname);
@@ -3507,19 +3428,13 @@ function LogoInterpreter(turtle, stream, savehook)
     if (lists.length === 1)
       lists = lists[0].map(lexpr);
 
-    var indexes = lists.map(function() { return 0; });
-    var done = false;
+    const indexes = lists.map(function() { return 0; });
+    let done = false;
 
-    var mapped = [];
-    return promiseLoop(function(loop, resolve, reject) {
-      if (done) {
-        resolve(mapped);
-        return;
-      }
-
-      var args = indexes.map(function(v, i) { return lists[i][v]; });
-
-      var pos = indexes.length - 1;
+    const mapped = [];
+    while (!done) {
+      const args = indexes.map(function(v, i) { return lists[i][v]; });
+      let pos = indexes.length - 1;
       ++indexes[pos];
       while (indexes[pos] === lists[pos].length) {
         if (pos === 0) {
@@ -3530,11 +3445,11 @@ function LogoInterpreter(turtle, stream, savehook)
         pos--;
         ++indexes[pos];
       }
-
-      Promise.resolve(routine.apply(this, args))
-        .then(function(value) { mapped.push(value); })
-        .then(loop, reject);
-    }.bind(this));
+      const value = await routine.apply(this, args);
+      mapped.push(value);
+      await promiseYield();
+    }
+    return mapped;
   }, {maximum: -1});
 
   // Not Supported: cascade
