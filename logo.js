@@ -138,17 +138,6 @@ function LogoInterpreter(turtle, stream, savehook)
     return results;
   }
 
-  // Returns a promise with the same result as the passed promise, but
-  // that executes finalBlock before it resolves, regardless of
-  // whether it fulfills or rejects.
-  async function promiseFinally(promise, finalBlock) {
-    try {
-      return await promise;
-    } finally {
-      finalBlock();
-    }
-  }
-
   // Returns a Promise that will resolve as soon as possible while ensuring
   // that control is yielded back to the event loop at least every 20ms.
   var lastTimeYielded = Date.now();
@@ -776,8 +765,7 @@ function LogoInterpreter(turtle, stream, savehook)
   // Takes a function and list of (possibly async) closures. Returns a
   // closure that, when executed, evaluates the closures serially then
   // applies the function to the results.
-  function defer(func /*, input...*/) {
-    var input = [].slice.call(arguments, 1);
+  function defer(func, ...input) {
     return () => {
       return serialExecute(input.slice())
         .then(args => {
@@ -966,18 +954,24 @@ function LogoInterpreter(turtle, stream, savehook)
     }
 
     if (procedure.noeval) {
-      return () => {
+      return async () => {
         self.stack.push(name);
-        return promiseFinally(procedure.apply(self, args),
-                              () => { self.stack.pop(); });
+        try {
+          return procedure.apply(self, args);
+        } finally {
+          self.stack.pop();
+        }
       };
     }
 
-    return () => {
+    return async () => {
       self.stack.push(name);
-      return promiseFinally(serialExecute(args.slice()).then(args => {
-        return procedure.apply(self, args);
-      }), () => { self.stack.pop(); });
+      try {
+        const a = await serialExecute(args.slice());
+        return await procedure.apply(self, a);
+      } finally {
+        self.stack.pop();
+      }
     };
   };
 
@@ -1327,32 +1321,36 @@ function LogoInterpreter(turtle, stream, savehook)
     var length = (def === undefined) ? inputs.length : def;
 
     // Closure over inputs and block to handle scopes, arguments and outputs
-    var func = function() {
+    var func = async (...args) => {
       // Define a new scope
       var scope = new StringMap(true);
       self.scopes.push(scope);
 
       var i = 0, op;
-      for (; i < inputs.length && i < arguments.length; ++i)
-        scope.set(inputs[i], {value: arguments[i]});
-      for (; i < inputs.length + optional_inputs.length && i < arguments.length; ++i) {
+      for (; i < inputs.length && i < args.length; ++i)
+        scope.set(inputs[i], {value: args[i]});
+      for (; i < inputs.length + optional_inputs.length && i < args.length; ++i) {
         op = optional_inputs[i - inputs.length];
-        scope.set(op[0], {value: arguments[i]});
+        scope.set(op[0], {value: args[i]});
       }
       for (; i < inputs.length + optional_inputs.length; ++i) {
         op = optional_inputs[i - inputs.length];
         scope.set(op[0], {value: evaluateExpression(reparse(op[1]))});
       }
       if (rest)
-        scope.set(rest, {value: [].slice.call(arguments, i)});
+        scope.set(rest, {value: args.slice(i)});
 
-      return promiseFinally(self.execute(block).then(promiseYield, err => {
+      try {
+        await self.execute(block);
+        await promiseYield();
+        return undefined;
+      } catch (err) {
         if (err instanceof Output)
           return err.output;
         throw err;
-      }), () => {
+      } finally {
         self.scopes.pop();
-      });
+      }
     };
 
     var proc = to_arity(func, length);
