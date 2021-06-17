@@ -2078,22 +2078,14 @@ function LogoInterpreter(turtle, stream, savehook)
     return booleanReduce(args, function(value) {return !value;}, 0);
   }, {noeval: true, minimum: 0, maximum: -1});
 
-  function booleanReduce(args, test, value) {
-    return promiseLoop((loop, resolve, reject) => {
-      if (!args.length) {
-        resolve(value);
-        return;
-      }
-      Promise.resolve(args.shift()())
-        .then(result => {
-          if (!test(result)) {
-            resolve(result);
-            return;
-          }
-          value = result;
-          loop();
-        });
-    });
+  async function booleanReduce(args, test, value) {
+    while (args.length) {
+      const result = await args.shift()();
+      if (!test(result))
+        return result;
+      value = result;
+    }
+    return value;
   }
 
   def("xor", function(a, b) {
@@ -2976,16 +2968,11 @@ function LogoInterpreter(turtle, stream, savehook)
     var old_repcount = this.repcount;
     var i = 1;
     try {
-      await promiseLoop((loop, resolve, reject) => {
-        if (i > count) {
-          resolve();
-          return;
-        }
+      while (i <= count) {
         this.repcount = i++;
-        this.execute(statements)
-          .then(promiseYield)
-          .then(loop, reject);
-      });
+        await this.execute(statements);
+        await promiseYield();
+      }
     } finally {
       this.repcount = old_repcount;
     }
@@ -2996,12 +2983,11 @@ function LogoInterpreter(turtle, stream, savehook)
     var old_repcount = this.repcount;
     var i = 1;
     try {
-      await promiseLoop((loop, resolve, reject) => {
+      for (;;) {
         this.repcount = i++;
-        this.execute(statements)
-          .then(promiseYield)
-          .then(loop, reject);
-      });
+        await this.execute(statements);
+        await promiseYield();
+      }
     } finally {
       this.repcount = old_repcount;
     }
@@ -3229,32 +3215,17 @@ function LogoInterpreter(turtle, stream, savehook)
       });
   });
 
-  def("dotimes", (control, statements) => {
+  def("dotimes", async (control, statements) => {
     control = reparse(lexpr(control));
     statements = reparse(lexpr(statements));
 
-    var varname = sexpr(control.shift());
-    var times, current = 1;
-
-    return Promise.resolve(evaluateExpression(control))
-      .then(r => {
-        times = aexpr(r);
-      })
-      .then(() => {
-        return promiseLoop((loop, resolve, reject) => {
-          if (current > times) {
-            resolve();
-            return;
-          }
-          setlocal(varname, current);
-          this.execute(statements)
-            .then(() => {
-              ++current;
-            })
-            .then(promiseYield)
-            .then(loop, reject);
-        });
-      });
+    const varname = sexpr(control.shift());
+    const times = aexpr(await evaluateExpression(control));
+    for (let current = 1; current <= times; ++current) {
+      setlocal(varname, current);
+      await this.execute(statements);
+      await promiseYield();
+    }
   });
 
   function checkevalblock(block) {
