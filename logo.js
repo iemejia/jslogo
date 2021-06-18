@@ -231,16 +231,14 @@ function LogoInterpreter(turtle, stream, savehook)
     }
     keys() {
       var keys = [];
-      this._map.forEach(function(value, key) { keys.push(key); });
+      this._map.forEach((value, key) => { keys.push(key); });
       return keys;
     }
     empty() {
       return this._map.size === 0;
     }
     forEach(fn) {
-      return this._map.forEach(function(value, key) {
-        fn(key, value);
-      });
+      return this._map.forEach((value, key) => { fn(key, value); });
     }
   }
 
@@ -740,25 +738,21 @@ function LogoInterpreter(turtle, stream, savehook)
   }
 
   function relationalExpression(list) {
-    var lhs = additiveExpression(list);
-    var op;
+    let lhs = additiveExpression(list);
     while (peek(list, ['=', '<', '>', '<=', '>=', '<>'])) {
-      op = list.shift();
+      const op = list.shift();
+      const rhs = additiveExpression(list);
 
-      lhs = (lhs => {
-        var rhs = additiveExpression(list);
+      switch (op) {
+      case "<": return defer((lhs, rhs) => (aexpr(lhs) < aexpr(rhs)) ? 1 : 0, lhs, rhs);
+      case ">": return defer((lhs, rhs) => (aexpr(lhs) > aexpr(rhs)) ? 1 : 0, lhs, rhs);
+      case "=": return defer((lhs, rhs) => equal(lhs, rhs) ? 1 : 0, lhs, rhs);
 
-        switch (op) {
-          case "<": return defer(function(lhs, rhs) { return (aexpr(lhs) < aexpr(rhs)) ? 1 : 0; }, lhs, rhs);
-          case ">": return defer(function(lhs, rhs) { return (aexpr(lhs) > aexpr(rhs)) ? 1 : 0; }, lhs, rhs);
-          case "=": return defer(function(lhs, rhs) { return equal(lhs, rhs) ? 1 : 0; }, lhs, rhs);
-
-          case "<=": return defer(function(lhs, rhs) { return (aexpr(lhs) <= aexpr(rhs)) ? 1 : 0; }, lhs, rhs);
-          case ">=": return defer(function(lhs, rhs) { return (aexpr(lhs) >= aexpr(rhs)) ? 1 : 0; }, lhs, rhs);
-          case "<>": return defer(function(lhs, rhs) { return !equal(lhs, rhs) ? 1 : 0; }, lhs, rhs);
-          default: throw new Error("Internal error in expression parser");
-        }
-      })(lhs);
+      case "<=": return defer((lhs, rhs) => (aexpr(lhs) <= aexpr(rhs)) ? 1 : 0, lhs, rhs);
+      case ">=": return defer((lhs, rhs) => (aexpr(lhs) >= aexpr(rhs)) ? 1 : 0, lhs, rhs);
+      case "<>": return defer((lhs, rhs) => !equal(lhs, rhs) ? 1 : 0, lhs, rhs);
+      default: throw new Error("Internal error in expression parser");
+      }
     }
 
     return lhs;
@@ -778,72 +772,62 @@ function LogoInterpreter(turtle, stream, savehook)
   }
 
   function additiveExpression(list) {
-    var lhs = multiplicativeExpression(list);
-    var op;
+    let lhs = multiplicativeExpression(list);
     while (peek(list, ['+', '-'])) {
-      op = list.shift();
+      const op = list.shift();
+      const rhs = multiplicativeExpression(list);
 
-      lhs = (lhs => {
-        var rhs = multiplicativeExpression(list);
-        switch (op) {
-          case "+": return defer(function(lhs, rhs) { return aexpr(lhs) + aexpr(rhs); }, lhs, rhs);
-          case "-": return defer(function(lhs, rhs) { return aexpr(lhs) - aexpr(rhs); }, lhs, rhs);
-          default: throw new Error("Internal error in expression parser");
-        }
-      })(lhs);
+      switch (op) {
+      case "+": return defer((lhs, rhs) => aexpr(lhs) + aexpr(rhs), lhs, rhs);
+      case "-": return defer((lhs, rhs) => aexpr(lhs) - aexpr(rhs), lhs, rhs);
+      default: throw new Error("Internal error in expression parser");
+      }
     }
 
     return lhs;
   }
 
   function multiplicativeExpression(list) {
-    var lhs = powerExpression(list);
-    var op;
+    let lhs = powerExpression(list);
     while (peek(list, ['*', '/', '%'])) {
-      op = list.shift();
+      const op = list.shift();
+      const rhs = powerExpression(list);
 
-      lhs = (lhs => {
-        var rhs = powerExpression(list);
-        switch (op) {
-          case "*": return defer(function(lhs, rhs) { return aexpr(lhs) * aexpr(rhs); }, lhs, rhs);
-          case "/": return defer(function(lhs, rhs) {
-            var n = aexpr(lhs), d = aexpr(rhs);
-            if (d === 0) { throw err("Division by zero", ERRORS.BAD_INPUT); }
-            return n / d;
-          }, lhs, rhs);
-          case "%": return defer(function(lhs, rhs) {
-            var n = aexpr(lhs), d = aexpr(rhs);
-            if (d === 0) { throw err("Division by zero", ERRORS.BAD_INPUT); }
-            return n % d;
-          }, lhs, rhs);
-          default: throw new Error("Internal error in expression parser");
-        }
-      })(lhs);
+      switch (op) {
+      case "*": return defer((lhs, rhs) => aexpr(lhs) * aexpr(rhs), lhs, rhs);
+      case "/": return defer((lhs, rhs) => {
+        var n = aexpr(lhs), d = aexpr(rhs);
+        if (d === 0) { throw err("Division by zero", ERRORS.BAD_INPUT); }
+        return n / d;
+      }, lhs, rhs);
+      case "%": return defer((lhs, rhs) => {
+        var n = aexpr(lhs), d = aexpr(rhs);
+        if (d === 0) { throw err("Division by zero", ERRORS.BAD_INPUT); }
+        return n % d;
+      }, lhs, rhs);
+      default: throw new Error("Internal error in expression parser");
+      }
     }
 
     return lhs;
   }
 
   function powerExpression(list) {
-    var lhs = unaryExpression(list);
-    var op;
+    let lhs = unaryExpression(list);
     while (peek(list, ['^'])) {
-      op = list.shift();
-      lhs = (lhs => {
-        var rhs = unaryExpression(list);
-        return defer(function(lhs, rhs) { return Math.pow(aexpr(lhs), aexpr(rhs)); }, lhs, rhs);
-      })(lhs);
+      const op = list.shift();
+      const rhs = unaryExpression(list);
+
+      return defer((lhs, rhs) => Math.pow(aexpr(lhs), aexpr(rhs)), lhs, rhs);
     }
 
     return lhs;
   }
 
   function unaryExpression(list) {
-    var rhs, op;
-
     if (peek(list, [UNARY_MINUS])) {
-      op = list.shift();
-      rhs = unaryExpression(list);
+      const op = list.shift();
+      const rhs = unaryExpression(list);
       return defer(rhs => -aexpr(rhs), rhs);
     } else {
       return finalExpression(list);
@@ -1443,8 +1427,8 @@ function LogoInterpreter(turtle, stream, savehook)
   }, {maximum: 2});
 
   def("mdarray", function(sizes) {
-    sizes = lexpr(sizes).map(aexpr).map(function(n) { return n|0; });
-    if (sizes.some(function(size) { return size < 1; }))
+    sizes = lexpr(sizes).map(aexpr).map(n =>n|0);
+    if (sizes.some(size => size < 1))
       throw err("{_PROC_}: Array size must be positive integer", ERRORS.BAD_INPUT);
     var origin = (arguments.length < 2) ? 1 : aexpr(arguments[1]);
 
@@ -1548,9 +1532,9 @@ function LogoInterpreter(turtle, stream, savehook)
     return list[i];
   });
 
-  def("remove", function(thing, list) {
-    return sifw(list, lexpr(list).filter(function(x) { return !equal(x, thing); }));
-  });
+  def("remove", (thing, list) =>
+      sifw(list, lexpr(list).filter(x => !equal(x, thing)))
+     );
 
   def("remdup", list => {
     // TODO: This only works with JS equality. Use equalp.
@@ -1873,7 +1857,7 @@ function LogoInterpreter(turtle, stream, savehook)
 
 
   def("sum", function(a, b) {
-    return Array.from(arguments).map(aexpr).reduce(function(a, b) { return a + b; }, 0);
+    return Array.from(arguments).map(aexpr).reduce((a, b) => a + b, 0);
   }, {minimum: 0, maximum: -1});
 
   def("difference", (a, b) => aexpr(a) - aexpr(b));
@@ -1881,7 +1865,7 @@ function LogoInterpreter(turtle, stream, savehook)
   def("minus", a => -aexpr(a));
 
   def("product", function(a, b) {
-    return Array.from(arguments).map(aexpr).reduce(function(a, b) { return a * b; }, 1);
+    return Array.from(arguments).map(aexpr).reduce((a, b) => a * b, 1);
   }, {minimum: 0, maximum: -1});
 
   def("quotient", (a, b) => {
@@ -2011,17 +1995,15 @@ function LogoInterpreter(turtle, stream, savehook)
 
 
   def("bitand", function(num1, num2) {
-    return Array.from(arguments).map(aexpr).reduce(function(a, b) { return a & b; }, -1);
+    return Array.from(arguments).map(aexpr).reduce((a, b) => a & b, -1);
   }, {minimum: 0, maximum: -1});
   def("bitor", function(num1, num2) {
-    return Array.from(arguments).map(aexpr).reduce(function(a, b) { return a | b; }, 0);
+    return Array.from(arguments).map(aexpr).reduce((a, b) => a | b, 0);
   }, {minimum: 0, maximum: -1});
   def("bitxor", function(num1, num2) {
-    return Array.from(arguments).map(aexpr).reduce(function(a, b) { return a ^ b; }, 0);
+    return Array.from(arguments).map(aexpr).reduce((a, b) => a ^ b, 0);
   }, {minimum: 0, maximum: -1});
-  def("bitnot", function(num) {
-    return ~aexpr(num);
-  });
+  def("bitnot", num => ~aexpr(num));
 
 
   def("ashift", (num1, num2) => {
@@ -2048,12 +2030,12 @@ function LogoInterpreter(turtle, stream, savehook)
 
   def("and", function(a, b) {
     var args = Array.from(arguments);
-    return booleanReduce(args, function(value) {return value;}, 1);
+    return booleanReduce(args, value => value, 1);
   }, {noeval: true, minimum: 0, maximum: -1});
 
   def("or", function(a, b) {
     var args = Array.from(arguments);
-    return booleanReduce(args, function(value) {return !value;}, 0);
+    return booleanReduce(args, value => !value, 0);
   }, {noeval: true, minimum: 0, maximum: -1});
 
   async function booleanReduce(args, test, value) {
@@ -2068,12 +2050,10 @@ function LogoInterpreter(turtle, stream, savehook)
 
   def("xor", function(a, b) {
     return Array.from(arguments).map(aexpr)
-      .reduce(function(a, b) { return Boolean(a) !== Boolean(b); }, 0) ? 1 : 0;
+      .reduce((a, b) => Boolean(a) !== Boolean(b), 0) ? 1 : 0;
   }, {minimum: 0, maximum: -1});
 
-  def("not", function(a) {
-    return !aexpr(a) ? 1 : 0;
-  });
+  def("not", a => !aexpr(a) ? 1 : 0);
 
   //----------------------------------------------------------------------
   //
@@ -2416,7 +2396,7 @@ function LogoInterpreter(turtle, stream, savehook)
   });
 
   def("local", function(varname) {
-    Array.from(arguments).forEach(function(name) { local(sexpr(name)); });
+    Array.from(arguments).forEach((name) => { local(sexpr(name)); });
   }, {maximum: -1});
 
   def("localmake", (varname, value) => {
@@ -2427,7 +2407,7 @@ function LogoInterpreter(turtle, stream, savehook)
 
   def("global", function(varname) {
     var globalscope = this.scopes[0];
-    Array.from(arguments).forEach(function(name) {
+    Array.from(arguments).forEach((name) => {
       globalscope.set(sexpr(name), {value: undefined}); });
   }, {maximum: -1});
 
@@ -3429,12 +3409,12 @@ function LogoInterpreter(turtle, stream, savehook)
     if (lists.length === 1)
       lists = lists[0].map(lexpr);
 
-    const indexes = lists.map(function() { return 0; });
+    const indexes = lists.map(() => 0);
     let done = false;
 
     const mapped = [];
     while (!done) {
-      const args = indexes.map(function(v, i) { return lists[i][v]; });
+      const args = indexes.map((v, i) => lists[i][v]);
       let pos = indexes.length - 1;
       ++indexes[pos];
       while (indexes[pos] === lists[pos].length) {
