@@ -1689,22 +1689,19 @@ function LogoInterpreter(turtle, stream, savehook) {
 
   def("standout", word => {
     // Hack: Convert English alphanumerics to Mathematical Bold
-    return sexpr(word)
-      .split('')
+    return [...sexpr(word)]
       .map(c => {
-        let u = c.charCodeAt(0);
+        let u = c.codePointAt(0);
         if ('A' <= c && c <= 'Z') {
-          u = u - 0x41 + 0x1D400;
+          u = u - 'A'.codePointAt(0) + 0x1D400;
         } else if ('a' <= c && c <= 'z') {
-          u = u - 0x61 + 0x1D41A;
+          u = u - 'a'.codePointAt(0) + 0x1D41A;
         } else if ('0' <= c && c <= '9') {
-          u = u - 0x30 + 0x1D7CE;
+          u = u - '0'.codePointAt(0) + 0x1D7CE;
         } else {
           return c;
         }
-        const lead = ((u - 0x10000) >> 10) + 0xD800;
-        const trail = ((u - 0x10000) & 0x3FF) + 0xDC00;
-        return String.fromCharCode(lead, trail);
+        return String.fromCodePoint(u);
       })
       .join('');
   });
