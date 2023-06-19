@@ -728,18 +728,20 @@ function LogoInterpreter(turtle, stream, savehook) {
     let lhs = additiveExpression(list);
     while (peek(list, ['=', '<', '>', '<=', '>=', '<>'])) {
       const op = list.shift();
-      const rhs = additiveExpression(list);
+      lhs = (lhs => {
+        const rhs = additiveExpression(list);
 
-      switch (op) {
-      case "<": return async () => (aexpr(await lhs()) < aexpr(await rhs())) ? 1 : 0;
-      case ">": return async () => (aexpr(await lhs()) > aexpr(await rhs())) ? 1 : 0;
-      case "=": return async () => equal(await lhs(), await rhs()) ? 1 : 0;
+        switch (op) {
+        case "<": return async () => (aexpr(await lhs()) < aexpr(await rhs())) ? 1 : 0;
+        case ">": return async () => (aexpr(await lhs()) > aexpr(await rhs())) ? 1 : 0;
+        case "=": return async () => equal(await lhs(), await rhs()) ? 1 : 0;
 
-      case "<=": return async () => (aexpr(await lhs()) <= aexpr(await rhs())) ? 1 : 0;
-      case ">=": return async () => (aexpr(await lhs()) >= aexpr(await rhs())) ? 1 : 0;
-      case "<>": return async () => !equal(await lhs(), await rhs()) ? 1 : 0;
-      default: throw new Error("Internal error in expression parser");
-      }
+        case "<=": return async () => (aexpr(await lhs()) <= aexpr(await rhs())) ? 1 : 0;
+        case ">=": return async () => (aexpr(await lhs()) >= aexpr(await rhs())) ? 1 : 0;
+        case "<>": return async () => !equal(await lhs(), await rhs()) ? 1 : 0;
+        default: throw new Error("Internal error in expression parser");
+        }
+      })(lhs);
     }
 
     return lhs;
@@ -749,13 +751,15 @@ function LogoInterpreter(turtle, stream, savehook) {
     let lhs = multiplicativeExpression(list);
     while (peek(list, ['+', '-'])) {
       const op = list.shift();
-      const rhs = multiplicativeExpression(list);
+      lhs = (lhs => {
+        const rhs = multiplicativeExpression(list);
 
-      switch (op) {
-      case "+": return async () => aexpr(await lhs()) + aexpr(await rhs());
-      case "-": return async () => aexpr(await lhs()) - aexpr(await rhs());
-      default: throw new Error("Internal error in expression parser");
-      }
+        switch (op) {
+        case "+": return async () => aexpr(await lhs()) + aexpr(await rhs());
+        case "-": return async () => aexpr(await lhs()) - aexpr(await rhs());
+        default: throw new Error("Internal error in expression parser");
+        }
+      })(lhs);
     }
 
     return lhs;
@@ -765,22 +769,24 @@ function LogoInterpreter(turtle, stream, savehook) {
     let lhs = powerExpression(list);
     while (peek(list, ['*', '/', '%'])) {
       const op = list.shift();
-      const rhs = powerExpression(list);
+      lhs = (lhs => {
+        const rhs = powerExpression(list);
 
-      switch (op) {
-      case "*": return async () => aexpr(await lhs()) * aexpr(await rhs());
-      case "/": return async () => {
-        const n = aexpr(await lhs()), d = aexpr(await rhs());
-        if (d === 0) { throw err("Division by zero", ERRORS.BAD_INPUT); }
-        return n / d;
-      };
-      case "%": return async () => {
-        const n = aexpr(await lhs()), d = aexpr(await rhs());
-        if (d === 0) { throw err("Division by zero", ERRORS.BAD_INPUT); }
-        return n % d;
-      };
-      default: throw new Error("Internal error in expression parser");
-      }
+        switch (op) {
+        case "*": return async () => aexpr(await lhs()) * aexpr(await rhs());
+        case "/": return async () => {
+          const n = aexpr(await lhs()), d = aexpr(await rhs());
+          if (d === 0) { throw err("Division by zero", ERRORS.BAD_INPUT); }
+          return n / d;
+        };
+        case "%": return async () => {
+          const n = aexpr(await lhs()), d = aexpr(await rhs());
+          if (d === 0) { throw err("Division by zero", ERRORS.BAD_INPUT); }
+          return n % d;
+        };
+        default: throw new Error("Internal error in expression parser");
+        }
+      })(lhs);
     }
 
     return lhs;
@@ -790,9 +796,11 @@ function LogoInterpreter(turtle, stream, savehook) {
     let lhs = unaryExpression(list);
     while (peek(list, ['^'])) {
       const op = list.shift();
-      const rhs = unaryExpression(list);
+      lhs = (lhs => {
+        const rhs = unaryExpression(list);
 
-      return async () => Math.pow(aexpr(await lhs()), aexpr(await rhs()));
+        return async () => Math.pow(aexpr(await lhs()), aexpr(await rhs()));
+      })(lhs);
     }
 
     return lhs;

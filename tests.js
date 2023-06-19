@@ -770,7 +770,7 @@ QUnit.test("Communication", function(t) {
 });
 
 QUnit.test("Arithmetic", function(t) {
-  t.expect(147);
+  t.expect(150);
 
   //
   // 4.1 Numeric Operations
@@ -781,6 +781,7 @@ QUnit.test("Arithmetic", function(t) {
   this.assert_equals('1 + 2', 3);
 
   this.assert_equals('"3 + "2', 5);
+  this.assert_equals('1 + 4 - 2', 3);
 
   this.assert_equals('difference 3 1', 2);
   this.assert_equals('3 - 1', 2);
@@ -794,6 +795,7 @@ QUnit.test("Arithmetic", function(t) {
   this.assert_equals('quotient 6 2', 3);
   this.assert_equals('(quotient 2)', 1 / 2);
   this.assert_equals('6 / 2', 3);
+  this.assert_equals('1 * 4 / 2', 2);
 
   this.assert_equals('remainder 7 4', 3);
   this.assert_equals('remainder 7 -4', 3);
@@ -826,6 +828,7 @@ QUnit.test("Arithmetic", function(t) {
   this.assert_equals('sqrt 9', 3);
   this.assert_equals('power 3 2', 9);
   this.assert_equals('3 ^ 2', 9);
+  this.assert_equals('2 ^ 3 ^ 4', 4096);
 
   this.assert_equals('exp 2', 7.38905609893065);
   this.assert_equals('log10 100', 2);
