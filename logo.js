@@ -459,7 +459,7 @@ function LogoInterpreter(turtle, stream, savehook) {
   const QUOTED_DELIMITER = WS_CHARS + '[](){}';
   function parseQuoted(stream) {
     let word = '';
-    while (!stream.eof && QUOTED_DELIMITER.indexOf(stream.peek()) === -1) {
+    while (!stream.eof && !QUOTED_DELIMITER.includes(stream.peek())) {
       const c = stream.get();
       word += (c.charAt(0) === '\\') ? c.charAt(1) : c.charAt(0);
     }
@@ -479,7 +479,7 @@ function LogoInterpreter(turtle, stream, savehook) {
   const WORD_DELIMITER = WS_CHARS + '[](){}+-*/%^=<>';
   function parseWord(stream) {
     let word = '';
-    while (!stream.eof && WORD_DELIMITER.indexOf(stream.peek()) === -1) {
+    while (!stream.eof && !WORD_DELIMITER.includes(stream.peek())) {
       const c = stream.get();
       word += (c.charAt(0) === '\\') ? c.charAt(1) : c.charAt(0);
     }
@@ -557,7 +557,7 @@ function LogoInterpreter(turtle, stream, savehook) {
         c = stream.get();
       } while (isWS(c));
 
-      while (c && !isWS(c) && '[]{}'.indexOf(c) === -1) {
+      while (c && !isWS(c) && !'[]{}'.includes(c)) {
         atom += c;
         c = stream.get();
       }
@@ -598,7 +598,7 @@ function LogoInterpreter(turtle, stream, savehook) {
         c = stream.get();
       } while (isWS(c));
 
-      while (c && !isWS(c) && '[]{}'.indexOf(c) === -1) {
+      while (c && !isWS(c) && !'[]{}'.includes(c)) {
         atom += c;
         c = stream.get();
       }
