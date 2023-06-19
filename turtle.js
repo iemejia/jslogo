@@ -36,6 +36,30 @@
   }
 
   class CanvasTurtle {
+    // --------------------------------------------------
+    // Private state
+    #clickx = 0;
+    #clicky = 0;
+    #mousex = 0;
+    #mousey = 0;
+    #buttons = 0;
+    #touches = [];
+    #down = false;
+    #last_state;
+
+    // For properties
+    #penmode;
+    #turtlemode;
+    #color;
+    #bgcolor;
+    #penwidth;
+    #fontsize;
+    #fontname;
+    #visible;
+
+
+    // --------------------------------------------------
+
     constructor(canvas_ctx, turtle_ctx, w, h, events) {
       // Stub for old browsers w/ canvas but no text functions
       canvas_ctx.fillText = canvas_ctx.fillText || function fillText(string, x, y) { };
@@ -64,18 +88,13 @@
       this.was_oob = false;
       this.filling = 0;
 
-      this._clickx = this._clicky = 0;
-      this._mousex = this._mousey = 0;
-      this._buttons = 0;
-      this._touches = [];
-
-      this._init();
-      this._tick();
+      this.#init();
+      this.#tick();
 
       if (events) {
         const mouse_handler = e => {
           const rect = events.getBoundingClientRect();
-          this._mousemove(e.clientX - rect.left, e.clientY - rect.top, e.buttons);
+          this.#mousemove(e.clientX - rect.left, e.clientY - rect.top, e.buttons);
         };
         ['mousemove', 'mousedown', 'mouseup'].forEach(e => {
           events.addEventListener(e, mouse_handler);
@@ -86,7 +105,7 @@
           const touches = [...e.touches].map(t => {
             return {x: t.clientX - rect.left, y: t.clientY - rect.top};
           });
-          this._touch(touches);
+          this.#touch(touches);
         };
         ['touchstart', 'touchmove', 'touchend'].forEach(e => {
           events.addEventListener(e, touch_handler);
@@ -97,7 +116,7 @@
 
     // Internal methods
 
-    _init() {
+    #init() {
       this.turtle_ctx.lineCap = 'round';
       this.turtle_ctx.strokeStyle = 'green';
       this.turtle_ctx.lineWidth = 2;
@@ -116,14 +135,14 @@
       });
     }
 
-    _tick() {
+    #tick() {
       function invert(p) { return [-p[0], p[1]]; }
 
-      requestAnimationFrame(this._tick.bind(this));
+      requestAnimationFrame(this.#tick.bind(this));
       const cur = JSON.stringify([this.x, this.y, this.r, this.visible,
                                 this.sx, this.sy, this.width, this.height]);
-      if (cur === this._last_state) return;
-      this._last_state = cur;
+      if (cur === this.#last_state) return;
+      this.#last_state = cur;
 
       this.turtle_ctx.save();
       this.turtle_ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -174,7 +193,7 @@
       }
     }
 
-    _moveto(x, y, setpos) {
+    #moveto(x, y, setpos) {
 
       const _go = (x1, y1, x2, y2) => {
         if (this.pendown) {
@@ -297,20 +316,20 @@
       }
     }
 
-    _mousemove(x, y, b) {
-      this._mousex = (x - this.width / 2) / this.sx;
-      this._mousey = (y - this.height / 2) / -this.sy;
-      this._buttons = b;
+    #mousemove(x, y, b) {
+      this.#mousex = (x - this.width / 2) / this.sx;
+      this.#mousey = (y - this.height / 2) / -this.sy;
+      this.#buttons = b;
     }
 
-    _mouseclick(x, y, b) {
-      this._clickx = (x - this.width / 2) / this.sx;
-      this._clicky = (y - this.height / 2) / -this.sy;
-      this._buttons = b;
+    #mouseclick(x, y, b) {
+      this.#clickx = (x - this.width / 2) / this.sx;
+      this.#clicky = (y - this.height / 2) / -this.sy;
+      this.#buttons = b;
     }
 
-    _touch(touches) {
-      this._touches = touches.map(touch => {
+    #touch(touches) {
+      this.#touches = touches.map(touch => {
         return [
           (touch.x - this.width / 2) / this.sx,
           (touch.y - this.height / 2) / -this.sy
@@ -323,7 +342,7 @@
     resize(w, h) {
       this.width = w;
       this.height = h;
-      this._init();
+      this.#init();
     }
 
     move(distance) {
@@ -347,7 +366,7 @@
 
       let x = precision(this.x + distance * Math.cos(this.r));
       let y = precision(this.y + distance * Math.sin(this.r));
-      this._moveto(x, y);
+      this.#moveto(x, y);
 
       if (point) {
         this.x = this.px = saved_x;
@@ -384,7 +403,7 @@
     }
 
     home() {
-      this._moveto(0, 0);
+      this.#moveto(0, 0);
       this.r = deg2rad(90);
     }
 
@@ -489,12 +508,12 @@
 
     // Properties
 
-    set pendown(down) { this._down = down; }
-    get pendown() { return this._down; }
+    set pendown(down) { this.#down = down; }
+    get pendown() { return this.#down; }
 
-    get penmode() { return this._penmode; }
+    get penmode() { return this.#penmode; }
     set penmode(penmode) {
-      this._penmode = penmode;
+      this.#penmode = penmode;
       this.canvas_ctx.globalCompositeOperation =
         (this.penmode === 'erase') ? 'destination-out' :
         (this.penmode === 'reverse') ? 'difference' : 'source-over';
@@ -504,45 +523,45 @@
         this.canvas_ctx.strokeStyle = this.canvas_ctx.fillStyle = '#ffffff';
     }
 
-    set turtlemode(turtlemode) { this._turtlemode = turtlemode; }
-    get turtlemode() { return this._turtlemode; }
+    set turtlemode(turtlemode) { this.#turtlemode = turtlemode; }
+    get turtlemode() { return this.#turtlemode; }
 
-    get color() { return this._color; }
+    get color() { return this.#color; }
     set color(color) {
-      this._color = color;
-      this.canvas_ctx.strokeStyle = this._color;
-      this.canvas_ctx.fillStyle = this._color;
+      this.#color = color;
+      this.canvas_ctx.strokeStyle = this.#color;
+      this.canvas_ctx.fillStyle = this.#color;
     }
 
-    get bgcolor() { return this._bgcolor; }
+    get bgcolor() { return this.#bgcolor; }
     set bgcolor(color) {
-      this._bgcolor = color;
+      this.#bgcolor = color;
       this.clear();
     }
 
     set penwidth(width) {
-      this._penwidth = width;
-      this.canvas_ctx.lineWidth = this._penwidth;
+      this.#penwidth = width;
+      this.canvas_ctx.lineWidth = this.#penwidth;
     }
-    get penwidth() { return this._penwidth; }
+    get penwidth() { return this.#penwidth; }
 
     set fontsize(size) {
-      this._fontsize = size;
+      this.#fontsize = size;
       this.canvas_ctx.font = font(this.fontsize, this.fontname);
     }
-    get fontsize() { return this._fontsize; }
+    get fontsize() { return this.#fontsize; }
 
     set fontname(name) {
-      this._fontname = name;
+      this.#fontname = name;
       this.canvas_ctx.font = font(this.fontsize, this.fontname);
     }
-    get fontname() { return this._fontname; }
+    get fontname() { return this.#fontname; }
 
     set position(coords) {
       let x = coords[0], y = coords[1];
       x = (x === undefined) ? this.x : x;
       y = (y === undefined) ? this.y : y;
-      this._moveto(x, y, /*setpos*/true);
+      this.#moveto(x, y, /*setpos*/true);
     }
     get position() {
       return [this.x, this.y];
@@ -555,8 +574,8 @@
       this.r = deg2rad(90 - angle);
     }
 
-    set visible(visible) { this._visible = visible; }
-    get visible() { return this._visible; }
+    set visible(visible) { this.#visible = visible; }
+    get visible() { return this.#visible; }
 
     set scrunch(sc) {
       const sx = sc[0], sy = sc[1];
@@ -574,13 +593,13 @@
       return [this.sx, this.sy];
     }
 
-    get mousepos() { return [this._mousex, this._mousey]; }
+    get mousepos() { return [this.#mousex, this.#mousey]; }
 
-    get clickpos() { return [this._clickx, this._clicky]; }
+    get clickpos() { return [this.#clickx, this.#clicky]; }
 
-    get button() { return this._buttons; }
+    get button() { return this.#buttons; }
 
-    get touches() { return this._touches; }
+    get touches() { return this.#touches; }
   }
 
   global.CanvasTurtle = CanvasTurtle;
