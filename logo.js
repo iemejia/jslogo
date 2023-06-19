@@ -124,19 +124,6 @@ function LogoInterpreter(turtle, stream, savehook) {
     return atom === match;
   }
 
-  // Takes a list of (possibly async) closures. Each is called in
-  // turn, waiting for its result to resolve before the next is
-  // executed. Resolves to an array of results, or rejects if any
-  // closure rejects.
-  async function serialExecute(funcs) {
-    const results = [];
-    while (funcs.length) {
-      const func = funcs.shift();
-      results.push(await func());
-    }
-    return results;
-  }
-
   // Returns a Promise that will resolve as soon as possible while ensuring
   // that control is yielded back to the event loop at least every 20ms.
   let lastTimeYielded = Date.now();
@@ -762,11 +749,12 @@ function LogoInterpreter(turtle, stream, savehook) {
   // closure that, when executed, evaluates the closures serially then
   // applies the function to the results.
   function defer(func, ...input) {
-    return () => {
-      return serialExecute(input.slice())
-        .then(args => {
-          return func.apply(null, args);
-        });
+    return async () => {
+      const args = [];
+      for (const closure of input) {
+        args.push(await closure());
+      }
+      return func.apply(null, args);
     };
   }
 
@@ -953,7 +941,10 @@ function LogoInterpreter(turtle, stream, savehook) {
     return async () => {
       self.stack.push(name);
       try {
-        const a = await serialExecute(args.slice());
+        const a = [];
+        for (const proc of args) {
+          a.push(await proc());
+        }
         return await procedure.apply(self, a);
       } finally {
         self.stack.pop();
