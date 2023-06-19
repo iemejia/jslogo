@@ -410,7 +410,7 @@ function LogoInterpreter(turtle, stream, savehook) {
         atom = stream.get();
       } else if (inRange(stream.peek(), '0', '9')) {
         atom = parseNumber(stream);
-      } else if (inChars(stream.peek(), OPERATOR_CHARS)) {
+      } else if (OPERATOR_CHARS.includes(stream.peek())) {
         atom = parseOperator(stream);
         // From UCB Logo:
 
@@ -431,7 +431,7 @@ function LogoInterpreter(turtle, stream, savehook) {
             atom = UNARY_MINUS;
           }
         }
-      } else if (!inChars(stream.peek(), WORD_DELIMITER)) {
+      } else if (!WORD_DELIMITER.includes(stream.peek())) {
         atom = parseWord(stream);
       } else {
         // NOTE: This shouldn't be reachable.
@@ -448,13 +448,10 @@ function LogoInterpreter(turtle, stream, savehook) {
     return a <= x && x <= b;
   }
 
-  function inChars(x, chars) {
-    return x && chars.indexOf(x) !== -1;
-  }
-
   const WS_CHARS = ' \f\n\r\t\v';
+  // OK to call with `undefined` (returns false)
   function isWS(c) {
-    return inChars(c, WS_CHARS);
+    return c && WS_CHARS.includes(c);
   }
 
   // "After a quotation mark outside square brackets, a word is
@@ -472,7 +469,7 @@ function LogoInterpreter(turtle, stream, savehook) {
   // Non-standard: U+2190 ... U+2193 are arrows, parsed as own-words.
   const OWNWORD_CHARS = '\u2190\u2191\u2192\u2193';
   function isOwnWord(c) {
-    return inChars(c, OWNWORD_CHARS);
+    return OWNWORD_CHARS.includes(c);
   }
 
   // "A word not after a quotation mark or inside square brackets is
@@ -496,7 +493,7 @@ function LogoInterpreter(turtle, stream, savehook) {
   const OPERATOR_CHARS = '+-*/%^=<>[]{}()';
   function parseOperator(stream) {
     let word = '';
-    if (inChars(stream.peek(), OPERATOR_CHARS))
+    if (OPERATOR_CHARS.includes(stream.peek()))
       word += stream.get();
     if ((word === '<' && stream.peek() === '=') ||
         (word === '>' && stream.peek() === '=') ||
