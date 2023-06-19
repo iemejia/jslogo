@@ -730,32 +730,18 @@ function LogoInterpreter(turtle, stream, savehook) {
       const rhs = additiveExpression(list);
 
       switch (op) {
-      case "<": return defer((lhs, rhs) => (aexpr(lhs) < aexpr(rhs)) ? 1 : 0, lhs, rhs);
-      case ">": return defer((lhs, rhs) => (aexpr(lhs) > aexpr(rhs)) ? 1 : 0, lhs, rhs);
-      case "=": return defer((lhs, rhs) => equal(lhs, rhs) ? 1 : 0, lhs, rhs);
+      case "<": return async () => (aexpr(await lhs()) < aexpr(await rhs())) ? 1 : 0;
+      case ">": return async () => (aexpr(await lhs()) > aexpr(await rhs())) ? 1 : 0;
+      case "=": return async () => equal(await lhs(), await rhs()) ? 1 : 0;
 
-      case "<=": return defer((lhs, rhs) => (aexpr(lhs) <= aexpr(rhs)) ? 1 : 0, lhs, rhs);
-      case ">=": return defer((lhs, rhs) => (aexpr(lhs) >= aexpr(rhs)) ? 1 : 0, lhs, rhs);
-      case "<>": return defer((lhs, rhs) => !equal(lhs, rhs) ? 1 : 0, lhs, rhs);
+      case "<=": return async () => (aexpr(await lhs()) <= aexpr(await rhs())) ? 1 : 0;
+      case ">=": return async () => (aexpr(await lhs()) >= aexpr(await rhs())) ? 1 : 0;
+      case "<>": return async () => !equal(await lhs(), await rhs()) ? 1 : 0;
       default: throw new Error("Internal error in expression parser");
       }
     }
 
     return lhs;
-  }
-
-
-  // Takes a function and list of (possibly async) closures. Returns a
-  // closure that, when executed, evaluates the closures serially then
-  // applies the function to the results.
-  function defer(func, ...input) {
-    return async () => {
-      const args = [];
-      for (const closure of input) {
-        args.push(await closure());
-      }
-      return func.apply(null, args);
-    };
   }
 
   function additiveExpression(list) {
@@ -765,8 +751,8 @@ function LogoInterpreter(turtle, stream, savehook) {
       const rhs = multiplicativeExpression(list);
 
       switch (op) {
-      case "+": return defer((lhs, rhs) => aexpr(lhs) + aexpr(rhs), lhs, rhs);
-      case "-": return defer((lhs, rhs) => aexpr(lhs) - aexpr(rhs), lhs, rhs);
+      case "+": return async () => aexpr(await lhs()) + aexpr(await rhs());
+      case "-": return async () => aexpr(await lhs()) - aexpr(await rhs());
       default: throw new Error("Internal error in expression parser");
       }
     }
@@ -781,17 +767,17 @@ function LogoInterpreter(turtle, stream, savehook) {
       const rhs = powerExpression(list);
 
       switch (op) {
-      case "*": return defer((lhs, rhs) => aexpr(lhs) * aexpr(rhs), lhs, rhs);
-      case "/": return defer((lhs, rhs) => {
-        const n = aexpr(lhs), d = aexpr(rhs);
+      case "*": return async () => aexpr(await lhs()) * aexpr(await rhs());
+      case "/": return async () => {
+        const n = aexpr(await lhs()), d = aexpr(await rhs());
         if (d === 0) { throw err("Division by zero", ERRORS.BAD_INPUT); }
         return n / d;
-      }, lhs, rhs);
-      case "%": return defer((lhs, rhs) => {
-        const n = aexpr(lhs), d = aexpr(rhs);
+      };
+      case "%": return async () => {
+        const n = aexpr(await lhs()), d = aexpr(await rhs());
         if (d === 0) { throw err("Division by zero", ERRORS.BAD_INPUT); }
         return n % d;
-      }, lhs, rhs);
+      };
       default: throw new Error("Internal error in expression parser");
       }
     }
@@ -805,7 +791,7 @@ function LogoInterpreter(turtle, stream, savehook) {
       const op = list.shift();
       const rhs = unaryExpression(list);
 
-      return defer((lhs, rhs) => Math.pow(aexpr(lhs), aexpr(rhs)), lhs, rhs);
+      return async () => Math.pow(aexpr(await lhs()), aexpr(await rhs()));
     }
 
     return lhs;
@@ -815,7 +801,7 @@ function LogoInterpreter(turtle, stream, savehook) {
     if (peek(list, [UNARY_MINUS])) {
       const op = list.shift();
       const rhs = unaryExpression(list);
-      return defer(rhs => -aexpr(rhs), rhs);
+      return async () => -aexpr(await rhs());
     } else {
       return finalExpression(list);
     }
