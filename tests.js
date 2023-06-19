@@ -23,7 +23,7 @@ var turtle_element = document.getElementById("turtle"), turtle_ctx;
 QUnit.module("Logo Unit Tests", {
   beforeEach: function(t) {
     // TODO: Replace with mock
-    canvas_ctx = canvas_ctx || canvas_element.getContext('2d');
+    canvas_ctx = canvas_ctx || canvas_element.getContext('2d', {willReadFrequently: true});
     turtle_ctx = turtle_ctx || turtle_element.getContext('2d');
 
     this.turtle = new CanvasTurtle(
