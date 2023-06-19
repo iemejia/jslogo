@@ -173,25 +173,29 @@ function LogoInterpreter(turtle, stream, savehook) {
 
   // Adapted from:
   // https://stackoverflow.com/questions/424292/how-to-create-my-own-javascript-random-number-generator-that-i-can-also-set-the-s
-  function PRNG(seed) {
-    let S = seed & 0x7fffffff, // seed
-        A = 48271, // const
-        M = 0x7fffffff, // const
-        Q = M / A, // const
-        R = M % A; // const
+  class PRNG {
+    constructor(seed) {
+      this.S = seed & 0x7fffffff, // seed
+      this.A = 48271, // const
+      this.M = 0x7fffffff, // const
+      this.Q = this.M / this.A, // const
+      this.R = this.M % this.A; // const
 
-    this.next = function PRNG_next() {
-      const hi = S / Q,
-          lo = S % Q,
-          t = A * lo - R * hi;
-      S = (t > 0) ? t : t + M;
-      this.last = S / M;
+      this.next();
+    }
+
+    next() {
+      const hi = this.S / this.Q,
+            lo = this.S % this.Q,
+            t = this.A * lo - this.R * hi;
+      this.S = (t > 0) ? t : t + this.M;
+      this.last = this.S / this.M;
       return this.last;
-    };
-    this.seed = function PRNG_seed(x) {
-      S = x & 0x7fffffff;
-    };
-    this.next();
+    }
+
+    seed(x) {
+      this.S = x & 0x7fffffff;
+    }
   }
 
   class StringMap {
