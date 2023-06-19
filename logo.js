@@ -1363,19 +1363,17 @@ function LogoInterpreter(turtle, stream, savehook) {
   // 2.1 Constructors
   //
 
-  def("word", function(word1, word2) {
-    return arguments.length ?
-      [...arguments].map(sexpr).reduce((a, b) => a + b) : "";
-  }, {minimum: 0, maximum: -1});
+  def("word", (...words) => {
+    return words.length ? words.map(sexpr).reduce((a, b) => a + b) : "";
+  }, {minimum: 0, default: 2, maximum: -1});
 
-  def("list", function(thing1, thing2) {
-    return [...arguments].map(x => x); // Make a copy
-  }, {minimum: 0, maximum: -1});
+  def("list", (...things) => {
+    return things.map(x => x); // Make a copy
+  }, {minimum: 0, default: 2, maximum: -1});
 
-  def(["sentence", "se"], function(thing1, thing2) {
+  def(["sentence", "se"], (...things) => {
     let list = [];
-    for (let i = 0; i < arguments.length; ++i) {
-      let thing = arguments[i];
+    for (let thing of things) {
       if (Type(thing) === 'list') {
         thing = lexpr(thing);
         list = list.concat(thing);
@@ -1384,7 +1382,7 @@ function LogoInterpreter(turtle, stream, savehook) {
       }
     }
     return list;
-  }, {minimum: 0, maximum: -1});
+  }, {minimum: 0, default: 2, maximum: -1});
 
   def("fput", (thing, list) => {
     const l = lexpr(list);
@@ -1398,19 +1396,19 @@ function LogoInterpreter(turtle, stream, savehook) {
     return sifw(list, l);
   });
 
-  def("array", function(size) {
+  def("array", (size, origin=undefined) => {
     size = aexpr(size);
     if (size < 1)
       throw err("{_PROC_}: Array size must be positive integer", ERRORS.BAD_INPUT);
-    const origin = (arguments.length < 2) ? 1 : aexpr(arguments[1]);
+    origin = (origin === undefined) ? 1 : aexpr(origin);
     return new LogoArray(size, origin);
   }, {maximum: 2});
 
-  def("mdarray", function(sizes) {
+  def("mdarray", (sizes, origin=undefined) => {
     sizes = lexpr(sizes).map(aexpr).map(n =>n|0);
     if (sizes.some(size => size < 1))
       throw err("{_PROC_}: Array size must be positive integer", ERRORS.BAD_INPUT);
-    const origin = (arguments.length < 2) ? 1 : aexpr(arguments[1]);
+    origin = (origin === undefined) ? 1 : aexpr(origin);
 
     function make(index) {
       const n = sizes[index], a = new LogoArray(n, origin);
@@ -1424,11 +1422,9 @@ function LogoInterpreter(turtle, stream, savehook) {
     return make(0);
   }, {maximum: 2});
 
-  def("listtoarray", function(list) {
+  def("listtoarray", (list, origin=undefined) => {
     list = lexpr(list);
-    let origin = 1;
-    if (arguments.length > 1)
-      origin = aexpr(arguments[1]);
+    origin = (origin === undefined) ? 1 : aexpr(origin);
     return LogoArray.from(list, origin);
   }, {maximum: 2});
 
@@ -1447,8 +1443,8 @@ function LogoInterpreter(turtle, stream, savehook) {
     }
   });
 
-  def("reverse", function(list) {
-    const tail = (arguments.length > 1) ? arguments[1] : (Type(list) === 'list' ? [] : '');
+  def("reverse", (list, tail=undefined) => {
+    tail = (tail !== undefined) ? tail : (Type(list) === 'list' ? [] : '');
     return sifw(tail, lexpr(list).reverse().concat(lexpr(tail)));
   }, {maximum: 2});
 
@@ -1728,34 +1724,34 @@ function LogoInterpreter(turtle, stream, savehook) {
 
   // 3.1 Transmitters
 
-  def(["print", "pr"], function(thing) {
-    const s = [...arguments].map(stringify_nodecorate).join(" ");
+  def(["print", "pr"], (...things) => {
+    const s = things.map(stringify_nodecorate).join(" ");
     return this.stream.write(s, "\n");
-  }, {minimum: 0, maximum: -1});
-  def("type", function(thing) {
-    const s = [...arguments].map(stringify_nodecorate).join("");
+  }, {minimum: 0, default: 1, maximum: -1});
+  def("type", (...things) => {
+    const s = things.map(stringify_nodecorate).join("");
     return this.stream.write(s);
-  }, {minimum: 0, maximum: -1});
-  def("show", function(thing) {
-    const s = [...arguments].map(stringify).join(" ");
+  }, {minimum: 0, default: 1, maximum: -1});
+  def("show", (...things) => {
+    const s = things.map(stringify).join(" ");
     return this.stream.write(s, "\n");
-  }, {minimum: 0, maximum: -1});
+  }, {minimum: 0, default: 1, maximum: -1});
 
   // 3.2 Receivers
 
-  def("readlist", function() {
+  def("readlist", (promptstr=undefined) => {
     return (
-      (arguments.length > 0)
-        ? stream.read(stringify_nodecorate(arguments[0]))
+      (promptstr !== undefined)
+        ? stream.read(stringify_nodecorate(promptstr))
         : stream.read()
     ).then(function(word) {
       return parse('[' + word + ']')[0];
     });
   }, {maximum: 1});
 
-  def("readword", function() {
-    if (arguments.length > 0)
-      return stream.read(stringify_nodecorate(arguments[0]));
+  def("readword", (promptstr=undefined) => {
+    if (promptstr !== undefined)
+      return stream.read(stringify_nodecorate(promptstr));
     else
       return stream.read();
   }, {maximum: 1});
@@ -1836,17 +1832,15 @@ function LogoInterpreter(turtle, stream, savehook) {
   // 4.1 Numeric Operations
 
 
-  def("sum", function(a, b) {
-    return [...arguments].map(aexpr).reduce((a, b) => a + b, 0);
-  }, {minimum: 0, maximum: -1});
+  def("sum", (...args) => args.map(aexpr).reduce((a, b) => a + b, 0),
+      {minimum: 0, default: 2, maximum: -1});
 
   def("difference", (a, b) => aexpr(a) - aexpr(b));
 
   def("minus", a => -aexpr(a));
 
-  def("product", function(a, b) {
-    return [...arguments].map(aexpr).reduce((a, b) => a * b, 1);
-  }, {minimum: 0, maximum: -1});
+  def("product", (...args) => args.map(aexpr).reduce((a, b) => a * b, 1),
+      {minimum: 0, default: 2, maximum: -1});
 
   def("quotient", (a, b) => {
     if (b !== undefined)
@@ -1873,10 +1867,10 @@ function LogoInterpreter(turtle, stream, savehook) {
   function deg2rad(d) { return d / 180 * Math.PI; }
   function rad2deg(r) { return r * 180 / Math.PI; }
 
-  def("arctan", function(a) {
-    if (arguments.length > 1) {
-      const x = aexpr(arguments[0]);
-      const y = aexpr(arguments[1]);
+  def("arctan", (a, b=undefined) => {
+    if (b !== undefined) {
+      const x = aexpr(a);
+      const y = aexpr(b);
       return rad2deg(Math.atan2(y, x));
     } else {
       return rad2deg(Math.atan(aexpr(a)));
@@ -1887,10 +1881,10 @@ function LogoInterpreter(turtle, stream, savehook) {
   def("cos", a => Math.cos(deg2rad(aexpr(a))));
   def("tan", a => Math.tan(deg2rad(aexpr(a))));
 
-  def("radarctan", function(a) {
-    if (arguments.length > 1) {
-      const x = aexpr(arguments[0]);
-      const y = aexpr(arguments[1]);
+  def("radarctan", (a, b=undefined) => {
+    if (b !== undefined) {
+      const x = aexpr(a);
+      const y = aexpr(b);
       return Math.atan2(y, x);
     } else {
       return Math.atan(aexpr(a));
@@ -1942,19 +1936,19 @@ function LogoInterpreter(turtle, stream, savehook) {
 
   // 4.3 Random Numbers
 
-  def("random", function(max) {
-    if (arguments.length < 2) {
-      max = aexpr(max);
+  def("random", (a, b=undefined) => {
+    if (b === undefined) {
+      const max = aexpr(a);
       return Math.floor(this.prng.next() * max);
     } else {
-      const start = aexpr(arguments[0]);
-      const end = aexpr(arguments[1]);
+      const start = aexpr(a);
+      const end = aexpr(b);
       return Math.floor(this.prng.next() * (end - start + 1)) + start;
     }
   }, {maximum: 2});
 
-  def("rerandom", function() {
-    const seed = (arguments.length > 0) ? aexpr(arguments[0]) : 2345678901;
+  def("rerandom", (expr=undefined) => {
+    const seed = (expr !== undefined) ? aexpr(expr) : 2345678901;
     return this.prng.seed(seed);
   }, {maximum: 1});
 
@@ -1974,15 +1968,12 @@ function LogoInterpreter(turtle, stream, savehook) {
   // 4.5 Bitwise Operations
 
 
-  def("bitand", function(num1, num2) {
-    return [...arguments].map(aexpr).reduce((a, b) => a & b, -1);
-  }, {minimum: 0, maximum: -1});
-  def("bitor", function(num1, num2) {
-    return [...arguments].map(aexpr).reduce((a, b) => a | b, 0);
-  }, {minimum: 0, maximum: -1});
-  def("bitxor", function(num1, num2) {
-    return [...arguments].map(aexpr).reduce((a, b) => a ^ b, 0);
-  }, {minimum: 0, maximum: -1});
+  def("bitand", (...args) => args.map(aexpr).reduce((a, b) => a & b, -1),
+      {minimum: 0, default: 2, maximum: -1});
+  def("bitor", (...args) => args.map(aexpr).reduce((a, b) => a | b, 0),
+      {minimum: 0, default: 2, maximum: -1});
+  def("bitxor", (...args) => args.map(aexpr).reduce((a, b) => a ^ b, 0),
+      {minimum: 0, default: 2, maximum: -1});
   def("bitnot", num => ~aexpr(num));
 
 
@@ -2008,15 +1999,11 @@ function LogoInterpreter(turtle, stream, savehook) {
   def("true", () => 1);
   def("false", () => 0);
 
-  def("and", function(a, b) {
-    const args = [...arguments];
-    return booleanReduce(args, value => value, 1);
-  }, {noeval: true, minimum: 0, maximum: -1});
+  def("and", (...args) => booleanReduce(args, value => value, 1),
+      {noeval: true, minimum: 0, default: 2, maximum: -1});
 
-  def("or", function(a, b) {
-    const args = [...arguments];
-    return booleanReduce(args, value => !value, 0);
-  }, {noeval: true, minimum: 0, maximum: -1});
+  def("or", (...args) => booleanReduce(args, value => !value, 0),
+      {noeval: true, minimum: 0, default: 2, maximum: -1});
 
   async function booleanReduce(args, test, value) {
     while (args.length) {
@@ -2028,10 +2015,8 @@ function LogoInterpreter(turtle, stream, savehook) {
     return value;
   }
 
-  def("xor", function(a, b) {
-    return [...arguments].map(aexpr)
-      .reduce((a, b) => Boolean(a) !== Boolean(b), 0) ? 1 : 0;
-  }, {minimum: 0, maximum: -1});
+  def("xor", (...args) => args.map(aexpr).reduce((a, b) => Boolean(a) !== Boolean(b), 0) ? 1 : 0,
+      {minimum: 0, default: 2, maximum: -1});
 
   def("not", a => !aexpr(a) ? 1 : 0);
 
@@ -2112,10 +2097,10 @@ function LogoInterpreter(turtle, stream, savehook) {
     }
   });
 
-  def("label", function(a) {
-    const s = [...arguments].map(stringify_nodecorate).join(" ");
+  def("label", (...args) => {
+    const s = args.map(stringify_nodecorate).join(" ");
     return turtle.drawtext(s);
-  }, {maximum: -1});
+  }, {minimum: 1, default: 1, maximum: -1});
 
   def("setlabelheight", a => { turtle.fontsize = aexpr(a); });
 
@@ -2375,9 +2360,9 @@ function LogoInterpreter(turtle, stream, savehook) {
     setvar(sexpr(varname), value);
   });
 
-  def("local", function(varname) {
-    [...arguments].forEach((name) => { local(sexpr(name)); });
-  }, {maximum: -1});
+  def("local", (...varnames) => {
+    varnames.forEach((name) => { local(sexpr(name)); });
+  }, {minimum: 1, default: 1, maximum: -1});
 
   def("localmake", (varname, value) => {
     setlocal(sexpr(varname), value);
@@ -2385,11 +2370,11 @@ function LogoInterpreter(turtle, stream, savehook) {
 
   def("thing", varname => getvar(sexpr(varname)));
 
-  def("global", function(varname) {
+  def("global", (...varnames) => {
     const globalscope = this.scopes[0];
-    [...arguments].forEach((name) => {
+    varnames.forEach((name) => {
       globalscope.set(sexpr(name), {value: undefined}); });
-  }, {maximum: -1});
+  }, {minimum: 1, default: 1, maximum: -1});
 
   //
   // 7.3 Property Lists
@@ -2933,11 +2918,9 @@ function LogoInterpreter(turtle, stream, savehook) {
 
   def(["repcount", "#"], () => this.repcount);
 
-  def("if", async function(tf, statements) {
+  def("if", async (tf, statements, statements2=undefined) => {
     if (Type(tf) === 'list')
       tf = evaluateExpression(reparse(tf));
-
-    let statements2 = arguments[2];
 
     tf = aexpr(await tf);
     statements = reparse(lexpr(statements));
@@ -3007,11 +2990,10 @@ function LogoInterpreter(turtle, stream, savehook) {
       });
   }, {maximum: 2});
 
-  def("throw", function(tag) {
+  def("throw", (tag, value=undefined) => {
     tag = sexpr(tag).toUpperCase();
-    const value = arguments[1];
     const error = new LogoError(tag, value);
-    error.code = (arguments.length > 1) ? ERRORS.USER_GENERATED : ERRORS.THROW_ERROR;
+    error.code = (value !== undefined) ? ERRORS.USER_GENERATED : ERRORS.THROW_ERROR;
     throw error;
   }, {maximum: 2});
 
@@ -3235,7 +3217,7 @@ function LogoInterpreter(turtle, stream, savehook) {
     return routine.apply(this, lexpr(list));
   });
 
-  def("invoke", function(procname, input1) {
+  def("invoke", (procname, ...args) => {
     procname = sexpr(procname);
 
     const routine = this.routines.get(procname);
@@ -3244,12 +3226,8 @@ function LogoInterpreter(turtle, stream, savehook) {
     if (routine.special || routine.noeval)
       throw err("Can't apply {_PROC_} to special {name:U}", { name: procname }, ERRORS.BAD_INPUT);
 
-    const args = [];
-    for (let i = 1; i < arguments.length; ++i)
-      args.push(arguments[i]);
-
     return routine.apply(this, args);
-  }, {minimum: 1, maximum: -1});
+  }, {minimum: 1, default: 2, maximum: -1});
 
   def("foreach", async (list, procname) => {
     procname = sexpr(procname);
@@ -3338,10 +3316,10 @@ function LogoInterpreter(turtle, stream, savehook) {
     return [];
   });
 
-  def("reduce", async function(procname, list) {
+  def("reduce", async (procname, list, initial=undefined) => {
     procname = sexpr(procname);
     list = lexpr(list);
-    let value = arguments[2] !== undefined ? arguments[2] : list.shift();
+    let value = initial !== undefined ? initial : list.shift();
 
     const procedure = this.routines.get(procname);
     if (!procedure)
