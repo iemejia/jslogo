@@ -1953,10 +1953,7 @@ function LogoInterpreter(turtle, stream, savehook) {
     width = aexpr(width);
     precision = aexpr(precision);
 
-    let str = num.toFixed(precision);
-    if (str.length < width)
-      str = Array(1 + width - str.length).join(' ') + str;
-    return str;
+    return num.toFixed(precision).padStart(width);
   });
 
   // 4.5 Bitwise Operations
