@@ -3246,7 +3246,7 @@ function LogoInterpreter(turtle, stream, savehook) {
   });
 
 
-  def("map", async function(procname, list/*,  ... */) {
+  def("map", async (procname, ...lists) => {
     procname = sexpr(procname);
 
     const routine = this.routines.get(procname);
@@ -3255,7 +3255,7 @@ function LogoInterpreter(turtle, stream, savehook) {
     if (routine.special || routine.noeval)
       throw err("Can't apply {_PROC_} to special {name:U}", { name: procname }, ERRORS.BAD_INPUT);
 
-    const lists = [].slice.call(arguments, 1).map(lexpr);
+    lists = lists.map(lexpr);
     if (!lists.length)
       throw err("{_PROC_}: Expected list", ERRORS.BAD_INPUT);
 
@@ -3271,7 +3271,7 @@ function LogoInterpreter(turtle, stream, savehook) {
       await promiseYield();
     }
     return mapped;
-  }, {maximum: -1});
+  }, {minimum: 2, default: 2, maximum: -1});
 
   // Not Supported: map.se
 
@@ -3335,7 +3335,7 @@ function LogoInterpreter(turtle, stream, savehook) {
   }, {maximum: 3});
 
 
-  def("crossmap", async function(procname, list/*,  ... */) {
+  def("crossmap", async (procname, ...lists) => {
     procname = sexpr(procname);
 
     const routine = this.routines.get(procname);
@@ -3344,7 +3344,7 @@ function LogoInterpreter(turtle, stream, savehook) {
     if (routine.special || routine.noeval)
       throw err("Can't apply {_PROC_} to special {name:U}", { name: procname }, ERRORS.BAD_INPUT);
 
-    let lists = [].slice.call(arguments, 1).map(lexpr);
+    lists = lists.map(lexpr);
     if (!lists.length)
       throw err("{_PROC_}: Expected list", ERRORS.BAD_INPUT);
 
@@ -3374,7 +3374,7 @@ function LogoInterpreter(turtle, stream, savehook) {
       await promiseYield();
     }
     return mapped;
-  }, {maximum: -1});
+  }, {minimum: 2, default: 2, maximum: -1});
 
   // Not Supported: cascade
   // Not Supported: cascade.2
