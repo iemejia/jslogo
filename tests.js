@@ -1588,7 +1588,7 @@ QUnit.test("Workspace Management", function(t) {
 });
 
 QUnit.test("Control Structures", function(t) {
-  t.expect(123);
+  t.expect(126);
   //
   // 8.1 Control
   //
@@ -1701,6 +1701,10 @@ QUnit.test("Control Structures", function(t) {
 
   this.assert_equals('make "x 0  for [ r 10 20 -1 ] [ make "x :x + :r ]  :x', 0);
   this.assert_equals('make "x 0  for [ r 20 10 1 ] [ make "x :x + :r ]  :x', 0);
+
+  this.assert_equals('make "x 0  for [i [sum 2 -1] 10 2] [make "x :x + :i]  :x', 25);
+  this.assert_equals('make "x 0  for [i 1 [sum 11 -1] 2] [make "x :x + :i]  :x', 25);
+  this.assert_equals('make "x 0  for [i 1 10 [sum 3 -1]] [make "x :x + :i]  :x', 25);
 
   this.assert_equals('make "x 0  dotimes [ i 5 ] [ make "x :x + :i ]  :x', 15);
   this.assert_equals('make "x 0  dotimes [ i 0 ] [ make "x :x + :i ]  :x', 0);

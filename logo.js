@@ -3325,13 +3325,28 @@ function LogoInterpreter(turtle, stream, savehook)
 
     return Promise.resolve(evaluateExpression(control))
       .then(function(r) {
+        if (Type(r) === 'list')
+          r = evaluateExpression(reparse(r));
+        return r;
+      })
+      .then(function(r) {
         current = start = aexpr(r);
         return evaluateExpression(control);
+      })
+      .then(function(r) {
+        if (Type(r) === 'list')
+          r = evaluateExpression(reparse(r));
+        return r;
       })
       .then(function(r) {
         limit = aexpr(r);
         return control.length ?
           evaluateExpression(control) : (limit < start ? -1 : 1);
+      })
+      .then(function(r) {
+        if (Type(r) === 'list')
+          r = evaluateExpression(reparse(r));
+        return r;
       })
       .then(function(r) {
         step = aexpr(r);
