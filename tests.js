@@ -1595,7 +1595,7 @@ QUnit.test("Workspace Management", function(t) {
 });
 
 QUnit.test("Control Structures", function(t) {
-  t.expect(126);
+  t.expect(156);
   //
   // 8.1 Control
   //
@@ -1763,39 +1763,70 @@ QUnit.test("Control Structures", function(t) {
 
   this.assert_equals('apply "word ["a "b "c]', '"a"b"c');
   this.assert_equals('apply "add_async [1 2]', 3);
+  this.assert_equals('apply [? * ?] [3 4]', 9);
+  this.assert_equals('apply [?1] [3 4]', 3);
+  this.assert_equals('apply [?2] [3 4]', 4);
+  this.assert_equals('apply [?1 * ?2] [3 4]', 12);
 
   this.assert_equals('invoke "word "a', 'a');
   this.assert_equals('(invoke "word "a "b "c)', 'abc');
   this.assert_equals('(invoke "word)', '');
   this.assert_equals('(invoke "add_async 1 2)', 3);
+  this.assert_equals('(invoke [?1] 3 4)', 3);
+  this.assert_equals('(invoke [?2] 3 4)', 4);
+  this.assert_equals('(invoke [? * ?] 3 4)', 9);
+  this.assert_equals('(invoke [?1 * ?2] 3 4)', 12);
 
   this.assert_equals('make "x 0  to addx :a make "x :x+:a end  foreach [ 1 2 3 4 5 ] "addx  :x', 15);
+  this.assert_equals('make "x 0  to addx :a make "x :x+:a end  foreach [ 1 2 3 4 5 ] [addx ?]  :x', 15);
   this.assert_equals('make "x 0  to addx :a make "x .promise :x+:a end  foreach [ 1 2 3 4 5 ] "addx  :x', 15);
+  this.assert_equals('make "x 0  to addx :a make "x .promise :x+:a end  foreach [ 1 2 3 4 5 ] [addx ?]  :x', 15);
+  // TODO: Shouldn't need to quote words in first argument (per UCBLogo)
+  this.assert_equals('make "x (word)  foreach [ "a "b "c ] [ make "x (word :x ? # ", ) ]  :x', 'a1,b2,c3,');
 
   this.assert_equals('to double :x output :x * 2 end  map "double [ 1 2 3 ]', [2, 4, 6]);
+  this.assert_equals('to double :x output :x * 2 end  map [double ?] [ 1 2 3 ]', [2, 4, 6]);
   this.assert_equals('to double :x output .promise :x * 2 end  map "double [ 1 2 3 ]', [2, 4, 6]);
+  this.assert_equals('to double :x output .promise :x * 2 end  map [double ?] [ 1 2 3 ]', [2, 4, 6]);
+  this.assert_equals('map [? * ?] [2 3 4 5]', [4, 9, 16, 25]);
+  this.assert_equals('map [? * #] [2 3 4 5]', [2, 6, 12, 20]);
+  this.assert_equals('to foo :a output (word :a #) end  map "foo [ 7 8 9 ]', ['71', '82', '93']);
 
   this.assert_equals('(map "sum [1 2 3] [40 50 60] [700 800 900])', [741, 852, 963]);
   this.assert_equals('(map "item [2 1 2 3] [john paul george ringo])', ['o', 'p', 'e', 'n']);
 
   this.assert_equals('to odd :x output :x % 2 end  filter "odd [ 1 2 3 ]', ["1", "3"]);
+  this.assert_equals('to odd :x output :x % 2 end  filter [odd ?] [ 1 2 3 ]', ["1", "3"]);
   this.assert_equals('to odd :x output .promise :x % 2 end  filter "odd [ 1 2 3 ]', ["1", "3"]);
+  this.assert_equals('to odd :x output .promise :x % 2 end  filter [odd ?] [ 1 2 3 ]', ["1", "3"]);
   this.assert_equals('filter "numberp [ 1 "a 2 "b ]', ["1", "2"]);
+  this.assert_equals('filter [numberp ?] [ 1 "a 2 "b ]', ["1", "2"]);
+  this.assert_equals('filter [# % 2] [ a b c d e f ]', ['a', 'c', 'e']);
+  this.assert_equals('to oddpos :x output # % 2 end  filter "oddpos [ a b c d e f ]', ['a', 'c', 'e']);
+  this.assert_equals('filter [(modulo # 2) <> 0] [ a b c d e f ]', ['a', 'c', 'e']);
 
   this.assert_equals('find "numberp (list "a "b "c 4 "e "f )', 4);
   this.assert_equals('find "numberp (list "a "b "c "d "e "f )', []);
   this.assert_equals('find "numberp_async (list "a "b "c 4 "e "f )', 4);
   this.assert_equals('find "numberp_async (list "a "b "c "d "e "f )', []);
+  this.assert_equals('find [? > 5] [2 4 6 8]', '6');
+  this.assert_equals('find [# = 3] [2 4 6 8]', '6');
+  this.assert_equals('to third :x output # = 3 end  find "third [2 4 6 8]', '6');
 
   this.assert_equals('reduce "sum [ 1 2 3 4 ]', 10);
   this.assert_equals('(reduce "sum [ 1 2 3 4 ] 10)', 20);
   this.assert_equals('reduce "add_async [ 1 2 3 4 ]', 10);
-  this.assert_equals('(reduce "add_async [ 1 2 3 4 ] 10)', 20);
+  this.assert_equals('(reduce [?1] [ 1 2 3 4 ]', 1);
+  this.assert_equals('(reduce [?2] [ 1 2 3 4 ]', 4);
+  this.assert_equals('(reduce [?1 * ?2] [ 1 2 3 4 ])', 24);
+  this.assert_equals('(reduce [?1 + ?2] [ 1 2 3 4 ])', 10);
+  this.assert_equals('(reduce [?1 - ?2] [ 1 2 3 4 ])', -2);
 
   this.assert_equals('(crossmap "word [a b c] [1 2 3 4])',
                      ['a1', 'a2', 'a3', 'a4', 'b1', 'b2', 'b3', 'b4', 'c1', 'c2', 'c3', 'c4']);
   this.assert_equals('(crossmap "word [a b] [1 2])', ['a1', 'a2', 'b1', 'b2']);
   this.assert_equals('crossmap "word [[a b] [1 2]]', ['a1', 'a2', 'b1', 'b2']);
+  this.assert_equals('crossmap [?1 * ?2 * ?3] [[2 3] [4 5] [6 7]]', [48, 56, 60, 70, 72, 84, 90, 105]);
 
   // TODO: Order of operations
   // TODO: Structures, lists of lists
@@ -1937,6 +1968,13 @@ QUnit.test("Regression Tests", function(t) {
   this.assert_equals('while [ 1 = 1 ] [ bye ] 123', undefined);
   this.assert_equals('do.until [ bye ] [ 1 = 0 ] 123', undefined);
   this.assert_equals('until [ 1 = 0 ] [ bye ] 123', undefined);
+
+  this.assert_equals(`make "s []
+                      repeat 3 [
+                        foreach [5 6 7] [queue "s (word repcount #)]
+                      ]
+                      :s`,
+                     ['11', '12', '13', '21', '22', '23', '31', '32', '33']);
 });
 
 QUnit.test("API Tests", function(t) {

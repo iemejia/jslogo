@@ -1089,7 +1089,7 @@ of comparison.</p>
   <dd class=example>forever [ make "n random 100  show :n  if :n == 0 [ bye ] ]</dd>
 
   <dt><code>repcount</code>
-  <dt><code>#</code>
+  <dt><code>#</code> (except within templates)
   <dd>Outputs the current iteration number of the current <code>repeat</code> or <code>forever</code>
   <dd class=example>repeat 10 [ show repcount ]</dd>
   <dd class=example>repeat 10 [ show # ]</dd>
@@ -1217,43 +1217,60 @@ of comparison.</p>
 
 <h4>8.2 Template-based Iteration</h4>
 
-<p>These higher-level procedures support only the <em>named procedure</em> form of template.
-The first input is the name of a procedure to call.</p>
+<p>These higher-level procedures support the <em>explicit-slot</em> and the <em>named-procedure</em> form of templates.
+
+<p>In the <em>explicit-slot</em> form, the template defines a procedure to evaluate.
+  The symbol <code>?</code> is the slot filled when the template is used with a list.
+  The symbols <code>?1</code>, <code>?2</code>, etc. are multiple arguments.
+
+<p>In the <em>named-procedure</em> form, the template is the name of a procedure to call.</p>
 
 <dl>
-  <dt><code>apply <var>procname</var> <var>list</var></code>
-  <dd>Call <var>procname</var> with the members of <var>list</var> as inputs
+  <dt><code>apply <var>template</var> <var>list</var></code>
+  <dd>Call the procedure with the members of <var>list</var> as inputs
+  <dd class=example>show apply "sum [3 4]</dd>
+  <dd class=example>show apply [?1 + ?2] [3 4]</dd>
 
-  <dt><code>invoke <var>procname</var> <var>input1</var></code>
-  <dt><code>(invoke <var>procname</var> <var>input1</var> ...)</code>
-  <dd>Call <var>procname</var> with the specified inputs as inputs
+  <dt><code>invoke <var>template</var> <var>input1</var></code>
+  <dt><code>(invoke <var>template</var> <var>input1</var> ...)</code>
+  <dd>Call the procedure with the specified inputs as inputs
   <dd class=example>invoke "show "hello</dd>
+  <dd class=example>show (invoke [?1 + ?2] 3 4)</dd>
 
-  <dt><code>foreach <var>list</var> <var>procname</var></code>
-  <dd>call <var>procname</var> for each item in the list
+  <dt><code>foreach <var>list</var> <var>template</var></code>
+  <dd>Call the procedure for each item in the list.
+      <code>#</code> is the current index.
   <dd class=example>foreach [1 2 3] "show</dd>
+  <dd class=example>foreach ["a "b "c] [show word ? #]</dd>
 
-  <dt><code>map <var>procname</var> <var>list</var></code>
-  <dd>Outputs a list composed of the results of calling <var>procname</var> for each item in the list
+  <dt><code>map <var>template</var> <var>list</var></code>
+  <dd>Outputs a list composed of the results of calling the procedure for each item in the list.
+      <code>#</code> is the current index.
   <dd class=example>to double :n output :n * 2 end  show map "double [1 2 3]</dd>
+  <dd class=example>show map [? * ?] [1 2 3]</dd>
 
-  <dt><code>filter <var>procname</var> <var>list</var></code>
-  <dd>Outputs a list composed of the input list where procname called on the item returns non-zero (true)
+  <dt><code>filter <var>template</var> <var>list</var></code>
+  <dd>Outputs a list composed of the input list items where the produre called on the item returns non-zero (true).
+      <code>#</code> is the current index.
   <dd class=example>to oddp :n output bitand :n 1 end  show filter "oddp [ 1 2 3 4 5 ]</dd>
+  <dd class=example>show filter [? % 2] [ 1 2 3 4 5 ]</dd>
 
-  <dt><code>find <var>procname</var> <var>list</var></code>
-  <dd>Outputs the first item in <var>list</var> for which calling <var>procname</var> on it returns non-zero (true).
+  <dt><code>find <var>template</var> <var>list</var></code>
+  <dd>Outputs the first item in <var>list</var> for which calling the procedure on it returns non-zero (true).
   If not found, the empty list is returned.
+      <code>#</code> is the current index.
   <dd class=example>to oddp :n output bitand :n 1 end  show find "oddp [ 2 8 4 7 10 9 ]</dd>
+  <dd class=example>show find [? % 2] [ 2 8 4 7 10 9 ]</dd>
 
-  <dt><code>reduce <var>procname</var> <var>list</var></code>
-  <dt><code>(reduce <var>procname</var> <var>list</var> <var>initial</var>)</code>
-  <dd>Call <var>procname</var> repeatedly with two inputs - the current value and the next list item. If <var>initial</var> is not specified, the first list element is used instead.
+  <dt><code>reduce <var>template</var> <var>list</var></code>
+  <dt><code>(reduce <var>template</var> <var>list</var> <var>initial</var>)</code>
+  <dd>Call the procedure repeatedly with two inputs - the current value and the next list item. If <var>initial</var> is not specified, the first list element is used instead.
   <dd class=example>show reduce "sum [ 1 2 3 4 5 ]</dd>
+  <dd class=example>show reduce [?1 + ?2] [ 1 2 3 4 5 ]</dd>
 
-  <dt><code>crossmap <var>procname</var> <var>listlist</var></code>
-  <dt><code>(crossmap <var>procname</var> <var>list</var> <var>list</var> ...)</code>
-  <dd>Call <var>procname</var> repeatedly with inputs from the lists, in all possible combinations.
+  <dt><code>crossmap <var>template</var> <var>listlist</var></code>
+  <dt><code>(crossmap <var>template</var> <var>list</var> <var>list</var> ...)</code>
+  <dd>Call the procedure repeatedly with inputs from the lists, in all possible combinations.
   <dd class=example>show crossmap "word [[a b] [x y]]</dd>
   <dd class=example>show (crossmap "word [a b c] [1 2 3 4])</dd>
 </dl>

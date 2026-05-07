@@ -2947,7 +2947,8 @@ function LogoInterpreter(turtle, stream, savehook) {
     }
   });
 
-  def(["repcount", "#"], () => this.repcount);
+  def(["repcount"], () => this.repcount);
+  def(["#"], () => this.itercount ?? this.repcount);
 
   def("if", async (tf, statements, statements2=undefined) => {
     if (Type(tf) === 'list')
@@ -3236,151 +3237,170 @@ function LogoInterpreter(turtle, stream, savehook) {
   // 8.2 Template-based Iteration
   //
 
+  function processTemplate(template, options) {
+    let routine;
+    if (Type(template) === 'list') {
+      // 'explicit-slot' form
+      template = reparse(lexpr(template));
+      routine = function(...args) {
+        function rep(x) {
+          if (Array.isArray(x)) return x.map(rep);
+          if (x === '?') return args[0];
+          if (x.match(/^\?(\d+)$/)) {
+            return args[RegExp.$1-1];
+          }
+          return x;
+        }
+        return self.execute(template.map(rep), options);
+      };
+    } else {
+      // 'named-procedure' form
+      const procname = sexpr(template);
+
+      routine = self.routines.get(procname);
+      if (!routine)
+        throw err("{_PROC_}: Don't know how to {name:U}", { name: procname }, ERRORS.BAD_PROC);
+      if (routine.special || routine.noeval)
+        throw err("Can't apply {_PROC_} to special {name:U}", { name: procname }, ERRORS.BAD_INPUT);
+    }
+    return routine;
+  }
+
 
   //
   // Higher order functions
   //
 
-  // TODO: multiple inputs
-
-  def("apply", (procname, list) => {
-    procname = sexpr(procname);
-
-    const routine = this.routines.get(procname);
-    if (!routine)
-      throw err("{_PROC_}: Don't know how to {name:U}", { name: procname }, ERRORS.BAD_PROC);
-    if (routine.special || routine.noeval)
-      throw err("Can't apply {_PROC_} to special {name:U}", { name: procname }, ERRORS.BAD_INPUT);
-
+  def("apply", (template, list) => {
+    const routine = processTemplate(template, {returnResult: true});
     return routine.apply(this, lexpr(list));
   });
 
-  def("invoke", (procname, ...args) => {
-    procname = sexpr(procname);
-
-    const routine = this.routines.get(procname);
-    if (!routine)
-      throw err("{_PROC_}: Don't know how to {name:U}", { name: procname }, ERRORS.BAD_PROC);
-    if (routine.special || routine.noeval)
-      throw err("Can't apply {_PROC_} to special {name:U}", { name: procname }, ERRORS.BAD_INPUT);
-
+  def("invoke", (template, ...args) => {
+    const routine = processTemplate(template, {returnResult: true});
     return routine.apply(this, args);
   }, {minimum: 1, default: 2, maximum: -1});
 
-  def("foreach", async (list, procname) => {
-    procname = sexpr(procname);
 
-    const routine = this.routines.get(procname);
+  def("foreach", async (list, template) => {
+    const routine = processTemplate(template);
+    list = lexpr(list);
+
+    // TODO: ?REST
+
     if (!routine)
       throw err("{_PROC_}: Don't know how to {name:U}", { name: procname }, ERRORS.BAD_PROC);
     if (routine.special || routine.noeval)
       throw err("Can't apply {_PROC_} to special {name:U}", { name: procname }, ERRORS.BAD_INPUT);
     list = lexpr(list);
 
-    while (list.length) {
-      await routine.call(this, list.shift());
-      await yieldIfNeeded();
-   }
+    const old_itercount = this.itercount;
+    let count = 0;
+    try {
+      while (list.length) {
+        this.itercount = ++count;
+        await routine.call(this, list.shift());
+        await yieldIfNeeded();
+      }
+    } finally {
+      this.itercount = old_itercount;
+    }
   });
 
-
-  def("map", async (procname, ...lists) => {
-    procname = sexpr(procname);
-
-    const routine = this.routines.get(procname);
-    if (!routine)
-      throw err("{_PROC_}: Don't know how to {name:U}", { name: procname }, ERRORS.BAD_PROC);
-    if (routine.special || routine.noeval)
-      throw err("Can't apply {_PROC_} to special {name:U}", { name: procname }, ERRORS.BAD_INPUT);
-
+  def("map", async (template, ...lists) => {
+    const routine = processTemplate(template, {returnResult: true});
     lists = lists.map(lexpr);
     if (!lists.length)
       throw err("{_PROC_}: Expected list", ERRORS.BAD_INPUT);
 
-    const mapped = [];
-    while (lists[0].length) {
-      const args = lists.map(l => {
-        if (!l.length)
-          throw err("{_PROC_}: Expected lists of equal length", ERRORS.BAD_INPUT);
-        return l.shift();
-      });
-      const value = await routine.apply(this, args);
-      mapped.push(value);
-      await yieldIfNeeded();
+    // TODO: ?REST
+
+    const old_itercount = this.itercount;
+    let count = 0;
+    try {
+      const mapped = [];
+      while (lists[0].length) {
+        const args = lists.map(l => {
+          if (!l.length)
+            throw err("{_PROC_}: Expected lists of equal length", ERRORS.BAD_INPUT);
+          return l.shift();
+        });
+        this.itercount = ++count;
+        const value = await routine.apply(this, args);
+        mapped.push(value);
+        await yieldIfNeeded();
+      }
+      return mapped;
+    } finally {
+      this.itercount = old_itercount;
     }
-    return mapped;
   }, {minimum: 2, default: 2, maximum: -1});
+
 
   // Not Supported: map.se
 
-  def("filter", async (procname, list) => {
-    procname = sexpr(procname);
-
-    const routine = this.routines.get(procname);
-    if (!routine)
-      throw err("{_PROC_}: Don't know how to {name:U}", { name: procname }, ERRORS.BAD_PROC);
-    if (routine.special || routine.noeval)
-      throw err("Can't apply {_PROC_} to special {name:U}", { name: procname }, ERRORS.BAD_INPUT);
-
+  def("filter", async (template, list) => {
+    const routine = processTemplate(template, {returnResult: true});
     list = lexpr(list);
-    const filtered = [];
-    while (list.length) {
-      const item = list.shift();
-      const value = await routine.call(this, item);
-      if (value)
-        filtered.push(item);
-      await yieldIfNeeded();
-   }
-    return filtered;
+
+    // TODO: ?REST
+
+    const old_itercount = this.itercount;
+    let count = 0;
+    try {
+      const filtered = [];
+      while (list.length) {
+        const item = list.shift();
+        this.itercount = ++count;
+        const value = await routine.call(this, item);
+        if (value)
+          filtered.push(item);
+        await yieldIfNeeded();
+      }
+      return filtered;
+    } finally {
+      this.itercount = old_itercount;
+    }
   });
 
-  def("find", async (procname, list) => {
-    procname = sexpr(procname);
-
-    const routine = this.routines.get(procname);
-    if (!routine)
-      throw err("{_PROC_}: Don't know how to {name:U}", { name: procname }, ERRORS.BAD_PROC);
-    if (routine.special || routine.noeval)
-      throw err("Can't apply {_PROC_} to special {name:U}", { name: procname }, ERRORS.BAD_INPUT);
-
+  def("find", async (template, list) => {
+    const routine = processTemplate(template, {returnResult: true});
     list = lexpr(list);
-    while (list.length) {
-      const item = list.shift();
-      const value = await routine.call(this, item);
-      if (value)
-        return item;
-      await yieldIfNeeded();
-   }
-    return [];
+
+    // TODO: ?REST
+
+    const old_itercount = this.itercount;
+    let count = 0;
+    try {
+      while (list.length) {
+        const item = list.shift();
+        this.itercount = ++count;
+        const value = await routine.call(this, item);
+        if (value)
+          return item;
+        await yieldIfNeeded();
+      }
+      return [];
+    } finally {
+      this.itercount = old_itercount;
+    }
   });
 
-  def("reduce", async (procname, list, initial=undefined) => {
-    procname = sexpr(procname);
+  def("reduce", async (template, list, initial=undefined) => {
+    var routine = processTemplate(template, {returnResult: true});
     list = lexpr(list);
-    let value = initial !== undefined ? initial : list.shift();
-
-    const procedure = this.routines.get(procname);
-    if (!procedure)
-      throw err("{_PROC_}: Don't know how to {name:U}", { name: procname }, ERRORS.BAD_PROC);
-    if (procedure.special || procedure.noeval)
-      throw err("Can't apply {_PROC_} to special {name:U}", { name: procname }, ERRORS.BAD_INPUT);
+    let value = initial !== undefined ? initial : list.pop();
 
     while (list.length) {
-      value = await procedure.call(this, value, list.shift());
+      value = await routine.call(this, list.pop(), value);
       await yieldIfNeeded();
     }
     return value;
   }, {maximum: 3});
 
 
-  def("crossmap", async (procname, ...lists) => {
-    procname = sexpr(procname);
-
-    const routine = this.routines.get(procname);
-    if (!routine)
-      throw err("{_PROC_}: Don't know how to {name:U}", { name: procname }, ERRORS.BAD_PROC);
-    if (routine.special || routine.noeval)
-      throw err("Can't apply {_PROC_} to special {name:U}", { name: procname }, ERRORS.BAD_INPUT);
+  def("crossmap", async (template, ...lists) => {
+    const routine = processTemplate(template, {returnResult: true});
 
     lists = lists.map(lexpr);
     if (!lists.length)
