@@ -3288,12 +3288,6 @@ function LogoInterpreter(turtle, stream, savehook) {
 
     // TODO: ?REST
 
-    if (!routine)
-      throw err("{_PROC_}: Don't know how to {name:U}", { name: procname }, ERRORS.BAD_PROC);
-    if (routine.special || routine.noeval)
-      throw err("Can't apply {_PROC_} to special {name:U}", { name: procname }, ERRORS.BAD_INPUT);
-    list = lexpr(list);
-
     const old_itercount = this.itercount;
     let count = 0;
     try {
