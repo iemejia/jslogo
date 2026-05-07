@@ -651,6 +651,13 @@ function LogoInterpreter(turtle, stream, savehook) {
     throw err("Don't know about variable {name:U}", {name: name}, ERRORS.BAD_VAR);
   }
 
+  function getslot(name) {
+    const value = self.slots ? self.slots(name) : undefined;
+    if (value !== undefined)
+      return value;
+    throw err("Don't know about variable {name:U}", {name: name}, ERRORS.BAD_VAR);
+  }
+
   function lvalue(name) {
     for (let i = self.scopes.length - 1; i >= 0; --i) {
       if (self.scopes[i].has(name)) {
@@ -844,6 +851,10 @@ function LogoInterpreter(turtle, stream, savehook) {
         // variable
         varname = atom.substring(1);
         return () => getvar(varname);
+      }
+      if (atom.charAt(0) === '?') {
+        // template slot
+        return () => getslot(atom.substring(1));
       }
       if (atom === '(') {
         // parenthesized expression/procedure call
@@ -3242,16 +3253,13 @@ function LogoInterpreter(turtle, stream, savehook) {
     if (Type(template) === 'list') {
       // 'explicit-slot' form
       template = reparse(lexpr(template));
-      routine = function(...args) {
-        function rep(x) {
-          if (Array.isArray(x)) return x.map(rep);
-          if (x === '?') return args[0];
-          if (x.match(/^\?(\d+)$/)) {
-            return args[RegExp.$1-1];
-          }
-          return x;
+      routine = async function(...args) {
+        self.slots = (name) => args[name === '' ? 0 : name - 1];
+        try {
+          return await self.execute(template, options);
+        } finally {
+          self.slots = undefined;
         }
-        return self.execute(template.map(rep), options);
       };
     } else {
       // 'named-procedure' form

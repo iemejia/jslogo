@@ -59,3 +59,11 @@ repeat 100 [
   setturtle 2 forward random 4
   wait 2
 ]
+
+to choices :menu [:sofar []]
+if emptyp :menu [print :sofar stop]
+foreach first :menu [(choices butfirst :menu sentence :sofar ?)]
+end
+choices [[small medium large]
+         [vanilla [ultra chocolate] lychee [rum raisin] ginger]
+         [cone cup]]

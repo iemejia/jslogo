@@ -1764,8 +1764,8 @@ QUnit.test("Control Structures", function(t) {
   this.assert_equals('apply "word ["a "b "c]', '"a"b"c');
   this.assert_equals('apply "add_async [1 2]', 3);
   this.assert_equals('apply [? * ?] [3 4]', 9);
-  this.assert_equals('apply [?1] [3 4]', 3);
-  this.assert_equals('apply [?2] [3 4]', 4);
+  this.assert_equals('apply [?1] [3 4]', '3');
+  this.assert_equals('apply [?2] [3 4]', '4');
   this.assert_equals('apply [?1 * ?2] [3 4]', 12);
 
   this.assert_equals('invoke "word "a', 'a');
@@ -1781,8 +1781,7 @@ QUnit.test("Control Structures", function(t) {
   this.assert_equals('make "x 0  to addx :a make "x :x+:a end  foreach [ 1 2 3 4 5 ] [addx ?]  :x', 15);
   this.assert_equals('make "x 0  to addx :a make "x .promise :x+:a end  foreach [ 1 2 3 4 5 ] "addx  :x', 15);
   this.assert_equals('make "x 0  to addx :a make "x .promise :x+:a end  foreach [ 1 2 3 4 5 ] [addx ?]  :x', 15);
-  // TODO: Shouldn't need to quote words in first argument (per UCBLogo)
-  this.assert_equals('make "x (word)  foreach [ "a "b "c ] [ make "x (word :x ? # ", ) ]  :x', 'a1,b2,c3,');
+  this.assert_equals('make "x (word)  foreach [ a b c ] [ make "x (word :x ? # ", ) ]  :x', 'a1,b2,c3,');
 
   this.assert_equals('to double :x output :x * 2 end  map "double [ 1 2 3 ]', [2, 4, 6]);
   this.assert_equals('to double :x output :x * 2 end  map [double ?] [ 1 2 3 ]', [2, 4, 6]);
@@ -1816,8 +1815,8 @@ QUnit.test("Control Structures", function(t) {
   this.assert_equals('reduce "sum [ 1 2 3 4 ]', 10);
   this.assert_equals('(reduce "sum [ 1 2 3 4 ] 10)', 20);
   this.assert_equals('reduce "add_async [ 1 2 3 4 ]', 10);
-  this.assert_equals('(reduce [?1] [ 1 2 3 4 ]', 1);
-  this.assert_equals('(reduce [?2] [ 1 2 3 4 ]', 4);
+  this.assert_equals('(reduce [?1] [ 1 2 3 4 ]', '1');
+  this.assert_equals('(reduce [?2] [ 1 2 3 4 ]', '4');
   this.assert_equals('(reduce [?1 * ?2] [ 1 2 3 4 ])', 24);
   this.assert_equals('(reduce [?1 + ?2] [ 1 2 3 4 ])', 10);
   this.assert_equals('(reduce [?1 - ?2] [ 1 2 3 4 ])', -2);
