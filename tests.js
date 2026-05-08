@@ -108,7 +108,7 @@ QUnit.module("Logo Unit Tests", {
           const x = px[0]|0, y = px[1]|0, rgba = px[2];
           const pix = canvas_ctx.getImageData(x, y, 1, 1).data;
           t.deepEqual([pix[0], pix[1], pix[2], pix[3]], rgba,
-                      expression + ': Pixel data at ' + x + ',' + y);
+                      `${expression}: Pixel data at ${x},${y}`);
         });
       } catch(failure) {
         t.pushResult({
@@ -174,19 +174,19 @@ QUnit.module("Logo Unit Tests", {
           result:false,
           actual: '(no error)',
           expected: expected,
-          message:'Expected to error but did not: ' + expression});
+          message:`Expected to error but did not: ${expression}`});
       } catch (ex) {
         t.pushResult({
           result: ex.message === expected,
           actual: ex.message,
           expected: expected,
-          message: 'Expected error from: ' + expression});
+          message: `Expected error from: ${expression}`});
         if (code !== undefined) {
           t.pushResult({
             result: ex.code === code,
             actual: ex.code,
             expected: code,
-            message: 'Expected error from: ' + expression});
+            message: `Expected error from: ${expression}`});
         }
       } finally {
         done();
@@ -204,7 +204,7 @@ QUnit.module("Logo Unit Tests", {
         console.warn(error.message);
         t.pushResult({
           result: false,
-          actual: 'Failed: ' + error.message,
+          actual: `Failed: ${error.message}`,
           expected: '(no error)',
           message: code
         });
@@ -216,152 +216,164 @@ QUnit.module("Logo Unit Tests", {
 QUnit.test("Parser", async function(t) {
 
   // Comments
-  await this.assert_equals('"abc;comment', 'abc');
-  await this.assert_equals('"abc;comment\n', 'abc');
-  await this.assert_equals('"abc ; comment', 'abc');
-  await this.assert_equals('"abc ; comment\n', 'abc');
+  await this.assert_equals(`"abc;comment`, 'abc');
+  await this.assert_equals(`"abc;comment\n`, 'abc');
+  await this.assert_equals(`"abc ; comment`, 'abc');
+  await this.assert_equals(`"abc ; comment\n`, 'abc');
 
-  await this.assert_equals('"abc\\;comment', 'abc;comment');
-  await this.assert_equals('"abc\\;comment\n', 'abc;comment');
+  await this.assert_equals(`"abc\\;comment`, 'abc;comment');
+  await this.assert_equals(`"abc\\;comment\n`, 'abc;comment');
 
   // Continuations
 
-  await this.assert_equals('"abc~', 'abc~');
-  await this.assert_equals('"abc\n"def', 'def');
-  await this.assert_equals('"abc~\n', 'abc');
-  await this.assert_equals('"abc~\ndef', 'abcdef');
-  await this.assert_equals('"abc~\n~\ndef', 'abcdef');
-  await this.assert_equals('"abc~\nd~\nef', 'abcdef');
-  await this.assert_equals('"abc\\~\n', 'abc~');
-  await this.assert_equals('"abc\\~\n"def', 'def');
+  await this.assert_equals(`"abc~`, 'abc~');
+  await this.assert_equals(`"abc\n"def`, 'def');
+  await this.assert_equals(`"abc~\n`, 'abc');
+  await this.assert_equals(`"abc~\ndef`, 'abcdef');
+  await this.assert_equals(`"abc~\n~\ndef`, 'abcdef');
+  await this.assert_equals(`"abc~\nd~\nef`, 'abcdef');
+  await this.assert_equals(`"abc\\~\n`, 'abc~');
+  await this.assert_equals(`"abc\\~\n"def`, 'def');
 
   // Comment and Continuations
 
-  await this.assert_equals('"abc;comment\n"def', 'def');
-  await this.assert_equals('"abc;comment~\ndef', 'abcdef');
-  await this.assert_equals('"abc;comment~\n~\ndef', 'abcdef');
-  await this.assert_equals('"abc;comment~\nde~\nf', 'abcdef');
-  await this.assert_equals('"abc;comment\\~\n', 'abc');
-  await this.assert_equals('"abc;comment\\~\n"def', 'def');
+  await this.assert_equals(`"abc;comment\n"def`, 'def');
+  await this.assert_equals(`"abc;comment~\ndef`, 'abcdef');
+  await this.assert_equals(`"abc;comment~\n~\ndef`, 'abcdef');
+  await this.assert_equals(`"abc;comment~\nde~\nf`, 'abcdef');
+  await this.assert_equals(`"abc;comment\\~\n`, 'abc');
+  await this.assert_equals(`"abc;comment\\~\n"def`, 'def');
 
   // Escaping
 
-  await this.assert_equals('count [\\]]', 1);
-  await this.assert_equals('count [[][]]', 2);
-  await this.assert_equals('count [[]{}[]]', 3);
-  await this.assert_equals('count [\\[\\]\\{\\}\\[\\]]', 1);
-  await this.assert_equals('count [ \\[ \\] \\{ \\} \\[ \\]]', 6);
-  await this.assert_equals('count [   ]', 0);
-  await this.assert_equals('count [ \\  ]', 1);
-  await this.assert_equals('count [ \\ \\  ]', 1);
-  await this.assert_equals('count [ \\  \\  ]', 2);
+  await this.assert_equals(`count [\\]]`, 1);
+  await this.assert_equals(`count [[][]]`, 2);
+  await this.assert_equals(`count [[]{}[]]`, 3);
+  await this.assert_equals(`count [\\[\\]\\{\\}\\[\\]]`, 1);
+  await this.assert_equals(`count [ \\[ \\] \\{ \\} \\[ \\]]`, 6);
+  await this.assert_equals(`count [   ]`, 0);
+  await this.assert_equals(`count [ \\  ]`, 1);
+  await this.assert_equals(`count [ \\ \\  ]`, 1);
+  await this.assert_equals(`count [ \\  \\  ]`, 2);
 
-  await this.assert_equals('count [ abc;com ment\ndef  ]', 2);
-  await this.assert_equals('count [ abc;com ment~\ndef  ]', 1);
-  await this.assert_equals('count [ abc;com ment\\~\ndef  ]', 2);
+  await this.assert_equals(`count [ abc;com ment\ndef  ]`, 2);
+  await this.assert_equals(`count [ abc;com ment~\ndef  ]`, 1);
+  await this.assert_equals(`count [ abc;com ment\\~\ndef  ]`, 2);
 
 
   //
   // Types
   //
 
-  await this.assert_equals('"test', 'test');
+  await this.assert_equals(`"test`, 'test');
 
-  await this.assert_equals('1', 1);
-  await this.assert_equals('[ a b c ]', ["a", "b", "c"]);
-  await this.assert_equals('[ 1 2 3 ]', ["1", "2", "3"]);
-  await this.assert_equals('[ 1 -2 3 ]', ["1", "-2", "3"]);
-  await this.assert_equals('[ 1-2 3 ]', ["1-2", "3"]);
-  await this.assert_equals('[ 1 2 [ 3 ] 4 *5 ]', ["1", "2", [ "3" ], "4", "*5"]);
+  await this.assert_equals(`1`, 1);
+  await this.assert_equals(`[ a b c ]`, ["a", "b", "c"]);
+  await this.assert_equals(`[ 1 2 3 ]`, ["1", "2", "3"]);
+  await this.assert_equals(`[ 1 -2 3 ]`, ["1", "-2", "3"]);
+  await this.assert_equals(`[ 1-2 3 ]`, ["1-2", "3"]);
+  await this.assert_equals(`[ 1 2 [ 3 ] 4 *5 ]`, ["1", "2", [ "3" ], "4", "*5"]);
 
   //
   // Unary Minus
   //
 
-  await this.assert_equals('-4', -4); // unary
-  await this.assert_equals('- 4 + 10', 6); // unary
-  await this.assert_equals('10 + - 4', 6); // unary
-  await this.assert_equals('(-4)', -4); // unary
-  await this.assert_equals('make "t 10 -4 :t', 10); // unary - the -4 is a statement
-  await this.assert_equals('make "t 10 - 4 :t', 6); // infix
-  await this.assert_equals('make "t 10-4 :t', 6); // infix
-  await this.assert_equals('make "t 10- 4 :t', 6); // infix
-  await this.assert_equals('sum 10 -4', 6); // unary
-  await this.assert_error('sum 10 - 4', 'Unexpected end of instructions'); // infix - should error
-  await this.assert_equals('sum 10 (-4)', 6); // unary
-  await this.assert_equals('sum 10 ( -4 )', 6); // unary
-  await this.assert_equals('sum 10 ( - 4 )', 6); // unary
-  await this.assert_equals('sum 10 (- 4)', 6); // unary
+  await this.assert_equals(`-4`, -4); // unary
+  await this.assert_equals(`- 4 + 10`, 6); // unary
+  await this.assert_equals(`10 + - 4`, 6); // unary
+  await this.assert_equals(`(-4)`, -4); // unary
+  await this.assert_equals(`make "t 10 -4 :t`, 10); // unary - the -4 is a statement
+  await this.assert_equals(`make "t 10 - 4 :t`, 6); // infix
+  await this.assert_equals(`make "t 10-4 :t`, 6); // infix
+  await this.assert_equals(`make "t 10- 4 :t`, 6); // infix
+  await this.assert_equals(`sum 10 -4`, 6); // unary
+  await this.assert_error(`sum 10 - 4`, 'Unexpected end of instructions'); // infix - should error
+  await this.assert_equals(`sum 10 (-4)`, 6); // unary
+  await this.assert_equals(`sum 10 ( -4 )`, 6); // unary
+  await this.assert_equals(`sum 10 ( - 4 )`, 6); // unary
+  await this.assert_equals(`sum 10 (- 4)`, 6); // unary
 
   //
   // Case insensitive
   //
 
-  await this.assert_equals('make "t 1 :t', 1);
-  await this.assert_equals('MAKE "t 1 :t', 1);
-  await this.assert_equals('MaKe "t 1 :t', 1);
+  await this.assert_equals(`make "t 1 :t`, 1);
+  await this.assert_equals(`MAKE "t 1 :t`, 1);
+  await this.assert_equals(`MaKe "t 1 :t`, 1);
 
-  await this.assert_equals('make "t 2 :t', 2);
-  await this.assert_equals('make "T 3 :t', 3);
-  await this.assert_equals('make "t 4 :T', 4);
-  await this.assert_equals('make "T 5 :T', 5);
+  await this.assert_equals(`make "t 2 :t`, 2);
+  await this.assert_equals(`make "T 3 :t`, 3);
+  await this.assert_equals(`make "t 4 :T`, 4);
+  await this.assert_equals(`make "T 5 :T`, 5);
 
-  await this.assert_equals('to foo output 6 end  foo', 6);
-  await this.assert_equals('to FOO output 7 end  foo', 7);
-  await this.assert_equals('to foo output 8 end  FOO', 8);
-  await this.assert_equals('to FOO output 9 end  FOO', 9);
+  await this.assert_equals(`to foo
+                              output 6
+                            end
+                            foo`, 6);
+  await this.assert_equals(`to FOO
+                              output 7
+                            end
+                            foo`, 7);
+  await this.assert_equals(`to foo
+                              output 8
+                            end
+                            FOO`, 8);
+  await this.assert_equals(`to FOO
+                              output 9
+                            end
+                            FOO`, 9);
 
   //
   // Lists
   //
 
-  await this.assert_stream('print [ Hello World ]', 'Hello World\n');
+  await this.assert_stream(`print [ Hello World ]`, 'Hello World\n');
 
   //
   // Numbers
   //
 
-  await this.assert_stream('type .2 + .3', '0.5');
-  await this.assert_equals('1e2', 100);
-  await this.assert_equals('1e+2', 100);
-  await this.assert_equals('1e-2', 0.01);
-  await this.assert_equals('-1', -1);
+  await this.assert_stream(`type .2 + .3`, '0.5');
+  await this.assert_equals(`1e2`, 100);
+  await this.assert_equals(`1e+2`, 100);
+  await this.assert_equals(`1e-2`, 0.01);
+  await this.assert_equals(`-1`, -1);
 
   //
   // Arrays
   //
 
-  await this.assert_equals('count { a b c }', 3);
-  await this.assert_equals('count { a b c }@0', 3);
-  await this.assert_equals('count { a b c }@123', 3);
-  await this.assert_equals('count { a b c } @ 0', 3);
-  await this.assert_error('make "a count { 1 2 3 }@1.5', "Don't know what to do with 0.5", 9);
-  await this.assert_equals('item 0 { 1 2 3 }@', '1');
+  await this.assert_equals(`count { a b c }`, 3);
+  await this.assert_equals(`count { a b c }@0`, 3);
+  await this.assert_equals(`count { a b c }@123`, 3);
+  await this.assert_equals(`count { a b c } @ 0`, 3);
+  await this.assert_error(`make "a count { 1 2 3 }@1.5`, "Don't know what to do with 0.5", 9);
+  await this.assert_equals(`item 0 { 1 2 3 }@`, '1');
 
-  await this.assert_equals('item 1 { 1 2 3 }@1', '1');
-  await this.assert_equals('item 2 { 1 2 3 }@1', '2');
-  await this.assert_equals('item 3 { 1 2 3 }@1', '3');
+  await this.assert_equals(`item 1 { 1 2 3 }@1`, '1');
+  await this.assert_equals(`item 2 { 1 2 3 }@1`, '2');
+  await this.assert_equals(`item 3 { 1 2 3 }@1`, '3');
 
-  await this.assert_equals('item 2 { 1 2 3 }@2', '1');
-  await this.assert_equals('item 3 { 1 2 3 }@2', '2');
-  await this.assert_equals('item 4 { 1 2 3 }@2', '3');
+  await this.assert_equals(`item 2 { 1 2 3 }@2`, '1');
+  await this.assert_equals(`item 3 { 1 2 3 }@2`, '2');
+  await this.assert_equals(`item 4 { 1 2 3 }@2`, '3');
 
-  await this.assert_equals('item -1 { 1 2 3 }@-1', '1');
-  await this.assert_equals('item 0 { 1 2 3 }@-1', '2');
+  await this.assert_equals(`item -1 { 1 2 3 }@-1`, '1');
+  await this.assert_equals(`item 0 { 1 2 3 }@-1`, '2');
 
   //
   // Nested Structures
   //
 
-  await this.assert_equals('count [ a b [ c d e ] f ]', 4);
-  await this.assert_equals('count { a b { c d e } f }', 4);
-  await this.assert_equals('count { a b [ c d e ] f }', 4);
-  await this.assert_equals('count [ a b { c d e } f ]', 4);
+  await this.assert_equals(`count [ a b [ c d e ] f ]`, 4);
+  await this.assert_equals(`count { a b { c d e } f }`, 4);
+  await this.assert_equals(`count { a b [ c d e ] f }`, 4);
+  await this.assert_equals(`count [ a b { c d e } f ]`, 4);
 
 
-  await this.assert_error('show ]', "Unexpected ']'");
-  await this.assert_error('show }', "Unexpected '}'");
-  await this.assert_error('show )', "Unexpected ')'");
+  await this.assert_error(`show ]`, "Unexpected ']'");
+  await this.assert_error(`show }`, "Unexpected '}'");
+  await this.assert_error(`show )`, "Unexpected ')'");
 });
 
 QUnit.test("Data Structure Primitives", async function(t) {
@@ -369,348 +381,406 @@ QUnit.test("Data Structure Primitives", async function(t) {
   // 2.1 Constructors
   //
 
-  await this.assert_equals('word "hello "world', 'helloworld');
-  await this.assert_equals('(word "a "b "c)', 'abc');
-  await this.assert_equals('(word)', '');
+  await this.assert_equals(`word "hello "world`, 'helloworld');
+  await this.assert_equals(`(word "a "b "c)`, 'abc');
+  await this.assert_equals(`(word)`, '');
 
-  await this.assert_equals('list 1 2', [1, 2]);
-  await this.assert_equals('(list 1 2 3)', [1, 2, 3]);
+  await this.assert_equals(`list 1 2`, [1, 2]);
+  await this.assert_equals(`(list 1 2 3)`, [1, 2, 3]);
 
-  await this.assert_stream('show array 2', '{[] []}\n');
-  await this.assert_stream('make "a (array 5 0) ' +
-                     'repeat 5 [ setitem repcount-1 :a repcount*repcount ] ' +
-                     'show :a', '{1 4 9 16 25}@0\n');
-  await this.assert_stream('make "a { 1 2 3 } ' +
-                     'show :a', '{1 2 3}\n');
-  await this.assert_stream('make "a { 1 2 3 } @ 10' +
-                     'show :a', '{1 2 3}@10\n');
+  await this.assert_stream(`show array 2`, '{[] []}\n');
+  await this.assert_stream(`make "a (array 5 0)
+                            repeat 5 [
+                              setitem repcount-1 :a repcount*repcount
+                            ]
+                            show :a`, '{1 4 9 16 25}@0\n');
+  await this.assert_stream(`make "a { 1 2 3 }
+                            show :a`, '{1 2 3}\n');
+  await this.assert_stream(`make "a { 1 2 3 } @ 10
+                            show :a`, '{1 2 3}@10\n');
 
-  await this.assert_stream('show mdarray [2 2]', '{{[] []} {[] []}}\n');
-  await this.assert_stream('show mdarray [2 2 2]', '{{{[] []} {[] []}} {{[] []} {[] []}}}\n');
-  await this.assert_stream('show (mdarray [2 2] 0)', '{{[] []}@0 {[] []}@0}@0\n');
-  await this.assert_error('mdarray [1 2 0]', 'MDARRAY: Array size must be positive integer');
+  await this.assert_stream(`show mdarray [2 2]`, '{{[] []} {[] []}}\n');
+  await this.assert_stream(`show mdarray [2 2 2]`, '{{{[] []} {[] []}} {{[] []} {[] []}}}\n');
+  await this.assert_stream(`show (mdarray [2 2] 0)`, '{{[] []}@0 {[] []}@0}@0\n');
+  await this.assert_error(`mdarray [1 2 0]`, 'MDARRAY: Array size must be positive integer');
 
-  await this.assert_stream('show (listtoarray [ 1 2 3 ])', '{1 2 3}\n');
-  await this.assert_stream('show (listtoarray [ 1 2 3 ] 0)', '{1 2 3}@0\n');
+  await this.assert_stream(`show (listtoarray [ 1 2 3 ])`, '{1 2 3}\n');
+  await this.assert_stream(`show (listtoarray [ 1 2 3 ] 0)`, '{1 2 3}@0\n');
 
-  await this.assert_equals('arraytolist {1 2 3}', ['1', '2', '3']);
-  await this.assert_equals('arraytolist {1 2 3}@0', ['1', '2', '3']);
+  await this.assert_equals(`arraytolist {1 2 3}`, ['1', '2', '3']);
+  await this.assert_equals(`arraytolist {1 2 3}@0`, ['1', '2', '3']);
 
-  await this.assert_equals('sentence 1 2', [1, 2]);
-  await this.assert_equals('se 1 2', [1, 2]);
-  await this.assert_equals('(sentence 1)', [1]);
-  await this.assert_equals('(sentence 1 2 3)', [1, 2, 3]);
-  await this.assert_equals('sentence [a] [b]', ["a", "b"]);
-  await this.assert_equals('sentence [a b] [c d]', ["a", "b", "c", "d"]);
-  await this.assert_equals('sentence 1 [2 3]', [1, "2", "3"]);
+  await this.assert_equals(`sentence 1 2`, [1, 2]);
+  await this.assert_equals(`se 1 2`, [1, 2]);
+  await this.assert_equals(`(sentence 1)`, [1]);
+  await this.assert_equals(`(sentence 1 2 3)`, [1, 2, 3]);
+  await this.assert_equals(`sentence [a] [b]`, ["a", "b"]);
+  await this.assert_equals(`sentence [a b] [c d]`, ["a", "b", "c", "d"]);
+  await this.assert_equals(`sentence 1 [2 3]`, [1, "2", "3"]);
 
-  await this.assert_equals('fput 0 ( list 1 2 3 )', [0, 1, 2, 3]);
-  await this.assert_equals('fput "x "abc', 'xabc');
+  await this.assert_equals(`fput 0 ( list 1 2 3 )`, [0, 1, 2, 3]);
+  await this.assert_equals(`fput "x "abc`, 'xabc');
 
-  await this.assert_equals('lput 0 ( list 1 2 3 )', [1, 2, 3, 0]);
-  await this.assert_equals('lput "x "abc', 'abcx');
+  await this.assert_equals(`lput 0 ( list 1 2 3 )`, [1, 2, 3, 0]);
+  await this.assert_equals(`lput "x "abc`, 'abcx');
 
-  await this.assert_equals('combine "a "b', 'ab');
-  await this.assert_equals('combine "a [b]', ["a", "b"]);
+  await this.assert_equals(`combine "a "b`, 'ab');
+  await this.assert_equals(`combine "a [b]`, ["a", "b"]);
 
-  await this.assert_equals('reverse [ a b c ]', ["c", "b", "a"]);
-  await this.assert_equals('reverse "abc', 'cba');
-  await this.assert_equals('(reverse [ a b c ] [ d e ])', ['c', 'b', 'a', 'd', 'e']);
-  await this.assert_equals('(reverse "abc "de)', 'cbade');
-  await this.assert_equals('(reverse "abc [ d e ])', ['c', 'b', 'a', 'd', 'e']);
-  await this.assert_equals('(reverse [ a b c ] "de)', 'cbade');
+  await this.assert_equals(`reverse [ a b c ]`, ["c", "b", "a"]);
+  await this.assert_equals(`reverse "abc`, 'cba');
+  await this.assert_equals(`(reverse [ a b c ] [ d e ])`, ['c', 'b', 'a', 'd', 'e']);
+  await this.assert_equals(`(reverse "abc "de)`, 'cbade');
+  await this.assert_equals(`(reverse "abc [ d e ])`, ['c', 'b', 'a', 'd', 'e']);
+  await this.assert_equals(`(reverse [ a b c ] "de)`, 'cbade');
 
-  await this.assert_equals('gensym <> gensym', 1);
+  await this.assert_equals(`gensym <> gensym`, 1);
 
   //
   // 2.2 Data Selectors
   //
 
-  await this.assert_equals('first (list 1 2 3 )', 1);
-  await this.assert_equals('firsts [ [ 1 2 3 ] [ "a "b "c] ]', ["1", '"a']);
-  await this.assert_equals('last [ a b c ]', "c");
-  await this.assert_equals('butfirst [ a b c ]', ["b", "c"]);
-  await this.assert_equals('butfirst "abc', 'bc');
-  await this.assert_equals('bf [ a b c ]', ["b", "c"]);
-  await this.assert_equals('butfirsts [ [ 1 2 3 ] [ "a "b "c] ]', [["2", "3"], ['"b', '"c']]);
-  await this.assert_equals('butfirsts [ 123 abc ]', ['23', 'bc']);
-  await this.assert_equals('bfs [ [ 1 2 3 ] [ "a "b "c] ]', [["2", "3"], ['"b', '"c']]);
-  await this.assert_equals('butlast  [ a b c ]', ["a", "b"]);
-  await this.assert_equals('bl [ a b c ]', ["a", "b"]);
+  await this.assert_equals(`first (list 1 2 3 )`, 1);
+  await this.assert_equals(`firsts [ [ 1 2 3 ] [ "a "b "c] ]`, ["1", '"a']);
+  await this.assert_equals(`last [ a b c ]`, "c");
+  await this.assert_equals(`butfirst [ a b c ]`, ["b", "c"]);
+  await this.assert_equals(`butfirst "abc`, 'bc');
+  await this.assert_equals(`bf [ a b c ]`, ["b", "c"]);
+  await this.assert_equals(`butfirsts [ [ 1 2 3 ] [ "a "b "c] ]`, [["2", "3"], ['"b', '"c']]);
+  await this.assert_equals(`butfirsts [ 123 abc ]`, ['23', 'bc']);
+  await this.assert_equals(`bfs [ [ 1 2 3 ] [ "a "b "c] ]`, [["2", "3"], ['"b', '"c']]);
+  await this.assert_equals(`butlast [ a b c ]`, ["a", "b"]);
+  await this.assert_equals(`bl [ a b c ]`, ["a", "b"]);
 
-  await this.assert_equals('first "123', '1');
-  await this.assert_equals('last  "123', '3');
-  await this.assert_equals('first "abc', 'a');
-  await this.assert_equals('last  "abc', 'c');
-  await this.assert_equals('butfirst "123', '23');
-  await this.assert_equals('butlast  "123', '12');
+  await this.assert_equals(`first "123`, '1');
+  await this.assert_equals(`last "123`, '3');
+  await this.assert_equals(`first "abc`, 'a');
+  await this.assert_equals(`last "abc`, 'c');
+  await this.assert_equals(`butfirst "123`, '23');
+  await this.assert_equals(`butlast "123`, '12');
 
-  await this.assert_equals('first 123', '1');
-  await this.assert_equals('last  123', '3');
-  await this.assert_equals('butfirst 123', '23');
-  await this.assert_equals('butlast  123', '12');
-
-
-  await this.assert_error('item 0 [ a b c ]', 'ITEM: Index out of bounds');
-  await this.assert_equals('item 1 [ a b c ]', "a");
-  await this.assert_equals('item 2 [ a b c ]', "b");
-  await this.assert_equals('item 3 [ a b c ]', "c");
-  await this.assert_error('item 4 [ a b c ]', 'ITEM: Index out of bounds');
-
-  await this.assert_error('item 0 { a b c }', 'ITEM: Index out of bounds');
-  await this.assert_equals('item 1 { a b c }', "a");
-  await this.assert_equals('item 2 { a b c }', "b");
-  await this.assert_equals('item 3 { a b c }', "c");
-  await this.assert_error('item 4 { a b c }', 'ITEM: Index out of bounds');
-
-  await this.assert_equals('item 0 { a b c }@0', 'a');
-  await this.assert_equals('item 1 { a b c }@0', 'b');
-  await this.assert_equals('item 2 { a b c }@0', 'c');
-  await this.assert_error('item 3 { a b c }@0', 'ITEM: Index out of bounds');
-
-  await this.assert_error('item 0 "abc', 'ITEM: Index out of bounds');
-  await this.assert_equals('item 1 "abc', "a");
-  await this.assert_equals('item 2 "abc', "b");
-  await this.assert_equals('item 3 "abc', "c");
-  await this.assert_error('item 4 "abc', 'ITEM: Index out of bounds');
-
-  await this.assert_error('item 0 456', 'ITEM: Index out of bounds');
-  await this.assert_equals('item 1 456', "4");
-  await this.assert_equals('item 2 456', "5");
-  await this.assert_equals('item 3 456', "6");
-  await this.assert_error('item 4 456', 'ITEM: Index out of bounds');
-
-  await this.assert_stream('make "a { a b c } ' +
-                     'setitem 2 :a "q ' +
-                     'show :a', '{a q c}\n');
-  await this.assert_stream('make "a { a b c }@0 ' +
-                     'setitem 2 :a "q ' +
-                     'show :a', '{a b q}@0\n');
+  await this.assert_equals(`first 123`, '1');
+  await this.assert_equals(`last 123`, '3');
+  await this.assert_equals(`butfirst 123`, '23');
+  await this.assert_equals(`butlast 123`, '12');
 
 
-  await this.assert_error('mditem [0 1] mdarray [1 1]', 'MDITEM: Index out of bounds');
-  await this.assert_error('mditem [1 2] mdarray [1 1]', 'MDITEM: Index out of bounds');
-  await this.assert_equals('mditem [1 1] mdarray [1 1]', []);
-  await this.assert_equals('mditem [0 0] (mdarray [1 1] 0)', []);
-  await this.assert_stream('show mditem [1] mdarray [1 1]', '{[]}\n');
-  await this.assert_stream('make "a mdarray [ 2 2 ] ' +
-                     'mdsetitem [1 1] :a 1 ' +
-                     'mdsetitem [1 2] :a 2 ' +
-                     'mdsetitem [2 1] :a 3 ' +
-                     'mdsetitem [2 2] :a 4 ' +
-                     'show :a', '{{1 2} {3 4}}\n');
+  await this.assert_error(`item 0 [ a b c ]`, 'ITEM: Index out of bounds');
+  await this.assert_equals(`item 1 [ a b c ]`, "a");
+  await this.assert_equals(`item 2 [ a b c ]`, "b");
+  await this.assert_equals(`item 3 [ a b c ]`, "c");
+  await this.assert_error(`item 4 [ a b c ]`, 'ITEM: Index out of bounds');
+
+  await this.assert_error(`item 0 { a b c }`, 'ITEM: Index out of bounds');
+  await this.assert_equals(`item 1 { a b c }`, "a");
+  await this.assert_equals(`item 2 { a b c }`, "b");
+  await this.assert_equals(`item 3 { a b c }`, "c");
+  await this.assert_error(`item 4 { a b c }`, 'ITEM: Index out of bounds');
+
+  await this.assert_equals(`item 0 { a b c }@0`, 'a');
+  await this.assert_equals(`item 1 { a b c }@0`, 'b');
+  await this.assert_equals(`item 2 { a b c }@0`, 'c');
+  await this.assert_error(`item 3 { a b c }@0`, 'ITEM: Index out of bounds');
+
+  await this.assert_error(`item 0 "abc`, 'ITEM: Index out of bounds');
+  await this.assert_equals(`item 1 "abc`, "a");
+  await this.assert_equals(`item 2 "abc`, "b");
+  await this.assert_equals(`item 3 "abc`, "c");
+  await this.assert_error(`item 4 "abc`, 'ITEM: Index out of bounds');
+
+  await this.assert_error(`item 0 456`, 'ITEM: Index out of bounds');
+  await this.assert_equals(`item 1 456`, "4");
+  await this.assert_equals(`item 2 456`, "5");
+  await this.assert_equals(`item 3 456`, "6");
+  await this.assert_error(`item 4 456`, 'ITEM: Index out of bounds');
+
+  await this.assert_stream(`make "a { a b c }
+                            setitem 2 :a "q
+                            show :a`, '{a q c}\n');
+  await this.assert_stream(`make "a { a b c }@0
+                            setitem 2 :a "q
+                            show :a`, '{a b q}@0\n');
+
+
+  await this.assert_error(`mditem [0 1] mdarray [1 1]`, 'MDITEM: Index out of bounds');
+  await this.assert_error(`mditem [1 2] mdarray [1 1]`, 'MDITEM: Index out of bounds');
+  await this.assert_equals(`mditem [1 1] mdarray [1 1]`, []);
+  await this.assert_equals(`mditem [0 0] (mdarray [1 1] 0)`, []);
+  await this.assert_stream(`show mditem [1] mdarray [1 1]`, '{[]}\n');
+  await this.assert_stream(`make "a mdarray [ 2 2 ]
+                            mdsetitem [1 1] :a 1
+                            mdsetitem [1 2] :a 2
+                            mdsetitem [2 1] :a 3
+                            mdsetitem [2 2] :a 4
+                            show :a`, '{{1 2} {3 4}}\n');
 
   for (let i = 0; i < 10; i += 1) {
-    await this.assert_predicate('pick [ 1 2 3 4 ]', function(x) { return 1 <= x && x <= 4; });
+    await this.assert_predicate(`pick [ 1 2 3 4 ]`, function(x) { return 1 <= x && x <= 4; });
   }
-  await this.assert_equals('remove "b [ a b c ]', ["a", "c"]);
-  await this.assert_equals('remove "d [ a b c ]', ["a", "b", "c"]);
-  await this.assert_equals('remove "b "abc', 'ac');
+  await this.assert_equals(`remove "b [ a b c ]`, ["a", "c"]);
+  await this.assert_equals(`remove "d [ a b c ]`, ["a", "b", "c"]);
+  await this.assert_equals(`remove "b "abc`, 'ac');
 
-  await this.assert_equals('remdup [ a b c a b c ]', ["a", "b", "c"]);
-  await this.assert_equals('remdup "abcabc', 'abc');
+  await this.assert_equals(`remdup [ a b c a b c ]`, ["a", "b", "c"]);
+  await this.assert_equals(`remdup "abcabc`, 'abc');
 
-  await this.assert_equals('quoted "abc', '"abc');
-  await this.assert_equals('quoted [ a b c ]', ['a', 'b', 'c']);
+  await this.assert_equals(`quoted "abc`, '"abc');
+  await this.assert_equals(`quoted [ a b c ]`, ['a', 'b', 'c']);
 
-  await this.assert_equals('split "a "banana', ['b', 'n', 'n']);
-  await this.assert_equals('split "a "alphabetical', ['lph', 'betic', 'l']);
-  await this.assert_equals('split 1 [1 2 3 4 1 2 3 4 1 2 3 4 ]', [['2', '3', '4'], ['2', '3', '4'], ['2', '3', '4']]);
-  await this.assert_equals('split 2 [1 2 3 4 1 2 3 4 1 2 3 4 ]', [['1'], ['3', '4', '1'], ['3', '4', '1'], ['3', '4']]);
-  await this.assert_equals('split 3 [1 2 3 4 1 2 3 4 1 2 3 4 ]', [['1', '2'], ['4', '1', '2'], ['4', '1', '2'], ['4']]);
-  await this.assert_equals('split 4 [1 2 3 4 1 2 3 4 1 2 3 4 ]', [['1', '2', '3'], ['1', '2', '3'], ['1', '2', '3']]);
+  await this.assert_equals(`split "a "banana`, ['b', 'n', 'n']);
+  await this.assert_equals(`split "a "alphabetical`, ['lph', 'betic', 'l']);
+  await this.assert_equals(`split 1 [1 2 3 4 1 2 3 4 1 2 3 4 ]`, [['2', '3', '4'], ['2', '3', '4'], ['2', '3', '4']]);
+  await this.assert_equals(`split 2 [1 2 3 4 1 2 3 4 1 2 3 4 ]`, [['1'], ['3', '4', '1'], ['3', '4', '1'], ['3', '4']]);
+  await this.assert_equals(`split 3 [1 2 3 4 1 2 3 4 1 2 3 4 ]`, [['1', '2'], ['4', '1', '2'], ['4', '1', '2'], ['4']]);
+  await this.assert_equals(`split 4 [1 2 3 4 1 2 3 4 1 2 3 4 ]`, [['1', '2', '3'], ['1', '2', '3'], ['1', '2', '3']]);
 
   //
   // 2.3 Data Mutators
   //
 
-  await this.assert_equals('make "s [] repeat 5 [ push "s repcount ] :s', [5, 4, 3, 2, 1]);
-  await this.assert_equals('make "s "0 repeat 5 [ push "s repcount ] :s', '543210');
+  await this.assert_equals(`make "s []
+                            repeat 5 [
+                              push "s repcount
+                            ]
+                            :s`, [5, 4, 3, 2, 1]);
+  await this.assert_equals(`make "s "0
+                            repeat 5 [
+                              push "s repcount
+                            ]
+                            :s`, '543210');
+  await this.assert_equals(`make "s [ a b c ]
+                            (list pop "s pop "s pop "s)`, ["a", "b", "c"]);
+  await this.assert_equals(`make "s [ a b c ]
+                            pop "s
+                            pop "s
+                            :s`, ["c"]);
+  await this.assert_equals(`make "s "abc
+                            (list pop "s pop "s pop "s)`, ["a", "b", "c"]);
+  await this.assert_equals(`make "s "abc
+                            pop "s
+                            :s`, 'bc');
 
-  await this.assert_equals('make "s [ a b c ] (list pop "s pop "s pop "s)', ["a", "b", "c"]);
-  await this.assert_equals('make "s [ a b c ] pop "s pop "s  :s', ["c"]);
-  await this.assert_equals('make "s "abc (list pop "s pop "s pop "s)', ["a", "b", "c"]);
-  await this.assert_equals('make "s "abc  pop "s  :s', 'bc');
+  await this.assert_equals(`make "q []
+                            repeat 5 [
+                              queue "q repcount
+                            ]
+                            :q`, [1, 2, 3, 4, 5]);
+  await this.assert_equals(`make "q "0
+                            repeat 5 [
+                              queue "q repcount
+                            ]
+                            :q`, '012345');
 
-  await this.assert_equals('make "q [] repeat 5 [ queue "q repcount ] :q', [1, 2, 3, 4, 5]);
-  await this.assert_equals('make "q "0 repeat 5 [ queue "q repcount ] :q', '012345');
+  await this.assert_equals(`make "q [ a b c ]
+                            (list dequeue "q dequeue "q dequeue "q)`, ["c", "b", "a"]);
+  await this.assert_equals(`make "q [ a b c ]
+                            dequeue "q
+                            dequeue "q
+                            :q`, ["a"]);
+  await this.assert_equals(`make "q "abc
+                            (list dequeue "q dequeue "q dequeue "q)`, ["c", "b", "a"]);
+  await this.assert_equals(`make "q "abc
+                            dequeue "q
+                            :q`, "ab");
 
-  await this.assert_equals('make "q [ a b c ] (list dequeue "q dequeue "q dequeue "q)', ["c", "b", "a"]);
-  await this.assert_equals('make "q [ a b c ]  dequeue "q  dequeue "q  :q', ["a"]);
-  await this.assert_equals('make "q "abc  (list dequeue "q dequeue "q dequeue "q)', ["c", "b", "a"]);
-  await this.assert_equals('make "q "abc  dequeue "q  :q', "ab");
+  await this.assert_equals(`make "a { 1 }
+                            make "b :a
+                            setitem 1 :a 2
+                            item 1 :b`, 2);
+  await this.assert_error(`make "a { 1 }
+                           setitem 1 :a
+                           :a`, "SETITEM: Can't create circular array");
+  await this.assert_error(`make "a { 1 }
+                           make "b { 1 }
+                           setitem 1 :b :a
+                           setitem 1 :a :b`, "SETITEM: Can't create circular array");
+  await this.assert_error(`setitem 1 "x 123`, 'SETITEM: Expected array');
 
-  await this.assert_equals('make "a { 1 }  make "b :a  setitem 1 :a 2  item 1 :b', 2);
-  await this.assert_error('make "a { 1 }  setitem 1 :a :a', "SETITEM: Can't create circular array");
-  await this.assert_error('make "a { 1 }  make "b { 1 }  setitem 1 :b :a  setitem 1 :a :b', "SETITEM: Can't create circular array");
-  await this.assert_error('setitem 1 "x 123', 'SETITEM: Expected array');
+  await this.assert_equals(`make "a mdarray [1 1]
+                            make "b :a
+                            mdsetitem [1 1] :a 2
+                            mditem [1 1] :b`, 2);
+  await this.assert_error(`make "a mdarray [1 1]
+                           mdsetitem [1 1] :a
+                           :a`, "MDSETITEM: Can't create circular array");
+  await this.assert_error(`mdsetitem [1 1] "x 0`, "MDSETITEM: Expected array");
+  await this.assert_error(`mdsetitem [1 1] {"x} 0`, "MDSETITEM: Expected array");
 
-  await this.assert_equals('make "a mdarray [1 1]  make "b :a  mdsetitem [1 1] :a 2  mditem [1 1] :b', 2);
-  await this.assert_error('make "a mdarray [1 1]  mdsetitem [1 1] :a :a', "MDSETITEM: Can't create circular array");
-  await this.assert_error('mdsetitem [1 1] "x 0', "MDSETITEM: Expected array");
-  await this.assert_error('mdsetitem [1 1] {"x} 0', "MDSETITEM: Expected array");
+  await this.assert_equals(`make "a []
+                            .setfirst :a "s
+                            :a`, ['s']);
+  await this.assert_error(`.setfirst "x "y`, '.SETFIRST: Expected list');
 
-  await this.assert_equals('make "a []  .setfirst :a "s  :a', ['s']);
-  await this.assert_error('.setfirst "x "y', '.SETFIRST: Expected list');
+  await this.assert_equals(`make "a [a]
+                            .setbf :a [b c]
+                            :a`, ['a', 'b', 'c']);
+  await this.assert_error(`.setbf "x [1]`, '.SETBF: Expected non-empty list');
+  await this.assert_error(`.setbf [] [1]`, '.SETBF: Expected non-empty list');
 
-  await this.assert_equals('make "a [a]  .setbf :a [b c]  :a', ['a', 'b', 'c']);
-  await this.assert_error('.setbf "x [1]', '.SETBF: Expected non-empty list');
-  await this.assert_error('.setbf [] [1]', '.SETBF: Expected non-empty list');
-
-  await this.assert_equals('make "a { 1 }  make "b :a  .setitem 1 :a 2  item 1 :b', 2);
-  await this.assert_equals('make "a { 1 }  .setitem 1 :a :a  equalp item 1 :a :a', 1);
-  await this.assert_error('.setitem 1 "x 123', '.SETITEM: Expected array');
+  await this.assert_equals(`make "a { 1 }
+                            make "b :a
+                            .setitem 1 :a 2
+                            item 1 :b`, 2);
+  await this.assert_equals(`make "a { 1 }
+                            .setitem 1 :a :a
+                            equalp item 1 :a :a`, 1);
+  await this.assert_error(`.setitem 1 "x 123`, '.SETITEM: Expected array');
 
   //
   // 2.4 Predicates
   //
 
-  await this.assert_equals('wordp "a', 1);
-  await this.assert_equals('wordp 1', 1);
-  await this.assert_equals('wordp [ 1 ]', 0);
-  await this.assert_equals('wordp { 1 }', 0);
-  await this.assert_equals('word? "a', 1);
-  await this.assert_equals('word? 1', 1);
-  await this.assert_equals('word? [ 1 ]', 0);
-  await this.assert_equals('word? { 1 }', 0);
+  await this.assert_equals(`wordp "a`, 1);
+  await this.assert_equals(`wordp 1`, 1);
+  await this.assert_equals(`wordp [ 1 ]`, 0);
+  await this.assert_equals(`wordp { 1 }`, 0);
+  await this.assert_equals(`word? "a`, 1);
+  await this.assert_equals(`word? 1`, 1);
+  await this.assert_equals(`word? [ 1 ]`, 0);
+  await this.assert_equals(`word? { 1 }`, 0);
 
-  await this.assert_equals('listp "a', 0);
-  await this.assert_equals('listp 1', 0);
-  await this.assert_equals('listp [ 1 ]', 1);
-  await this.assert_equals('listp { 1 }', 0);
-  await this.assert_equals('list? "a', 0);
-  await this.assert_equals('list? 1', 0);
-  await this.assert_equals('list? [ 1 ]', 1);
-  await this.assert_equals('list? { 1 }', 0);
+  await this.assert_equals(`listp "a`, 0);
+  await this.assert_equals(`listp 1`, 0);
+  await this.assert_equals(`listp [ 1 ]`, 1);
+  await this.assert_equals(`listp { 1 }`, 0);
+  await this.assert_equals(`list? "a`, 0);
+  await this.assert_equals(`list? 1`, 0);
+  await this.assert_equals(`list? [ 1 ]`, 1);
+  await this.assert_equals(`list? { 1 }`, 0);
 
-  await this.assert_equals('arrayp "a', 0);
-  await this.assert_equals('arrayp 1', 0);
-  await this.assert_equals('arrayp [ 1 ]', 0);
-  await this.assert_equals('arrayp { 1 }', 1);
-  await this.assert_equals('array? "a', 0);
-  await this.assert_equals('array? 1', 0);
-  await this.assert_equals('array? [ 1 ]', 0);
-  await this.assert_equals('array? { 1 }', 1);
+  await this.assert_equals(`arrayp "a`, 0);
+  await this.assert_equals(`arrayp 1`, 0);
+  await this.assert_equals(`arrayp [ 1 ]`, 0);
+  await this.assert_equals(`arrayp { 1 }`, 1);
+  await this.assert_equals(`array? "a`, 0);
+  await this.assert_equals(`array? 1`, 0);
+  await this.assert_equals(`array? [ 1 ]`, 0);
+  await this.assert_equals(`array? { 1 }`, 1);
 
-  await this.assert_equals('equalp 3 4', 0);
-  await this.assert_equals('equalp 3 3', 1);
-  await this.assert_equals('equalp 3 2', 0);
-  await this.assert_equals('equal? 3 4', 0);
-  await this.assert_equals('equal? 3 3', 1);
-  await this.assert_equals('equal? 3 2', 0);
-  await this.assert_equals('3 = 4', 0);
-  await this.assert_equals('3 = 3', 1);
-  await this.assert_equals('3 = 2', 0);
-  await this.assert_equals('notequalp 3 4', 1);
-  await this.assert_equals('notequalp 3 3', 0);
-  await this.assert_equals('notequalp 3 2', 1);
-  await this.assert_equals('notequal? 3 4', 1);
-  await this.assert_equals('notequal? 3 3', 0);
-  await this.assert_equals('notequal? 3 2', 1);
-  await this.assert_equals('3 <> 4', 1);
-  await this.assert_equals('3 <> 3', 0);
-  await this.assert_equals('3 <> 2', 1);
-  await this.assert_equals('[] = []', 1);
-  await this.assert_equals('[] <> [ 1 ]', 1);
+  await this.assert_equals(`equalp 3 4`, 0);
+  await this.assert_equals(`equalp 3 3`, 1);
+  await this.assert_equals(`equalp 3 2`, 0);
+  await this.assert_equals(`equal? 3 4`, 0);
+  await this.assert_equals(`equal? 3 3`, 1);
+  await this.assert_equals(`equal? 3 2`, 0);
+  await this.assert_equals(`3 = 4`, 0);
+  await this.assert_equals(`3 = 3`, 1);
+  await this.assert_equals(`3 = 2`, 0);
+  await this.assert_equals(`notequalp 3 4`, 1);
+  await this.assert_equals(`notequalp 3 3`, 0);
+  await this.assert_equals(`notequalp 3 2`, 1);
+  await this.assert_equals(`notequal? 3 4`, 1);
+  await this.assert_equals(`notequal? 3 3`, 0);
+  await this.assert_equals(`notequal? 3 2`, 1);
+  await this.assert_equals(`3 <> 4`, 1);
+  await this.assert_equals(`3 <> 3`, 0);
+  await this.assert_equals(`3 <> 2`, 1);
+  await this.assert_equals(`[] = []`, 1);
+  await this.assert_equals(`[] <> [ 1 ]`, 1);
 
-  await this.assert_equals('equalp "a "a', 1);
-  await this.assert_equals('equalp "a "b', 0);
-  await this.assert_equals('"a = "a', 1);
-  await this.assert_equals('"a = "b', 0);
-  await this.assert_equals('equalp [1 2] [1 2]', 1);
-  await this.assert_equals('equalp [1 2] [1 3]', 0);
-  await this.assert_equals('[ 1 2 ] = [ 1 2 ]', 1);
-  await this.assert_equals('[ 1 2 ] = [ 1 3 ]', 0);
+  await this.assert_equals(`equalp "a "a`, 1);
+  await this.assert_equals(`equalp "a "b`, 0);
+  await this.assert_equals(`"a = "a`, 1);
+  await this.assert_equals(`"a = "b`, 0);
+  await this.assert_equals(`equalp [1 2] [1 2]`, 1);
+  await this.assert_equals(`equalp [1 2] [1 3]`, 0);
+  await this.assert_equals(`[ 1 2 ] = [ 1 2 ]`, 1);
+  await this.assert_equals(`[ 1 2 ] = [ 1 3 ]`, 0);
 
-  await this.assert_equals('equalp {1} {1}', 0);
-  await this.assert_equals('make "a {1}  equalp :a :a', 1);
-  await this.assert_equals('{1} = {1}', 0);
-  await this.assert_equals('make "a {1}  :a = :a', 1);
+  await this.assert_equals(`equalp {1} {1}`, 0);
+  await this.assert_equals(`make "a {1}
+                            equalp :a :a`, 1);
+  await this.assert_equals(`{1} = {1}`, 0);
+  await this.assert_equals(`make "a {1}
+                            :a = :a`, 1);
 
-  await this.assert_equals('equalp "a 1', 0);
-  await this.assert_equals('equalp "a [ 1 ]', 0);
-  await this.assert_equals('equalp 1 [ 1 ]', 0);
+  await this.assert_equals(`equalp "a 1`, 0);
+  await this.assert_equals(`equalp "a [ 1 ]`, 0);
+  await this.assert_equals(`equalp 1 [ 1 ]`, 0);
 
 
-  await this.assert_equals('numberp "a', 0);
-  await this.assert_equals('numberp 1', 1);
-  await this.assert_equals('numberp [ 1 ]', 0);
-  await this.assert_equals('numberp { 1 }', 0);
-  await this.assert_equals('number? "a', 0);
-  await this.assert_equals('number? 1', 1);
-  await this.assert_equals('number? [ 1 ]', 0);
-  await this.assert_equals('number? { 1 }', 0);
+  await this.assert_equals(`numberp "a`, 0);
+  await this.assert_equals(`numberp 1`, 1);
+  await this.assert_equals(`numberp [ 1 ]`, 0);
+  await this.assert_equals(`numberp { 1 }`, 0);
+  await this.assert_equals(`number? "a`, 0);
+  await this.assert_equals(`number? 1`, 1);
+  await this.assert_equals(`number? [ 1 ]`, 0);
+  await this.assert_equals(`number? { 1 }`, 0);
 
-  await this.assert_equals('emptyp []', 1);
-  await this.assert_equals('empty? []', 1);
-  await this.assert_equals('emptyp [ 1 ]', 0);
-  await this.assert_equals('empty? [ 1 ]', 0);
-  await this.assert_equals('emptyp "', 1);
-  await this.assert_equals('empty? "', 1);
-  await this.assert_equals('emptyp "a', 0);
-  await this.assert_equals('empty? "a', 0);
+  await this.assert_equals(`emptyp []`, 1);
+  await this.assert_equals(`empty? []`, 1);
+  await this.assert_equals(`emptyp [ 1 ]`, 0);
+  await this.assert_equals(`empty? [ 1 ]`, 0);
+  await this.assert_equals(`emptyp "`, 1);
+  await this.assert_equals(`empty? "`, 1);
+  await this.assert_equals(`emptyp "a`, 0);
+  await this.assert_equals(`empty? "a`, 0);
 
-  await this.assert_equals('emptyp {}', 0);
+  await this.assert_equals(`emptyp {}`, 0);
 
-  await this.assert_equals('beforep "a "b', 1);
-  await this.assert_equals('beforep "b "b', 0);
-  await this.assert_equals('beforep "c "b', 0);
-  await this.assert_equals('before? "a "b', 1);
-  await this.assert_equals('before? "b "b', 0);
-  await this.assert_equals('before? "c "b', 0);
+  await this.assert_equals(`beforep "a "b`, 1);
+  await this.assert_equals(`beforep "b "b`, 0);
+  await this.assert_equals(`beforep "c "b`, 0);
+  await this.assert_equals(`before? "a "b`, 1);
+  await this.assert_equals(`before? "b "b`, 0);
+  await this.assert_equals(`before? "c "b`, 0);
 
-  await this.assert_equals('.eq 1 1', false);
-  await this.assert_equals('.eq 1 "1', false);
-  await this.assert_equals('.eq [] []', false);
-  await this.assert_equals('.eq {} {}', false);
-  await this.assert_equals('make "a 1  .eq :a :a', false);
-  await this.assert_equals('make "a []  .eq :a :a', true);
-  await this.assert_equals('make "a {}  .eq :a :a', true);
+  await this.assert_equals(`.eq 1 1`, false);
+  await this.assert_equals(`.eq 1 "1`, false);
+  await this.assert_equals(`.eq [] []`, false);
+  await this.assert_equals(`.eq {} {}`, false);
+  await this.assert_equals(`make "a 1
+                            .eq :a :a`, false);
+  await this.assert_equals(`make "a []
+                            .eq :a :a`, true);
+  await this.assert_equals(`make "a {}
+                            .eq :a :a`, true);
 
-  await this.assert_equals('memberp "b [ a b c ]', 1);
-  await this.assert_equals('memberp "e [ a b c ]', 0);
-  await this.assert_equals('memberp [ "b ] [ [ "a ] [ "b ] [ "c ] ]', 1);
-  await this.assert_equals('member? "b [ a b c ]', 1);
-  await this.assert_equals('member? "e [ a b c ]', 0);
-  await this.assert_equals('member? [ "b ] [ [ "a ] [ "b ] [ "c ] ]', 1);
+  await this.assert_equals(`memberp "b [ a b c ]`, 1);
+  await this.assert_equals(`memberp "e [ a b c ]`, 0);
+  await this.assert_equals(`memberp [ "b ] [ [ "a ] [ "b ] [ "c ] ]`, 1);
+  await this.assert_equals(`member? "b [ a b c ]`, 1);
+  await this.assert_equals(`member? "e [ a b c ]`, 0);
+  await this.assert_equals(`member? [ "b ] [ [ "a ] [ "b ] [ "c ] ]`, 1);
 
-  await this.assert_equals('substringp "a "abc', 1);
-  await this.assert_equals('substringp "z "abc', 0);
-  await this.assert_equals('substring? "a "abc', 1);
-  await this.assert_equals('substring? "z "abc', 0);
+  await this.assert_equals(`substringp "a "abc`, 1);
+  await this.assert_equals(`substringp "z "abc`, 0);
+  await this.assert_equals(`substring? "a "abc`, 1);
+  await this.assert_equals(`substring? "z "abc`, 0);
 
   //
   // 2.5 Queries
   //
 
-  await this.assert_equals('count [ ]', 0);
-  await this.assert_equals('count [ 1 ]', 1);
-  await this.assert_equals('count [ 1 2 ]', 2);
-  await this.assert_equals('count { 1 2 }@0', 2);
-  await this.assert_equals('count "', 0);
-  await this.assert_equals('count "a', 1);
-  await this.assert_equals('count "ab', 2);
+  await this.assert_equals(`count [ ]`, 0);
+  await this.assert_equals(`count [ 1 ]`, 1);
+  await this.assert_equals(`count [ 1 2 ]`, 2);
+  await this.assert_equals(`count { 1 2 }@0`, 2);
+  await this.assert_equals(`count "`, 0);
+  await this.assert_equals(`count "a`, 1);
+  await this.assert_equals(`count "ab`, 2);
 
-  await this.assert_equals('ascii "A', 65);
-  await this.assert_equals('char 65', 'A');
+  await this.assert_equals(`ascii "A`, 65);
+  await this.assert_equals(`char 65`, 'A');
 
-  await this.assert_equals('member "a "banana', 'anana');
-  await this.assert_equals('member "z "banana', '');
-  await this.assert_equals('member 1 [1 2 3 1 2 3]', ['1', '2', '3', '1', '2', '3']);
-  await this.assert_equals('member 2 [1 2 3 1 2 3]', ['2', '3', '1', '2', '3']);
-  await this.assert_equals('member 3 [1 2 3 1 2 3]', ['3', '1', '2', '3']);
-  await this.assert_equals('member 4 [1 2 3 1 2 3]', []);
+  await this.assert_equals(`member "a "banana`, 'anana');
+  await this.assert_equals(`member "z "banana`, '');
+  await this.assert_equals(`member 1 [1 2 3 1 2 3]`, ['1', '2', '3', '1', '2', '3']);
+  await this.assert_equals(`member 2 [1 2 3 1 2 3]`, ['2', '3', '1', '2', '3']);
+  await this.assert_equals(`member 3 [1 2 3 1 2 3]`, ['3', '1', '2', '3']);
+  await this.assert_equals(`member 4 [1 2 3 1 2 3]`, []);
 
-  await this.assert_equals('lowercase "ABcd', 'abcd');
-  await this.assert_equals('uppercase "ABcd', 'ABCD');
+  await this.assert_equals(`lowercase "ABcd`, 'abcd');
+  await this.assert_equals(`uppercase "ABcd`, 'ABCD');
 
-  await this.assert_equals('standout "whatever', '\uD835\uDC30\uD835\uDC21\uD835\uDC1A\uD835\uDC2D\uD835\uDC1E\uD835\uDC2F\uD835\uDC1E\uD835\uDC2B');
-  await this.assert_equals('standout "ABCabc123', '\uD835\uDC00\uD835\uDC01\uD835\uDC02\uD835\uDC1A\uD835\uDC1B\uD835\uDC1C\uD835\uDFCF\uD835\uDFD0\uD835\uDFD1');
-  await this.assert_equals('standout "!@#$_,.?', '!@#$_,.?');
+  await this.assert_equals(`standout "whatever`, '\uD835\uDC30\uD835\uDC21\uD835\uDC1A\uD835\uDC2D\uD835\uDC1E\uD835\uDC2F\uD835\uDC1E\uD835\uDC2B');
+  await this.assert_equals(`standout "ABCabc123`, '\uD835\uDC00\uD835\uDC01\uD835\uDC02\uD835\uDC1A\uD835\uDC1B\uD835\uDC1C\uD835\uDFCF\uD835\uDFD0\uD835\uDFD1');
+  await this.assert_equals(`standout "!@#$_,.?`, '!@#$_,.?');
 
 
-  await this.assert_equals('parse "1+\\(2\\ *\\ 3\\)', ['1+(2', '*', '3)']);
-  await this.assert_equals('runparse "1+\\(2\\ *\\ 3\\)', ['1', '+', '(', '2', '*', '3', ')']);
+  await this.assert_equals(`parse "1+\\(2\\ *\\ 3\\)`, ['1+(2', '*', '3)']);
+  await this.assert_equals(`runparse "1+\\(2\\ *\\ 3\\)`, ['1', '+', '(', '2', '*', '3', ')']);
 
 });
 
@@ -719,56 +789,65 @@ QUnit.test("Communication", async function(t) {
 
   // 3.1 Transmitters
 
-  await this.assert_stream('print "a', 'a\n');
-  await this.assert_stream('print 1', '1\n');
-  await this.assert_stream('print [ 1 ]', '1\n');
-  await this.assert_stream('print [ 1 [ 2 ] ]', '1 [2]\n');
-  await this.assert_stream('(print "a 1 [ 2 [ 3 ] ])', 'a 1 2 [3]\n');
+  await this.assert_stream(`print "a`, 'a\n');
+  await this.assert_stream(`print 1`, '1\n');
+  await this.assert_stream(`print [ 1 ]`, '1\n');
+  await this.assert_stream(`print [ 1 [ 2 ] ]`, '1 [2]\n');
+  await this.assert_stream(`(print "a 1 [ 2 [ 3 ] ])`, 'a 1 2 [3]\n');
 
-  await this.assert_stream('type "a', 'a');
-  await this.assert_stream('(type "a 1 [ 2 [ 3 ] ])', 'a12 [3]');
+  await this.assert_stream(`type "a`, 'a');
+  await this.assert_stream(`(type "a 1 [ 2 [ 3 ] ])`, 'a12 [3]');
 
-  await this.assert_stream('(print "hello "world)', "hello world\n");
-  await this.assert_stream('(type "hello "world)', "helloworld");
+  await this.assert_stream(`(print "hello "world)`, "hello world\n");
+  await this.assert_stream(`(type "hello "world)`, "helloworld");
 
-  await this.assert_stream('show "a', 'a\n');
-  await this.assert_stream('show 1', '1\n');
-  await this.assert_stream('show [ 1 ]', '[1]\n');
-  await this.assert_stream('show [ 1 [ 2 ] ]', '[1 [2]]\n');
-  await this.assert_stream('(show "a 1 [ 2 [ 3 ] ])', 'a 1 [2 [3]]\n');
+  await this.assert_stream(`show "a`, 'a\n');
+  await this.assert_stream(`show 1`, '1\n');
+  await this.assert_stream(`show [ 1 ]`, '[1]\n');
+  await this.assert_stream(`show [ 1 [ 2 ] ]`, '[1 [2]]\n');
+  await this.assert_stream(`(show "a 1 [ 2 [ 3 ] ])`, 'a 1 [2 [3]]\n');
 
   // 3.2 Receivers
 
   this.queue(() => { this.stream.inputbuffer = "1+2"; });
-  await this.assert_equals('readlist', ['1+2']);
+  await this.assert_equals(`readlist`, ['1+2']);
   this.queue(() => { this.stream.inputbuffer = "1 + 2"; });
-  await this.assert_equals('readlist', ['1', '+', '2']);
-  await this.assert_prompt('readlist', undefined);
-  await this.assert_prompt('(readlist "query)', 'query');
-  await this.assert_prompt('(readlist [a b c])', 'a b c');
+  await this.assert_equals(`readlist`, ['1', '+', '2']);
+  await this.assert_prompt(`readlist`, undefined);
+  await this.assert_prompt(`(readlist "query)`, 'query');
+  await this.assert_prompt(`(readlist [a b c])`, 'a b c');
 
   this.queue(() => { this.stream.inputbuffer = "test"; });
-  await this.assert_equals('readword', 'test');
+  await this.assert_equals(`readword`, 'test');
   this.queue(() => { this.stream.inputbuffer = "a b c 1 2 3"; });
-  await this.assert_equals('readword', 'a b c 1 2 3');
-  await this.assert_prompt('readword', undefined);
-  await this.assert_prompt('(readword "query)', 'query');
-  await this.assert_prompt('(readword [a b c])', 'a b c');
+  await this.assert_equals(`readword`, 'a b c 1 2 3');
+  await this.assert_prompt(`readword`, undefined);
+  await this.assert_prompt(`(readword "query)`, 'query');
+  await this.assert_prompt(`(readword [a b c])`, 'a b c');
 
   // 3.3 File Access
   // 3.4 Terminal Access
 
-  await this.assert_stream('print "a cleartext', '');
-  await this.assert_stream('print "a ct', '');
+  await this.assert_stream(`print "a cleartext`, '');
+  await this.assert_stream(`print "a ct`, '');
 
-  await this.assert_equals('settextcolor "red  textcolor', 'red');
-  await this.assert_equals('settextcolor "#123456  textcolor', '#123456');
-  await this.assert_equals('settextcolor [ 0 100 0 ]  textcolor', '#00ff00');
+  await this.assert_equals(`settextcolor "red
+                            textcolor`, 'red');
+  await this.assert_equals(`settextcolor "#123456
+                            textcolor`, '#123456');
+  await this.assert_equals(`settextcolor [ 0 100 0 ]
+                            textcolor`, '#00ff00');
 
-  await this.assert_equals('setfont "serif  font', 'serif');
-  await this.assert_equals('settextsize 66  textsize', 66);
-  await this.assert_equals('settextsize 100  increasefont  textsize', 125);
-  await this.assert_equals('settextsize 100  decreasefont  textsize', 80);
+  await this.assert_equals(`setfont "serif
+                            font`, 'serif');
+  await this.assert_equals(`settextsize 66
+                            textsize`, 66);
+  await this.assert_equals(`settextsize 100
+                            increasefont
+                            textsize`, 125);
+  await this.assert_equals(`settextsize 100
+                            decreasefont
+                            textsize`, 80);
 
   this.stream.clear();
 });
@@ -780,219 +859,227 @@ QUnit.test("Arithmetic", async function(t) {
   // 4.1 Numeric Operations
   //
 
-  await this.assert_equals('sum 1 2', 3);
-  await this.assert_equals('(sum 1 2 3 4)', 10);
-  await this.assert_equals('1 + 2', 3);
+  await this.assert_equals(`sum 1 2`, 3);
+  await this.assert_equals(`(sum 1 2 3 4)`, 10);
+  await this.assert_equals(`1 + 2`, 3);
 
-  await this.assert_equals('"3 + "2', 5);
-  await this.assert_equals('1 + 4 - 2', 3);
+  await this.assert_equals(`"3 + "2`, 5);
+  await this.assert_equals(`1 + 4 - 2`, 3);
 
-  await this.assert_equals('difference 3 1', 2);
-  await this.assert_equals('3 - 1', 2);
-  await this.assert_equals('minus 3 + 4', -(3 + 4));
-  await this.assert_equals('- 3 + 4', (-3) + 4);
-  await this.assert_equals('minus 3', -3);
-  await this.assert_equals('- 3', -3);
-  await this.assert_equals('product 2 3', 6);
-  await this.assert_equals('(product 2 3 4)', 24);
-  await this.assert_equals('2 * 3', 6);
-  await this.assert_equals('quotient 6 2', 3);
-  await this.assert_equals('(quotient 2)', 1 / 2);
-  await this.assert_equals('6 / 2', 3);
-  await this.assert_equals('1 * 4 / 2', 2);
+  await this.assert_equals(`difference 3 1`, 2);
+  await this.assert_equals(`3 - 1`, 2);
+  await this.assert_equals(`minus 3 + 4`, -(3 + 4));
+  await this.assert_equals(`- 3 + 4`, (-3) + 4);
+  await this.assert_equals(`minus 3`, -3);
+  await this.assert_equals(`- 3`, -3);
+  await this.assert_equals(`product 2 3`, 6);
+  await this.assert_equals(`(product 2 3 4)`, 24);
+  await this.assert_equals(`2 * 3`, 6);
+  await this.assert_equals(`quotient 6 2`, 3);
+  await this.assert_equals(`(quotient 2)`, 1 / 2);
+  await this.assert_equals(`6 / 2`, 3);
+  await this.assert_equals(`1 * 4 / 2`, 2);
 
-  await this.assert_equals('remainder 7 4', 3);
-  await this.assert_equals('remainder 7 -4', 3);
-  await this.assert_equals('remainder -7 4', -3);
-  await this.assert_equals('remainder -7 -4', -3);
-  await this.assert_equals('7 % 4', 3);
-  await this.assert_equals('7 % -4', 3);
-  await this.assert_equals('-7 % 4', -3);
-  await this.assert_equals('-7 % -4', -3);
+  await this.assert_equals(`remainder 7 4`, 3);
+  await this.assert_equals(`remainder 7 -4`, 3);
+  await this.assert_equals(`remainder -7 4`, -3);
+  await this.assert_equals(`remainder -7 -4`, -3);
+  await this.assert_equals(`7 % 4`, 3);
+  await this.assert_equals(`7 % -4`, 3);
+  await this.assert_equals(`-7 % 4`, -3);
+  await this.assert_equals(`-7 % -4`, -3);
 
-  await this.assert_equals('modulo 7 4', 3);
-  await this.assert_equals('modulo 7 -4', -3);
-  await this.assert_equals('modulo -7 4', 3);
-  await this.assert_equals('modulo -7 -4', -3);
+  await this.assert_equals(`modulo 7 4`, 3);
+  await this.assert_equals(`modulo 7 -4`, -3);
+  await this.assert_equals(`modulo -7 4`, 3);
+  await this.assert_equals(`modulo -7 -4`, -3);
 
-  await this.assert_equals('abs -1', 1);
-  await this.assert_equals('abs 0', 0);
-  await this.assert_equals('abs 1', 1);
+  await this.assert_equals(`abs -1`, 1);
+  await this.assert_equals(`abs 0`, 0);
+  await this.assert_equals(`abs 1`, 1);
 
 
-  await this.assert_equals('int 3.5', 3);
-  await this.assert_equals('int -3.5', -3);
-  await this.assert_equals('round 2.4', 2);
-  await this.assert_equals('round 2.5', 3);
-  await this.assert_equals('round 2.6', 3);
-  await this.assert_equals('round -2.4', -2);
-  await this.assert_equals('round -2.5', -2);
-  await this.assert_equals('round -2.6', -3);
+  await this.assert_equals(`int 3.5`, 3);
+  await this.assert_equals(`int -3.5`, -3);
+  await this.assert_equals(`round 2.4`, 2);
+  await this.assert_equals(`round 2.5`, 3);
+  await this.assert_equals(`round 2.6`, 3);
+  await this.assert_equals(`round -2.4`, -2);
+  await this.assert_equals(`round -2.5`, -2);
+  await this.assert_equals(`round -2.6`, -3);
 
-  await this.assert_equals('sqrt 9', 3);
-  await this.assert_equals('power 3 2', 9);
-  await this.assert_equals('3 ^ 2', 9);
-  await this.assert_equals('2 ^ 3 ^ 4', 4096);
+  await this.assert_equals(`sqrt 9`, 3);
+  await this.assert_equals(`power 3 2`, 9);
+  await this.assert_equals(`3 ^ 2`, 9);
+  await this.assert_equals(`2 ^ 3 ^ 4`, 4096);
 
-  await this.assert_equals('exp 2', 7.38905609893065);
-  await this.assert_equals('log10 100', 2);
-  await this.assert_equals('ln 9', 2.1972245773362196);
+  await this.assert_equals(`exp 2`, 7.38905609893065);
+  await this.assert_equals(`log10 100`, 2);
+  await this.assert_equals(`ln 9`, 2.1972245773362196);
 
-  await this.assert_equals('arctan 1', 45);
-  await this.assert_equals('2*(arctan 0 1)', 180);
-  await this.assert_equals('sin 30', 0.5);
-  await this.assert_equals('cos 60', 0.5);
-  await this.assert_equals('tan 45', 1);
+  await this.assert_equals(`arctan 1`, 45);
+  await this.assert_equals(`2*(arctan 0 1)`, 180);
+  await this.assert_equals(`sin 30`, 0.5);
+  await this.assert_equals(`cos 60`, 0.5);
+  await this.assert_equals(`tan 45`, 1);
 
-  await this.assert_equals('radarctan 1', Math.PI / 4);
-  await this.assert_equals('2*(radarctan 0 1)', Math.PI);
-  await this.assert_equals('radsin 0.5235987755982988', 0.5);
-  await this.assert_equals('radcos 1.0471975511965976', 0.5);
-  await this.assert_equals('radtan 0.7853981633974483', 1);
+  await this.assert_equals(`radarctan 1`, Math.PI / 4);
+  await this.assert_equals(`2*(radarctan 0 1)`, Math.PI);
+  await this.assert_equals(`radsin 0.5235987755982988`, 0.5);
+  await this.assert_equals(`radcos 1.0471975511965976`, 0.5);
+  await this.assert_equals(`radtan 0.7853981633974483`, 1);
 
-  await this.assert_equals('iseq 1 4', [1, 2, 3, 4]);
-  await this.assert_equals('iseq 3 7', [3, 4, 5, 6, 7]);
-  await this.assert_equals('iseq 7 3', [7, 6, 5, 4, 3]);
+  await this.assert_equals(`iseq 1 4`, [1, 2, 3, 4]);
+  await this.assert_equals(`iseq 3 7`, [3, 4, 5, 6, 7]);
+  await this.assert_equals(`iseq 7 3`, [7, 6, 5, 4, 3]);
 
-  await this.assert_equals('rseq 3 5 9', [3, 3.25, 3.5, 3.75, 4, 4.25, 4.5, 4.75, 5]);
-  await this.assert_equals('rseq 3 5 5', [3, 3.5, 4, 4.5, 5]);
+  await this.assert_equals(`rseq 3 5 9`, [3, 3.25, 3.5, 3.75, 4, 4.25, 4.5, 4.75, 5]);
+  await this.assert_equals(`rseq 3 5 5`, [3, 3.5, 4, 4.5, 5]);
 
   //
   // 4.2 Numeric Predicates
   //
 
-  await this.assert_equals('greaterp 3 4', 0);
-  await this.assert_equals('greaterp 3 3', 0);
-  await this.assert_equals('greaterp 3 2', 1);
-  await this.assert_equals('greater? 3 4', 0);
-  await this.assert_equals('greater? 3 3', 0);
-  await this.assert_equals('greater? 3 2', 1);
-  await this.assert_equals('3 > 4', 0);
-  await this.assert_equals('3 > 3', 0);
-  await this.assert_equals('3 > 2', 1);
-  await this.assert_equals('greaterequalp 3 4', 0);
-  await this.assert_equals('greaterequalp 3 3', 1);
-  await this.assert_equals('greaterequalp 3 2', 1);
-  await this.assert_equals('greaterequal? 3 4', 0);
-  await this.assert_equals('greaterequal? 3 3', 1);
-  await this.assert_equals('greaterequal? 3 2', 1);
-  await this.assert_equals('3 >= 4', 0);
-  await this.assert_equals('3 >= 3', 1);
-  await this.assert_equals('3 >= 2', 1);
-  await this.assert_equals('lessp 3 4', 1);
-  await this.assert_equals('lessp 3 3', 0);
-  await this.assert_equals('lessp 3 2', 0);
-  await this.assert_equals('less? 3 4', 1);
-  await this.assert_equals('less? 3 3', 0);
-  await this.assert_equals('less? 3 2', 0);
-  await this.assert_equals('3 < 4', 1);
-  await this.assert_equals('3 < 3', 0);
-  await this.assert_equals('3 < 2', 0);
-  await this.assert_equals('lessequalp 3 4', 1);
-  await this.assert_equals('lessequalp 3 3', 1);
-  await this.assert_equals('lessequalp 3 2', 0);
-  await this.assert_equals('lessequal? 3 4', 1);
-  await this.assert_equals('lessequal? 3 3', 1);
-  await this.assert_equals('lessequal? 3 2', 0);
-  await this.assert_equals('3 <= 4', 1);
-  await this.assert_equals('3 <= 3', 1);
-  await this.assert_equals('3 <= 2', 0);
+  await this.assert_equals(`greaterp 3 4`, 0);
+  await this.assert_equals(`greaterp 3 3`, 0);
+  await this.assert_equals(`greaterp 3 2`, 1);
+  await this.assert_equals(`greater? 3 4`, 0);
+  await this.assert_equals(`greater? 3 3`, 0);
+  await this.assert_equals(`greater? 3 2`, 1);
+  await this.assert_equals(`3 > 4`, 0);
+  await this.assert_equals(`3 > 3`, 0);
+  await this.assert_equals(`3 > 2`, 1);
+  await this.assert_equals(`greaterequalp 3 4`, 0);
+  await this.assert_equals(`greaterequalp 3 3`, 1);
+  await this.assert_equals(`greaterequalp 3 2`, 1);
+  await this.assert_equals(`greaterequal? 3 4`, 0);
+  await this.assert_equals(`greaterequal? 3 3`, 1);
+  await this.assert_equals(`greaterequal? 3 2`, 1);
+  await this.assert_equals(`3 >= 4`, 0);
+  await this.assert_equals(`3 >= 3`, 1);
+  await this.assert_equals(`3 >= 2`, 1);
+  await this.assert_equals(`lessp 3 4`, 1);
+  await this.assert_equals(`lessp 3 3`, 0);
+  await this.assert_equals(`lessp 3 2`, 0);
+  await this.assert_equals(`less? 3 4`, 1);
+  await this.assert_equals(`less? 3 3`, 0);
+  await this.assert_equals(`less? 3 2`, 0);
+  await this.assert_equals(`3 < 4`, 1);
+  await this.assert_equals(`3 < 3`, 0);
+  await this.assert_equals(`3 < 2`, 0);
+  await this.assert_equals(`lessequalp 3 4`, 1);
+  await this.assert_equals(`lessequalp 3 3`, 1);
+  await this.assert_equals(`lessequalp 3 2`, 0);
+  await this.assert_equals(`lessequal? 3 4`, 1);
+  await this.assert_equals(`lessequal? 3 3`, 1);
+  await this.assert_equals(`lessequal? 3 2`, 0);
+  await this.assert_equals(`3 <= 4`, 1);
+  await this.assert_equals(`3 <= 3`, 1);
+  await this.assert_equals(`3 <= 2`, 0);
 
-  await this.assert_equals('"3 < "22', 1);
+  await this.assert_equals(`"3 < "22`, 1);
 
   //
   // 4.3 Random Numbers
   //
 
   for (let i = 0; i < 10; i += 1) {
-    await this.assert_predicate('random 10', function(x) { return 0 <= x && x < 10; });
+    await this.assert_predicate(`random 10`, function(x) { return 0 <= x && x < 10; });
   }
   for (let i = 0; i < 10; i += 1) {
-    await this.assert_predicate('(random 1 6)', function(x) { return 1 <= x && x <= 6; });
+    await this.assert_predicate(`(random 1 6)`, function(x) { return 1 <= x && x <= 6; });
   }
-  await this.assert_equals('rerandom  make "x random 100  rerandom  make "y random 100  :x - :y', 0);
-  await this.assert_equals('(rerandom 123) make "x random 100  (rerandom 123)  make "y random 100  :x - :y', 0);
+  await this.assert_equals(`rerandom
+                            make "x random 100
+                            rerandom
+                            make "y random 100
+                            :x - :y`, 0);
+  await this.assert_equals(`(rerandom 123)
+                            make "x random 100
+                            (rerandom 123)
+                            make "y random 100
+                            :x - :y`, 0);
 
   //
   // 4.4 Print Formatting
   //
 
-  await this.assert_stream('type form 123.456 10 0', '       123');
-  await this.assert_stream('type form 123.456 10 1', '     123.5'); // note rounding
-  await this.assert_stream('type form 123.456 10 2', '    123.46'); // note rounding
-  await this.assert_stream('type form 123.456 10 3', '   123.456');
-  await this.assert_stream('type form 123.456 10 4', '  123.4560');
-  await this.assert_stream('type form 123.456 10 5', ' 123.45600');
-  await this.assert_stream('type form 123.456 10 6', '123.456000');
-  await this.assert_stream('type form 123.456 10 7', '123.4560000');
-  await this.assert_stream('type form 123.456 10 8', '123.45600000');
+  await this.assert_stream(`type form 123.456 10 0`, '       123');
+  await this.assert_stream(`type form 123.456 10 1`, '     123.5'); // note rounding
+  await this.assert_stream(`type form 123.456 10 2`, '    123.46'); // note rounding
+  await this.assert_stream(`type form 123.456 10 3`, '   123.456');
+  await this.assert_stream(`type form 123.456 10 4`, '  123.4560');
+  await this.assert_stream(`type form 123.456 10 5`, ' 123.45600');
+  await this.assert_stream(`type form 123.456 10 6`, '123.456000');
+  await this.assert_stream(`type form 123.456 10 7`, '123.4560000');
+  await this.assert_stream(`type form 123.456 10 8`, '123.45600000');
 
   //
   // 4.5 Bitwise Operations
   //
 
-  await this.assert_equals('bitand 1 2', 0);
-  await this.assert_equals('bitand 7 2', 2);
-  await this.assert_equals('(bitand 7 11 15)', 3);
+  await this.assert_equals(`bitand 1 2`, 0);
+  await this.assert_equals(`bitand 7 2`, 2);
+  await this.assert_equals(`(bitand 7 11 15)`, 3);
 
-  await this.assert_equals('bitor 1 2', 3);
-  await this.assert_equals('bitor 7 2', 7);
-  await this.assert_equals('(bitor 1 2 4)', 7);
+  await this.assert_equals(`bitor 1 2`, 3);
+  await this.assert_equals(`bitor 7 2`, 7);
+  await this.assert_equals(`(bitor 1 2 4)`, 7);
 
-  await this.assert_equals('bitxor 1 2', 3);
-  await this.assert_equals('bitxor 7 2', 5);
-  await this.assert_equals('(bitxor 1 2 7)', 4);
+  await this.assert_equals(`bitxor 1 2`, 3);
+  await this.assert_equals(`bitxor 7 2`, 5);
+  await this.assert_equals(`(bitxor 1 2 7)`, 4);
 
-  await this.assert_equals('bitnot 0', -1);
-  await this.assert_equals('bitnot -1', 0);
-  await this.assert_equals('bitand (bitnot 123) 123', 0);
+  await this.assert_equals(`bitnot 0`, -1);
+  await this.assert_equals(`bitnot -1`, 0);
+  await this.assert_equals(`bitand (bitnot 123) 123`, 0);
 
-  await this.assert_equals('ashift 1 2', 4);
-  await this.assert_equals('ashift 8 -2', 2);
-  await this.assert_equals('lshift 1 2', 4);
-  await this.assert_equals('lshift 8 -2', 2);
+  await this.assert_equals(`ashift 1 2`, 4);
+  await this.assert_equals(`ashift 8 -2`, 2);
+  await this.assert_equals(`lshift 1 2`, 4);
+  await this.assert_equals(`lshift 8 -2`, 2);
 
-  await this.assert_equals('ashift -1024 -1', -512);
-  await this.assert_equals('ashift -1 -1', -1);
-  await this.assert_equals('lshift -1 -1', 0x7fffffff);
+  await this.assert_equals(`ashift -1024 -1`, -512);
+  await this.assert_equals(`ashift -1 -1`, -1);
+  await this.assert_equals(`lshift -1 -1`, 0x7fffffff);
 });
 
 QUnit.test("Logical Operations", async function(t) {
   t.expect(29);
 
-  await this.assert_equals('true', 1);
-  await this.assert_equals('false', 0);
-  await this.assert_equals('and 0 0', 0);
-  await this.assert_equals('and 0 1', 0);
-  await this.assert_equals('and 1 0', 0);
-  await this.assert_equals('and 1 1', 1);
-  await this.assert_equals('(and 0 0 0)', 0);
-  await this.assert_equals('(and 1 0 1)', 0);
-  await this.assert_equals('(and 1 1 1)', 1);
-  await this.assert_equals('or 0 0', 0);
-  await this.assert_equals('or 0 1', 1);
-  await this.assert_equals('or 1 0', 1);
-  await this.assert_equals('or 1 1', 1);
-  await this.assert_equals('(or 0 0 0)', 0);
-  await this.assert_equals('(or 1 0 1)', 1);
-  await this.assert_equals('(or 1 1 1)', 1);
-  await this.assert_equals('xor 0 0', 0);
-  await this.assert_equals('xor 0 1', 1);
-  await this.assert_equals('xor 1 0', 1);
-  await this.assert_equals('xor 1 1', 0);
-  await this.assert_equals('(xor 0 0 0)', 0);
-  await this.assert_equals('(xor 1 0 1)', 0);
-  await this.assert_equals('(xor 1 1 1)', 1);
-  await this.assert_equals('not 0', 1);
-  await this.assert_equals('not 1', 0);
+  await this.assert_equals(`true`, 1);
+  await this.assert_equals(`false`, 0);
+  await this.assert_equals(`and 0 0`, 0);
+  await this.assert_equals(`and 0 1`, 0);
+  await this.assert_equals(`and 1 0`, 0);
+  await this.assert_equals(`and 1 1`, 1);
+  await this.assert_equals(`(and 0 0 0)`, 0);
+  await this.assert_equals(`(and 1 0 1)`, 0);
+  await this.assert_equals(`(and 1 1 1)`, 1);
+  await this.assert_equals(`or 0 0`, 0);
+  await this.assert_equals(`or 0 1`, 1);
+  await this.assert_equals(`or 1 0`, 1);
+  await this.assert_equals(`or 1 1`, 1);
+  await this.assert_equals(`(or 0 0 0)`, 0);
+  await this.assert_equals(`(or 1 0 1)`, 1);
+  await this.assert_equals(`(or 1 1 1)`, 1);
+  await this.assert_equals(`xor 0 0`, 0);
+  await this.assert_equals(`xor 0 1`, 1);
+  await this.assert_equals(`xor 1 0`, 1);
+  await this.assert_equals(`xor 1 1`, 0);
+  await this.assert_equals(`(xor 0 0 0)`, 0);
+  await this.assert_equals(`(xor 1 0 1)`, 0);
+  await this.assert_equals(`(xor 1 1 1)`, 1);
+  await this.assert_equals(`not 0`, 1);
+  await this.assert_equals(`not 1`, 0);
 
   // short circuits
 
-  await this.assert_stream('and 0 (print "nope)', '');
-  await this.assert_stream('or 1 (print "nope)', '');
+  await this.assert_stream(`and 0 (print "nope)`, '');
+  await this.assert_stream(`or 1 (print "nope)`, '');
 
-  await this.assert_stream('and 1 (type "yup)', 'yup');
-  await this.assert_stream('or 0 (type "yup)', 'yup');
+  await this.assert_stream(`and 1 (type "yup)`, 'yup');
+  await this.assert_stream(`or 0 (type "yup)`, 'yup');
 });
 
 QUnit.test("Graphics", async function(t) {
@@ -1004,42 +1091,44 @@ QUnit.test("Graphics", async function(t) {
         black = [0, 0, 0, 0xff],
         red = [0xff, 0, 0, 0xff];
 
-  await this.run('clearscreen');
-  await this.assert_equals('clean home (list heading xcor ycor)', [0, 0, 0]);
-  await this.assert_pixel('cs', 150, 150, [0xff,0xff,0xff,0xff]);
+  await this.run(`clearscreen`);
+  await this.assert_equals(`clean home (list heading xcor ycor)`, [0, 0, 0]);
+  await this.assert_pixel(`cs`, 150, 150, [0xff,0xff,0xff,0xff]);
 
   //
   // 6.1 Turtle Motion
   //
 
-  await this.assert_equals('home forward 100 pos', [0, 100]);
-  await this.assert_equals('home fd 100 pos', [0, 100]);
-  await this.assert_equals('home back 100 pos', [0, -100]);
-  await this.assert_equals('home bk 100 pos', [0, -100]);
-  await this.assert_equals('home left 45 heading', -45);
-  await this.assert_equals('home lt 45 heading', -45);
-  await this.assert_equals('home right 45 heading', 45);
-  await this.assert_equals('home rt 45 heading', 45);
+  await this.assert_equals(`home forward 100 pos`, [0, 100]);
+  await this.assert_equals(`home fd 100 pos`, [0, 100]);
+  await this.assert_equals(`home back 100 pos`, [0, -100]);
+  await this.assert_equals(`home bk 100 pos`, [0, -100]);
+  await this.assert_equals(`home left 45 heading`, -45);
+  await this.assert_equals(`home lt 45 heading`, -45);
+  await this.assert_equals(`home right 45 heading`, 45);
+  await this.assert_equals(`home rt 45 heading`, 45);
 
-  await this.assert_equals('home \u2190 heading', -15);
-  await this.assert_equals('home \u2192 heading', 15);
-  await this.assert_equals('home \u2191 pos', [0, 10]);
-  await this.assert_equals('home \u2193 pos', [0, -10]);
+  await this.assert_equals(`home \u2190 heading`, -15);
+  await this.assert_equals(`home \u2192 heading`, 15);
+  await this.assert_equals(`home \u2191 pos`, [0, 10]);
+  await this.assert_equals(`home \u2193 pos`, [0, -10]);
 
 
-  await this.assert_equals('setpos [ 12 34 ] pos', [12, 34]);
-  await this.assert_equals('setxy 56 78 pos', [56, 78]);
-  await this.assert_equals('setxy 0 0 (list xcor ycor)', [0, 0]);
-  await this.assert_equals('setx 123 xcor', 123);
-  await this.assert_equals('sety 45 ycor', 45);
-  await this.assert_equals('setheading 69 heading', 69);
-  await this.assert_equals('seth 13 heading', 13);
+  await this.assert_equals(`setpos [ 12 34 ] pos`, [12, 34]);
+  await this.assert_equals(`setxy 56 78 pos`, [56, 78]);
+  await this.assert_equals(`setxy 0 0 (list xcor ycor)`, [0, 0]);
+  await this.assert_equals(`setx 123 xcor`, 123);
+  await this.assert_equals(`sety 45 ycor`, 45);
+  await this.assert_equals(`setheading 69 heading`, 69);
+  await this.assert_equals(`seth 13 heading`, 13);
 
-  await this.assert_equals('forward 100 rt 90 home (list heading xcor ycor)', [0, 0, 0]);
+  await this.assert_equals(`forward 100 rt 90 home (list heading xcor ycor)`, [0, 0, 0]);
 
-  await this.assert_equals('home arc 123 456 (list heading xcor ycor)', [0, 0, 0]);
+  await this.assert_equals(`home arc 123 456 (list heading xcor ycor)`, [0, 0, 0]);
 
-  await this.assert_pixels('cs  setpw 10  arc 45 100', [
+  await this.assert_pixels(`cs
+                            setpw 10
+                            arc 45 100`, [
     [150, 150, white],
     [150+100*Math.cos(Math.PI * 8/8), 150-100*Math.sin(Math.PI * 8/8)|0, white],
     [150+100*Math.cos(Math.PI * 7/8), 150-100*Math.sin(Math.PI * 7/8)|0, white],
@@ -1051,7 +1140,9 @@ QUnit.test("Graphics", async function(t) {
     [150+100*Math.cos(Math.PI * 1/8), 150-100*Math.sin(Math.PI * 1/8)|0, white],
     [150+100*Math.cos(Math.PI * 0/8), 150-100*Math.sin(Math.PI * 0/8)|0, white]
   ]);
-  await this.assert_pixels('cs  setpw 10  arc -45 100', [
+  await this.assert_pixels(`cs
+                            setpw 10
+                            arc -45 100`, [
     [150, 150, white],
     [150+100*Math.cos(Math.PI * 8/8), 150-100*Math.sin(Math.PI * 8/8)|0, white],
     [150+100*Math.cos(Math.PI * 7/8), 150-100*Math.sin(Math.PI * 7/8)|0, white],
@@ -1064,13 +1155,19 @@ QUnit.test("Graphics", async function(t) {
     [150+100*Math.cos(Math.PI * 0/8), 150-100*Math.sin(Math.PI * 0/8)|0, white]
   ]);
 
-  await this.assert_pixels('cs  pu  setxy 50 50  arc 360 20  fill', [
+  await this.assert_pixels(`cs
+                            pu
+                            setxy 50 50
+                            arc 360 20
+                            fill`, [
     [150, 150, white],
     [150 + 50, 150 - 50, black]
   ]);
 
   ['"red', '4', '[99 0 0]'].forEach(async color => {
-    await this.assert_pixels('cs  pu  filled ' + color + ' [ arc 135 100 ]', [
+    await this.assert_pixels(`cs
+                              pu
+                              filled ${color} [ arc 135 100 ]`, [
       [150, 150, white],
       [150 + 100, 150 - 100, white],
       [150 + 10, 150 - 90, red],
@@ -1078,7 +1175,9 @@ QUnit.test("Graphics", async function(t) {
     ]);
   });
 
-  await this.assert_pixels('cs  pd  filled "black [ fd 100 pu bk 100 rt 90 fd 100 pd lt 90 fd 100 ]', [
+  await this.assert_pixels(`cs
+                            pd
+                            filled "black [ fd 100 pu bk 100 rt 90 fd 100 pd lt 90 fd 100 ]`, [
     [150 + 25, 150 - 50, black],
     [150 + 75, 150 - 50, black],
     [150 + 50, 150 - 25, white],
@@ -1089,51 +1188,69 @@ QUnit.test("Graphics", async function(t) {
   // 6.2 Turtle Motion Queries
   //
 
-  await this.assert_equals('setpos [ 12 34 ] pos', [12, 34]);
-  await this.assert_equals('setx 123 xcor', 123);
-  await this.assert_equals('sety 45 ycor', 45);
-  await this.assert_equals('setheading 69 heading', 69);
-  await this.assert_equals('seth 69 heading', 69);
-  await this.assert_equals('setxy -100 -100 towards [ 0 0 ]', 45);
+  await this.assert_equals(`setpos [ 12 34 ] pos`, [12, 34]);
+  await this.assert_equals(`setx 123 xcor`, 123);
+  await this.assert_equals(`sety 45 ycor`, 45);
+  await this.assert_equals(`setheading 69 heading`, 69);
+  await this.assert_equals(`seth 69 heading`, 69);
+  await this.assert_equals(`setxy -100 -100 towards [ 0 0 ]`, 45);
 
   //
   // 6.3 Turtle and Window Control
   //
 
-  await this.assert_equals('showturtle shownp', 1);
-  await this.assert_equals('st shownp', 1);
-  await this.assert_equals('hideturtle shownp', 0);
-  await this.assert_equals('ht shownp', 0);
-  await this.assert_equals('setpos [ 12 34 ] clean pos', [12, 34]);
-  await this.assert_equals('setpos [ 12 34 ] clearscreen (list heading xcor ycor)', [0, 0, 0]);
-  await this.assert_equals('setpos [ 12 34 ] cs (list heading xcor ycor)', [0, 0, 0]);
-  await this.assert_equals('wrap turtlemode', 'WRAP');
+  await this.assert_equals(`showturtle shownp`, 1);
+  await this.assert_equals(`st shownp`, 1);
+  await this.assert_equals(`hideturtle shownp`, 0);
+  await this.assert_equals(`ht shownp`, 0);
+  await this.assert_equals(`setpos [ 12 34 ] clean pos`, [12, 34]);
+  await this.assert_equals(`setpos [ 12 34 ] clearscreen (list heading xcor ycor)`, [0, 0, 0]);
+  await this.assert_equals(`setpos [ 12 34 ] cs (list heading xcor ycor)`, [0, 0, 0]);
+  await this.assert_equals(`wrap turtlemode`, 'WRAP');
 
-  await this.assert_equals('setxy 0 0 setxy 160 160 (list xcor ycor)', [-140, -140]);
-  await this.assert_equals('window turtlemode', 'WINDOW');
-  await this.assert_equals('setxy 0 0 setxy 160 160 (list xcor ycor)', [160, 160]);
+  await this.assert_equals(`setxy 0 0 setxy 160 160 (list xcor ycor)`, [-140, -140]);
+  await this.assert_equals(`window turtlemode`, 'WINDOW');
+  await this.assert_equals(`setxy 0 0 setxy 160 160 (list xcor ycor)`, [160, 160]);
 
-  await this.assert_equals('fence turtlemode', 'FENCE');
-  await this.assert_equals('setxy 0 0 setxy 160 160 (list xcor ycor)', [150, 150]);
+  await this.assert_equals(`fence turtlemode`, 'FENCE');
+  await this.assert_equals(`setxy 0 0 setxy 160 160 (list xcor ycor)`, [150, 150]);
 
-  await this.assert_equals('wrap turtlemode', 'WRAP');
+  await this.assert_equals(`wrap turtlemode`, 'WRAP');
 
-  await this.assert_equals('(label "a 1 [ 2 [ 3 ] ])', undefined);
-  await this.assert_equals('setlabelheight 5 labelsize', [5, 5]);
-  await this.assert_equals('setlabelheight 10 labelsize', [10, 10]);
+  await this.assert_equals(`(label "a 1 [ 2 [ 3 ] ])`, undefined);
+  await this.assert_equals(`setlabelheight 5 labelsize`, [5, 5]);
+  await this.assert_equals(`setlabelheight 10 labelsize`, [10, 10]);
 
-  await this.assert_equals('setpalette 8 "pink  palette 8', 'pink');
-  await this.assert_equals('setpalette 9 [0 50 99]  palette 9', '#0080ff');
+  await this.assert_equals(`setpalette 8 "pink
+                            palette 8`, 'pink');
+  await this.assert_equals(`setpalette 9 [0 50 99]
+                            palette 9`, '#0080ff');
 
-  await this.assert_equals('setlabelfont "Times\\ New\\ Roman  labelfont', 'Times New Roman');
+  await this.assert_equals(`setlabelfont "Times\\ New\\ Roman
+                            labelfont`, 'Times New Roman');
 
-  await this.assert_equals('cs  wrap  setscrunch 0.5 0.5  fd 50 pos', [0, 50]);
-  await this.assert_equals('cs  wrap  setscrunch 0.5 0.5  fd 350 pos', [0, -250]);
-  await this.assert_equals('cs  setscrunch 1 0.5  setxy 50 50  setscrunch 1 1  pos', [50, 25]);
+  await this.assert_equals(`cs
+                            wrap
+                            setscrunch 0.5 0.5
+                            fd 50
+                            pos`, [0, 50]);
+  await this.assert_equals(`cs
+                            wrap
+                            setscrunch 0.5 0.5
+                            fd 350
+                            pos`, [0, -250]);
+  await this.assert_equals(`cs
+                            setscrunch 1 0.5
+                            setxy 50 50
+                            setscrunch 1 1
+                            pos`, [50, 25]);
 
 
   // SETSCRUNCH + ARC
-  await this.assert_pixels('cs  setscrunch 0.5 1.5  setpw 10  arc 360 100', [
+  await this.assert_pixels(`cs
+                            setscrunch 0.5 1.5
+                            setpw 10
+                            arc 360 100`, [
     [150, 150, white],
 
     [150 - 100, 150, white],
@@ -1148,7 +1265,10 @@ QUnit.test("Graphics", async function(t) {
   ]);
 
   // WRAP + SETSCRUNCH + ARC
-  await this.assert_pixels('cs  setscrunch 0.5 3  setpw 10  arc 360 100', [
+  await this.assert_pixels(`cs
+                            setscrunch 0.5 3
+                            setpw 10
+                            arc 360 100`, [
     [150, 150, black],
 
     [150 - 100, 150, white],
@@ -1162,125 +1282,204 @@ QUnit.test("Graphics", async function(t) {
     [150, 150 + 149, white]
   ]);
 
-  await this.run('cs setscrunch 1 1');
+  await this.run(`cs
+                  setscrunch 1 1`);
 
-  await this.assert_equals('cs fd 100 setturtle 2 pos', [0, 0]);
-  await this.assert_equals('cs fd 100 setturtle 2 rt 90 setturtle 1 pos', [0, 100]);
-  await this.assert_equals('cs ht setturtle 2 shownp', 1);
-  await this.assert_equals('cs setturtle 2 ht setturtle 1 shownp', 1);
-  await this.assert_equals('cs ht setturtle 2 setturtle 1 shownp', 0);
-  await this.assert_equals('cs ht ask 2 [ pu ] shownp', 0);
-  await this.assert_equals('cs pu setturtle 2 pendownp', 1);
-  await this.assert_equals('cs setturtle 2 pu setturtle 1 pendownp', 1);
-  await this.assert_equals('cs pu setturtle 2 setturtle 1 pendownp', 0);
-  await this.assert_equals('cs pu ask 2 [ ht ] pendownp', 0);
+  await this.assert_equals(`cs
+                            fd 100
+                            setturtle 2
+                            pos`, [0, 0]);
+  await this.assert_equals(`cs
+                            fd 100
+                            setturtle 2
+                            rt 90
+                            setturtle 1
+                            pos`, [0, 100]);
+  await this.assert_equals(`cs
+                            ht
+                            setturtle 2
+                            shownp`, 1);
+  await this.assert_equals(`cs
+                            setturtle 2
+                            ht
+                            setturtle 1
+                            shownp`, 1);
+  await this.assert_equals(`cs
+                            ht
+                            setturtle 2
+                            setturtle 1
+                            shownp`, 0);
+  await this.assert_equals(`cs
+                            ht
+                            ask 2 [ pu ]
+                            shownp`, 0);
+  await this.assert_equals(`cs
+                            pu
+                            setturtle 2
+                            pendownp`, 1);
+  await this.assert_equals(`cs
+                            setturtle 2
+                            pu
+                            setturtle 1
+                            pendownp`, 1);
+  await this.assert_equals(`cs
+                            pu
+                            setturtle 2
+                            setturtle 1
+                            pendownp`, 0);
+  await this.assert_equals(`cs
+                            pu
+                            ask 2 [ ht ]
+                            pendownp`, 0);
 
-  await this.assert_equals('cs  setxy 100 100  setscrunch 2 2  pos', [50, 50]);
-  await this.run('cs setscrunch 1 1');
-  await this.assert_equals('cs  ask 2 [ setxy 100 100 ]  setscrunch 2 2  setturtle 2  pos', [50, 50]);
-  await this.run('cs setscrunch 1 1');
+  await this.assert_equals(`cs
+                            setxy 100 100
+                            setscrunch 2 2
+                            pos`, [50, 50]);
+  await this.run(`cs
+                   setscrunch 1 1`);
+  await this.assert_equals(`cs
+                            ask 2 [ setxy 100 100 ]
+                            setscrunch 2 2
+                            setturtle 2
+                            pos`, [50, 50]);
+  await this.run(`cs
+                   setscrunch 1 1`);
 
 
   //
   // 6.4 Turtle and Window Queries
   //
 
-  await this.assert_equals('showturtle shownp', 1);
-  await this.assert_equals('hideturtle shownp', 0);
+  await this.assert_equals(`showturtle shownp`, 1);
+  await this.assert_equals(`hideturtle shownp`, 0);
 
-  await this.assert_equals('wrap turtlemode', 'WRAP');
-  await this.assert_equals('window turtlemode', 'WINDOW');
-  await this.assert_equals('fence turtlemode', 'FENCE');
-  await this.assert_equals('wrap turtlemode', 'WRAP');
+  await this.assert_equals(`wrap turtlemode`, 'WRAP');
+  await this.assert_equals(`window turtlemode`, 'WINDOW');
+  await this.assert_equals(`fence turtlemode`, 'FENCE');
+  await this.assert_equals(`wrap turtlemode`, 'WRAP');
 
 
-  await this.assert_equals('setlabelheight 5 labelsize', [5, 5]);
+  await this.assert_equals(`setlabelheight 5 labelsize`, [5, 5]);
 
-  await this.assert_equals('( item 2 bounds ) + ( item 1 bounds )', 0);
-  await this.assert_equals('( item 4 bounds ) + ( item 3 bounds )', 0);
-  await this.assert_equals('make "x ( item 1 bounds )  setscrunch 2 1  :x = (item 1 bounds) * 2', 1);
-  await this.assert_equals('make "y ( item 3 bounds )  setscrunch 1 3  :x = (item 3 bounds) * 3', 1);
+  await this.assert_equals(`( item 2 bounds ) + ( item 1 bounds )`, 0);
+  await this.assert_equals(`( item 4 bounds ) + ( item 3 bounds )`, 0);
+  await this.assert_equals(`make "x ( item 1 bounds )
+                            setscrunch 2 1
+                            :x = (item 1 bounds) * 2`, 1);
+  await this.assert_equals(`make "y ( item 3 bounds )
+                            setscrunch 1 3
+                            :x = (item 3 bounds) * 3`, 1);
 
-  await this.assert_equals('clearturtles turtle', 1);
-  await this.assert_equals('clearturtles setturtle 10 setturtle 5 turtle', 5);
-  await this.assert_equals('clearturtles setturtle 10 setturtle 5 turtles', 10);
-  await this.assert_equals('clearscreen setturtle 3 turtles', 3);
+  await this.assert_equals(`clearturtles
+                            turtle`, 1);
+  await this.assert_equals(`clearturtles
+                            setturtle 10
+                            setturtle 5
+                            turtle`, 5);
+  await this.assert_equals(`clearturtles
+                            setturtle 10
+                            setturtle 5
+                            turtles`, 10);
+  await this.assert_equals(`clearscreen
+                            setturtle 3
+                            turtles`, 3);
 
   //
   // 6.5 Pen and Background Control
   //
 
-  await this.assert_equals('pendown pendownp', 1);
-  await this.assert_equals('penup pendownp', 0);
-  await this.assert_equals('pd pendownp', 1);
-  await this.assert_equals('pu pendownp', 0);
-  await this.run('pendown');
+  await this.assert_equals(`pendown pendownp`, 1);
+  await this.assert_equals(`penup pendownp`, 0);
+  await this.assert_equals(`pd pendownp`, 1);
+  await this.assert_equals(`pu pendownp`, 0);
+  await this.run(`pendown`);
 
-  await this.assert_equals('penpaint penmode', 'PAINT');
-  await this.assert_equals('penerase penmode', 'ERASE');
-  await this.assert_equals('penreverse penmode', 'REVERSE');
-  await this.run('penpaint');
+  await this.assert_equals(`penpaint penmode`, 'PAINT');
+  await this.assert_equals(`penerase penmode`, 'ERASE');
+  await this.assert_equals(`penreverse penmode`, 'REVERSE');
+  await this.run(`penpaint`);
 
-  await this.assert_equals('setpencolor 0 pencolor', 'black');
-  await this.assert_pixel('cs setpw 10  fd 0', 150, 150, black);
+  await this.assert_equals(`setpencolor 0 pencolor`, 'black');
+  await this.assert_pixel(`cs
+                           setpw 10
+                           fd 0`, 150, 150, black);
 
-  await this.assert_equals('setpc 0 pencolor', 'black');
-  await this.assert_pixel('cs setpw 10  fd 0', 150, 150, black);
+  await this.assert_equals(`setpc 0
+                            pencolor`, 'black');
+  await this.assert_pixel(`cs
+                           setpw 10
+                           fd 0`, 150, 150, black);
 
-  await this.assert_equals('setpencolor "#123456 pencolor', '#123456');
-  await this.assert_pixel('cs setpw 10  fd 0', 150, 150, [0x12, 0x34, 0x56, 0xff]);
+  await this.assert_equals(`setpencolor "#123456
+                            pencolor`, '#123456');
+  await this.assert_pixel(`cs
+                           setpw 10
+                           fd 0`, 150, 150, [0x12, 0x34, 0x56, 0xff]);
 
-  await this.assert_equals('setpencolor [0 50 99] pencolor', '#0080ff');
-  await this.assert_pixel('cs setpw 10  fd 0', 150, 150, [0, 0x80, 0xff, 0xff]);
+  await this.assert_equals(`setpencolor [0 50 99]
+                            pencolor`, '#0080ff');
+  await this.assert_pixel(`cs
+                           setpw 10
+                           fd 0`, 150, 150, [0, 0x80, 0xff, 0xff]);
 
-  await this.assert_equals('setpensize 6 pensize', [6, 6]);
-  await this.assert_equals('setpensize [6 6] pensize', [6, 6]);
+  await this.assert_equals(`setpensize 6
+                            pensize`, [6, 6]);
+  await this.assert_equals(`setpensize [6 6]
+                            pensize`, [6, 6]);
 
-  await this.assert_equals('setbackground 0 background', 'black');
-  await this.assert_equals('setscreencolor 0 background', 'black');
-  await this.assert_equals('setsc 0 background', 'black');
-  await this.assert_equals('setbackground "#123456 background', '#123456');
-  await this.assert_equals('setbackground [0 50 99] background', '#0080ff');
-  await this.assert_pixel('setbackground "white', 150, 150, white);
-  await this.assert_pixel('setbackground "red', 150, 150, red);
+  await this.assert_equals(`setbackground 0
+                            background`, 'black');
+  await this.assert_equals(`setscreencolor 0
+                            background`, 'black');
+  await this.assert_equals(`setsc 0
+                            background`, 'black');
+  await this.assert_equals(`setbackground "#123456
+                            background`, '#123456');
+  await this.assert_equals(`setbackground [0 50 99]
+                            background`, '#0080ff');
+  await this.assert_pixel(`setbackground "white`, 150, 150, white);
+  await this.assert_pixel(`setbackground "red`, 150, 150, red);
 
   //
   // 6.6 Pen Queries
   //
 
-  await this.assert_equals('pendown pendownp', 1);
-  await this.assert_equals('penup pendownp', 0);
+  await this.assert_equals(`pendown pendownp`, 1);
+  await this.assert_equals(`penup pendownp`, 0);
 
-  await this.assert_equals('penpaint penmode', 'PAINT');
-  await this.assert_equals('penerase penmode', 'ERASE');
-  await this.assert_equals('penreverse penmode', 'REVERSE');
+  await this.assert_equals(`penpaint penmode`, 'PAINT');
+  await this.assert_equals(`penerase penmode`, 'ERASE');
+  await this.assert_equals(`penreverse penmode`, 'REVERSE');
 
-  await this.assert_equals('setpencolor 0 pencolor', 'black');
-  await this.assert_equals('setpencolor "#123456 pencolor', '#123456');
+  await this.assert_equals(`setpencolor 0 pencolor`, 'black');
+  await this.assert_equals(`setpencolor "#123456 pencolor`, '#123456');
 
-  await this.assert_equals('setpalette 8 "pink  palette 8', 'pink');
-  await this.assert_equals('setpalette 9 [0 50 99]  palette 9', '#0080ff');
+  await this.assert_equals(`setpalette 8 "pink
+                            palette 8`, 'pink');
+  await this.assert_equals(`setpalette 9 [0 50 99]
+                            palette 9`, '#0080ff');
 
-  await this.assert_equals('setpensize 6 pensize', [6, 6]);
+  await this.assert_equals(`setpensize 6 pensize`, [6, 6]);
 
-  await this.assert_equals('setsc 0 background', 'black');
-  await this.assert_equals('setsc 0 getscreencolor', 'black');
-  await this.assert_equals('setsc 0 getsc', 'black');
-  await this.assert_equals('setsc "#123456 background', '#123456');
-  await this.assert_equals('setsc "#123456 getscreencolor', '#123456');
-  await this.assert_equals('setsc "#123456 getsc', '#123456');
-  await this.assert_equals('setsc [0 50 99] background', '#0080ff');
-  await this.assert_equals('setsc [0 50 99] getscreencolor', '#0080ff');
+  await this.assert_equals(`setsc 0 background`, 'black');
+  await this.assert_equals(`setsc 0 getscreencolor`, 'black');
+  await this.assert_equals(`setsc 0 getsc`, 'black');
+  await this.assert_equals(`setsc "#123456 background`, '#123456');
+  await this.assert_equals(`setsc "#123456 getscreencolor`, '#123456');
+  await this.assert_equals(`setsc "#123456 getsc`, '#123456');
+  await this.assert_equals(`setsc [0 50 99] background`, '#0080ff');
+  await this.assert_equals(`setsc [0 50 99] getscreencolor`, '#0080ff');
 
   // 6.7 Saving and Loading Pictures
 
   // 6.8 Mouse Queries
 
-  await this.assert_equals('button', 0);
-  await this.assert_equals('buttonp', 0);
-  await this.assert_equals('button?', 0);
-  await this.assert_equals('mousepos', [0, 0]);
-  await this.assert_equals('clickpos', [0, 0]);
+  await this.assert_equals(`button`, 0);
+  await this.assert_equals(`buttonp`, 0);
+  await this.assert_equals(`button?`, 0);
+  await this.assert_equals(`mousepos`, [0, 0]);
+  await this.assert_equals(`clickpos`, [0, 0]);
 });
 
 QUnit.test("Workspace Management", async function(t) {
@@ -1290,110 +1489,226 @@ QUnit.test("Workspace Management", async function(t) {
   // 7.1 Procedure Definition
   //
 
-  await this.assert_equals('to square :x output :x * :x end  square 5', 25);
-  await this.assert_equals('to foo output 5 end  foo', 5);
-  await this.assert_equals('to foo :x :y output 5 end  foo 1 2', 5);
-  await this.assert_equals('to foo :x :y output :x + :y end  foo 1 2', 3);
-  await this.assert_equals('to foo :x :y output :x + :y end  def "foo', 'to foo :x :y\n  output :x + :y\nend');
-  await this.assert_equals('to foo :x bar 1 "a + :x [ 1 2 ] end  def "foo', 'to foo :x\n  bar 1 "a + :x [ 1 2 ]\nend');
-  await this.assert_equals('to foo output 1 + 2 - 3 * 4 / 5 % 6 ^ -1 end  def "foo', 'to foo\n  output 1 + 2 - 3 * 4 / 5 % 6 ^ -1\nend');
+  await this.assert_equals(`to square :x
+                              output :x * :x
+                            end
+                            square 5`, 25);
+  await this.assert_equals(`to foo
+                              output 5
+                            end
+                            foo`, 5);
+  await this.assert_equals(`to foo :x :y
+                              output 5
+                            end
+                            foo 1 2`, 5);
+  await this.assert_equals(`to foo :x :y
+                              output :x + :y
+                            end
+                            foo 1 2`, 3);
+  await this.assert_equals(`to foo :x :y
+                              output :x + :y
+                            end
+                            def "foo`, 'to foo :x :y\n  output :x + :y\nend');
+  await this.assert_equals(`to foo :x
+                              bar 1 "a + :x [ 1 2 ]
+                            end
+                            def "foo`, 'to foo :x\n  bar 1 "a + :x [ 1 2 ]\nend');
+  await this.assert_equals(`to foo
+                              output 1 + 2 - 3 * 4 / 5 % 6 ^ -1
+                            end
+                            def "foo`, 'to foo\n  output 1 + 2 - 3 * 4 / 5 % 6 ^ -1\nend');
 
-  await this.assert_equals('to square :x output :x * :x end  copydef "multbyself "square  multbyself 5', 25);
+  await this.assert_equals(`to square :x
+                              output :x * :x
+                            end
+                            copydef "multbyself "square
+                            multbyself 5`, 25);
 
-  await this.assert_equals('define "square [[x][output :x * :x]]  square 5', 25);
-  await this.assert_equals('make "a 0  define "p [[][repeat 5 [ make "a :a + 1 ]]]  p 5  :a', 5);
+  await this.assert_equals(`define "square [[x][output :x * :x]]
+                            square 5`, 25);
+  await this.assert_equals(`make "a 0
+                            define "p [[][repeat 5 [ make "a :a + 1 ]]]
+                            p 5
+                            :a`, 5);
 
-  await this.assert_equals('to foo :x :y output :x + :y end  text "foo',
+  await this.assert_equals(`to foo :x :y
+                              output :x + :y
+                            end
+                            text "foo`,
                      [['x', 'y'], ['output', ':x', '+', ':y']]);
-  await this.assert_equals('to foo :x bar 1 "a + :x [ 1 2 ] end  text "foo',
+  await this.assert_equals(`to foo :x
+                              bar 1 "a + :x [ 1 2 ]
+                            end
+                            text "foo`,
                      [['x'], ['bar', '1', '"a', '+', ':x', [ '1', '2' ]]]);
-  await this.assert_equals('to foo output 1 + 2 - 3 * 4 / 5 % 6 ^ -1 end  text "foo',
+  await this.assert_equals(`to foo
+                              output 1 + 2 - 3 * 4 / 5 % 6 ^ -1
+                            end
+                            text "foo`,
                      [[], ['output', '1', '+', '2', '-', '3', '*', '4', '/', '5', '%', '6', '^', '<UNARYMINUS>', '1']]);
 
   // Various combinations of inputs, optional inputs, rest, and default length
 
   // No inputs
-  await this.assert_equals('to foo (output 1) end  (foo)', 1);
+  await this.assert_equals(`to foo
+                              (output 1)
+                            end
+                            (foo)`, 1);
 
   // + Required inputs
-  await this.assert_error('to foo :a (output :a) end  (foo)', 'Not enough inputs for FOO');
-  await this.assert_equals('to foo :a (output :a) end  (foo 1)', 1);
+  await this.assert_error(`to foo :a
+                             (output :a)
+                            end
+                            (foo)`, 'Not enough inputs for FOO');
+  await this.assert_equals(`to foo :a
+                              (output :a)
+                            end
+                            (foo 1)`, 1);
 
-  await this.assert_error('to foo :a :b output (list :a :b) end  (foo)', 'Not enough inputs for FOO');
-  await this.assert_error('to foo :a :b output (list :a :b) end  (foo 1)', 'Not enough inputs for FOO');
-  await this.assert_equals('to foo :a :b output (list :a :b)) end  (foo 1 2)', [1, 2]);
-  await this.assert_equals('to foo :a :b output (list :a :b)) end  foo 1 2', [1, 2]);
-  await this.assert_equals('to foo :a :b output (list :a :b)) end  foo 1 2 3', 3);
+  await this.assert_error(`to foo :a :b
+                              output (list :a :b)
+                            end
+                            (foo)`, 'Not enough inputs for FOO');
+  await this.assert_error(`to foo :a :b
+                              output (list :a :b)
+                            end
+                            (foo 1)`, 'Not enough inputs for FOO');
+  await this.assert_equals(`to foo :a :b
+                              output (list :a :b))
+                            end
+                            (foo 1 2)`, [1, 2]);
+  await this.assert_equals(`to foo :a :b
+                              output (list :a :b))
+                            end
+                            foo 1 2`, [1, 2]);
+  await this.assert_equals(`to foo :a :b
+                              output (list :a :b))
+                            end
+                            foo 1 2 3`, 3);
 
   // + Optional inputs
-  await this.assert_equals('to foo [:a 6] output (list :a) end  (foo)', [6]);
-  await this.assert_equals('to foo [:a 6] output (list :a) end  (foo 1)', [1]);
-  await this.assert_equals('to foo [:a 6] [:b 7] output (list :a :b) end  (foo)', [6, 7]);
-  await this.assert_equals('to foo [:a 6] [:b 7] output (list :a :b) end  (foo 1)', [1, 7]);
-  await this.assert_equals('to foo [:a 6] [:b 7] output (list :a :b) end  (foo 1 2)', [1, 2]);
-  await this.assert_error('to foo [:a 6] [:b 7] output (list :a :b) end  (foo 1 2 3)', 'Too many inputs for FOO');
+  await this.assert_equals(`to foo [:a 6] output (list :a) end
+                            (foo)`, [6]);
+  await this.assert_equals(`to foo [:a 6] output (list :a) end
+                            (foo 1)`, [1]);
+  await this.assert_equals(`to foo [:a 6] [:b 7] output (list :a :b) end
+                            (foo)`, [6, 7]);
+  await this.assert_equals(`to foo [:a 6] [:b 7] output (list :a :b) end
+                            (foo 1)`, [1, 7]);
+  await this.assert_equals(`to foo [:a 6] [:b 7] output (list :a :b) end
+                            (foo 1 2)`, [1, 2]);
+  await this.assert_error(`to foo [:a 6] [:b 7] output (list :a :b) end
+                           (foo 1 2 3)`, 'Too many inputs for FOO');
 
-  await this.assert_equals('to foo :a [:b 6] output (list :a :b) end  (foo 1)', [1, 6]);
-  await this.assert_equals('to foo :a [:b 6] output (list :a :b) end  (foo 1 2)', [1, 2]);
+  await this.assert_equals(`to foo :a [:b 6] output (list :a :b) end
+                            (foo 1)`, [1, 6]);
+  await this.assert_equals(`to foo :a [:b 6] output (list :a :b) end
+                            (foo 1 2)`, [1, 2]);
 
-  await this.assert_error('to foo :a :b [:c 6] output (list :a :b :c) end  (foo 1)', 'Not enough inputs for FOO');
-  await this.assert_equals('to foo :a :b [:c 6] output (list :a :b :c) end  (foo 1 2)', [1, 2, 6]);
-  await this.assert_equals('to foo :a :b [:c 6] output (list :a :b :c) end  (foo 1 2 3)', [1, 2, 3]);
+  await this.assert_error(`to foo :a :b [:c 6] output (list :a :b :c) end
+                           (foo 1)`, 'Not enough inputs for FOO');
+  await this.assert_equals(`to foo :a :b [:c 6] output (list :a :b :c) end
+                            (foo 1 2)`, [1, 2, 6]);
+  await this.assert_equals(`to foo :a :b [:c 6] output (list :a :b :c) end
+                            (foo 1 2 3)`, [1, 2, 3]);
 
   // + Rest inputs
-  await this.assert_equals('to foo [:r] output :r end  (foo)', []);
-  await this.assert_equals('to foo [:r] output :r end  (foo 1 2)', [1, 2]);
+  await this.assert_equals(`to foo [:r] output :r end
+                            (foo)`, []);
+  await this.assert_equals(`to foo [:r] output :r end
+                            (foo 1 2)`, [1, 2]);
 
-  await this.assert_error('to foo :a [:r] output (list :a :r) end  (foo)', 'Not enough inputs for FOO');
-  await this.assert_equals('to foo :a [:r] output (list :a :r) end  (foo 1)', [1, []]);
-  await this.assert_equals('to foo :a [:r] output (list :a :r) end  (foo 1 2)', [1, [2]]);
-  await this.assert_equals('to foo :a [:r] output (list :a :r) end  (foo 1 2 3)', [1, [2, 3]]);
+  await this.assert_error(`to foo :a [:r] output (list :a :r) end
+                           (foo)`, 'Not enough inputs for FOO');
+  await this.assert_equals(`to foo :a [:r] output (list :a :r) end
+                            (foo 1)`, [1, []]);
+  await this.assert_equals(`to foo :a [:r] output (list :a :r) end
+                            (foo 1 2)`, [1, [2]]);
+  await this.assert_equals(`to foo :a [:r] output (list :a :r) end
+                            (foo 1 2 3)`, [1, [2, 3]]);
 
-  await this.assert_equals('to foo :a :b [:r] output (list :a :b :r) end  (foo 1 2)', [1, 2, []]);
-  await this.assert_equals('to foo :a :b [:r] output (list :a :b :r) end  (foo 1 2 3)', [1, 2, [3]]);
-  await this.assert_equals('to foo [:a 6] [:r] output (list :a :r) end  (foo)', [6, []]);
-  await this.assert_equals('to foo [:a 6] [:r] output (list :a :r) end  (foo 1)', [1, []]);
-  await this.assert_equals('to foo [:a 6] [:r] output (list :a :r) end  (foo 1 2)', [1, [2]]);
-  await this.assert_equals('to foo [:a 6] [:r] output (list :a :r) end  (foo 1 2 3)', [1, [2, 3]]);
+  await this.assert_equals(`to foo :a :b [:r] output (list :a :b :r) end
+                            (foo 1 2)`, [1, 2, []]);
+  await this.assert_equals(`to foo :a :b [:r] output (list :a :b :r) end
+                            (foo 1 2 3)`, [1, 2, [3]]);
+  await this.assert_equals(`to foo [:a 6] [:r] output (list :a :r) end
+                            (foo)`, [6, []]);
+  await this.assert_equals(`to foo [:a 6] [:r] output (list :a :r) end
+                            (foo 1)`, [1, []]);
+  await this.assert_equals(`to foo [:a 6] [:r] output (list :a :r) end
+                            (foo 1 2)`, [1, [2]]);
+  await this.assert_equals(`to foo [:a 6] [:r] output (list :a :r) end
+                            (foo 1 2 3)`, [1, [2, 3]]);
 
   // + Default length
-  await this.assert_error('to foo 4 end', 'TO: Bad default number of inputs for FOO');
-  await this.assert_error('to foo :a :b 1 end', 'TO: Bad default number of inputs for FOO');
-  await this.assert_error('to foo :a :b 3 end', 'TO: Bad default number of inputs for FOO');
-  await this.assert_error('to foo :a [:b 0] 0 end', 'TO: Bad default number of inputs for FOO');
-  await this.assert_error('to foo :a [:b 0] 3 end', 'TO: Bad default number of inputs for FOO');
+  await this.assert_error(`to foo 4 end`, 'TO: Bad default number of inputs for FOO');
+  await this.assert_error(`to foo :a :b 1 end`, 'TO: Bad default number of inputs for FOO');
+  await this.assert_error(`to foo :a :b 3 end`, 'TO: Bad default number of inputs for FOO');
+  await this.assert_error(`to foo :a [:b 0] 0 end`, 'TO: Bad default number of inputs for FOO');
+  await this.assert_error(`to foo :a [:b 0] 3 end`, 'TO: Bad default number of inputs for FOO');
 
-  await this.assert_equals('to foo :a 1 output (list :a) end  (foo 1)', [1]);
-  await this.assert_equals('to foo :a :b 2 output (list :a :b) end  (foo 1 2)', [1, 2]);
-  await this.assert_equals('to foo [:a 6] 0 output (list :a) end  (list foo 1 2 3)', [[6], 1, 2, 3]);
-  await this.assert_equals('to foo [:a 6] 1 output (list :a) end  (list foo 1 2 3)', [[1], 2, 3]);
-  await this.assert_equals('to foo :a [:b 6] 1 output (list :a :b) end  (list foo 1 2 3)', [[1, 6], 2, 3]);
-  await this.assert_equals('to foo :a [:b 6] 2 output (list :a :b) end  (list foo 1 2 3)', [[1, 2], 3]);
+  await this.assert_equals(`to foo :a 1 output (list :a) end
+                            (foo 1)`, [1]);
+  await this.assert_equals(`to foo :a :b 2 output (list :a :b) end
+                            (foo 1 2)`, [1, 2]);
+  await this.assert_equals(`to foo [:a 6] 0 output (list :a) end
+                            (list foo 1 2 3)`, [[6], 1, 2, 3]);
+  await this.assert_equals(`to foo [:a 6] 1 output (list :a) end
+                            (list foo 1 2 3)`, [[1], 2, 3]);
+  await this.assert_equals(`to foo :a [:b 6] 1 output (list :a :b) end
+                            (list foo 1 2 3)`, [[1, 6], 2, 3]);
+  await this.assert_equals(`to foo :a [:b 6] 2 output (list :a :b) end
+                            (list foo 1 2 3)`, [[1, 2], 3]);
 
-  await this.assert_equals('to foo [:r] 2 output :r end  (list foo 1 2 3 4)', [[1, 2], 3, 4]);
-  await this.assert_equals('to foo :a [:r] 1 output (list :a :r) end  (list foo 1 2 3 4)', [[1, []], 2, 3, 4]);
-  await this.assert_equals('to foo :a [:r] 2 output (list :a :r) end  (list foo 1 2 3 4)', [[1, [2]], 3, 4]);
-  await this.assert_equals('to foo :a [:r] 3 output (list :a :r) end  (list foo 1 2 3 4)', [[1, [2, 3]], 4]);
-  await this.assert_equals('to foo [:a 6] [:r] 0 output (list :a :r) end  (list foo 1 2 3 4)', [[6, []], 1, 2, 3, 4]);
-  await this.assert_equals('to foo [:a 6] [:r] 1 output (list :a :r) end  (list foo 1 2 3 4)', [[1, []], 2, 3, 4]);
-  await this.assert_equals('to foo [:a 6] [:r] 2 output (list :a :r) end  (list foo 1 2 3 4)', [[1, [2]], 3, 4]);
-  await this.assert_equals('to foo [:a 6] [:r] 3 output (list :a :r) end  (list foo 1 2 3 4)', [[1, [2, 3]], 4]);
-  await this.assert_equals('to foo :a [:b 6] [:r] 1 output (list :a :b :r) end  (list foo 1 2 3 4)', [[1, 6, []], 2, 3, 4]);
-  await this.assert_equals('to foo :a [:b 6] [:r] 2 output (list :a :b :r) end  (list foo 1 2 3 4)', [[1, 2, []], 3, 4]);
-  await this.assert_equals('to foo :a [:b 6] [:r] 3 output (list :a :b :r) end  (list foo 1 2 3 4)', [[1, 2, [3]], 4]);
-  await this.assert_equals('to foo :a [:b 6] [:r] 4 output (list :a :b :r) end  (list foo 1 2 3 4)', [[1, 2, [3, 4]]]);
+  await this.assert_equals(`to foo [:r] 2 output :r end
+                            (list foo 1 2 3 4)`, [[1, 2], 3, 4]);
+  await this.assert_equals(`to foo :a [:r] 1 output (list :a :r) end
+                            (list foo 1 2 3 4)`, [[1, []], 2, 3, 4]);
+  await this.assert_equals(`to foo :a [:r] 2 output (list :a :r) end
+                            (list foo 1 2 3 4)`, [[1, [2]], 3, 4]);
+  await this.assert_equals(`to foo :a [:r] 3 output (list :a :r) end
+                            (list foo 1 2 3 4)`, [[1, [2, 3]], 4]);
+  await this.assert_equals(`to foo [:a 6] [:r] 0 output (list :a :r) end
+                            (list foo 1 2 3 4)`, [[6, []], 1, 2, 3, 4]);
+  await this.assert_equals(`to foo [:a 6] [:r] 1 output (list :a :r) end
+                            (list foo 1 2 3 4)`, [[1, []], 2, 3, 4]);
+  await this.assert_equals(`to foo [:a 6] [:r] 2 output (list :a :r) end
+                            (list foo 1 2 3 4)`, [[1, [2]], 3, 4]);
+  await this.assert_equals(`to foo [:a 6] [:r] 3 output (list :a :r) end
+                            (list foo 1 2 3 4)`, [[1, [2, 3]], 4]);
+  await this.assert_equals(`to foo :a [:b 6] [:r] 1 output (list :a :b :r) end
+                            (list foo 1 2 3 4)`, [[1, 6, []], 2, 3, 4]);
+  await this.assert_equals(`to foo :a [:b 6] [:r] 2 output (list :a :b :r) end
+                            (list foo 1 2 3 4)`, [[1, 2, []], 3, 4]);
+  await this.assert_equals(`to foo :a [:b 6] [:r] 3 output (list :a :b :r) end
+                            (list foo 1 2 3 4)`, [[1, 2, [3]], 4]);
+  await this.assert_equals(`to foo :a [:b 6] [:r] 4 output (list :a :b :r) end
+                            (list foo 1 2 3 4)`, [[1, 2, [3, 4]]]);
 
   // "a default value expression can be based on earlier inputs"
-  await this.assert_equals('to foo :a [:b :a + 5] output (list :a :b) end  (foo 1)', [1, 6]);
-  await this.assert_equals('to foo :a [:b :a + 5] [:c :b * :b ] output :c  end  (foo 1)', 36);
+  await this.assert_equals(`to foo :a [:b :a + 5]
+                              output (list :a :b)
+                            end
+                            (foo 1)`, [1, 6]);
+  await this.assert_equals(`to foo :a [:b :a + 5] [:c :b * :b ]
+                              output :c
+                            end
+                            (foo 1)`, 36);
 
-  await this.assert_equals('to foo :a [:b 1 + 2] [:c] 2 (show :a :b :c)  end  text "foo',
+  await this.assert_equals(`to foo :a [:b 1 + 2] [:c] 2
+                              (show :a :b :c)
+                            end
+                            text "foo`,
                      [['a', ["b", ['1', '+', '2']], ['c'], 2], ['(', 'show', ':a', ':b', ':c', ')']]);
 
-  await this.assert_equals('to foo :a [:b 1 + 2] [:c] 2 (show :a :b :c)  end  def "foo',
+  await this.assert_equals(`to foo :a [:b 1 + 2] [:c] 2
+                              (show :a :b :c)
+                            end
+                            def "foo`,
                      'to foo :a [:b 1 + 2] [:c] 2\n  ( show :a :b :c )\nend');
 
-  await this.assert_equals('define "foo [[a [b 1 + 2] [c] 2] [ (show :a :b :c) ]]  text "foo',
+  await this.assert_equals(`define "foo [[a [b 1 + 2] [c] 2] [ (show :a :b :c) ]]
+                            text "foo`,
                      [['a', ["b", ['1', '+', '2']], ['c'], 2], ['(', 'show', ':a', ':b', ':c', ')']]);
 
   // TODO: copydef + redefp
@@ -1402,85 +1717,96 @@ QUnit.test("Workspace Management", async function(t) {
   // 7.2 Variable Definition
   //
 
-  await this.assert_equals('make "foo 5 :foo', 5);
-  await this.assert_equals('make "foo "a :foo', 'a');
-  await this.assert_equals('make "foo [a b] :foo', ["a", "b"]);
-  await this.assert_equals('make "n "alpha make :n "beta :alpha', 'beta');
+  await this.assert_equals(`make "foo 5 :foo`, 5);
+  await this.assert_equals(`make "foo "a :foo`, 'a');
+  await this.assert_equals(`make "foo [a b] :foo`, ["a", "b"]);
+  await this.assert_equals(`make "n "alpha make :n "beta :alpha`, 'beta');
 
   // by default, make operates in global scope
-  await this.assert_equals('to dofoo ' +
-                '  make "foo 456 ' +
-                '  output :foo ' +
-                'end ' +
-                'make "foo 123 ' +
-                'dofoo + :foo', 456 + 456);
+  await this.assert_equals(`to dofoo
+                              make "foo 456
+                              output :foo
+                            end
+                            make "foo 123
+                            dofoo + :foo`, 456 + 456);
 
-  await this.assert_equals('to dofoo2 :foo ' +
-                '  make "foo 456 ' +
-                '  output :foo + :foo ' +
-                'end ' +
-                'make "foo 123 ' +
-                '(dofoo2 111) + :foo', 123 + 456 + 456);
+  await this.assert_equals(`to dofoo2 :foo
+                              make "foo 456
+                              output :foo + :foo
+                            end
+                            make "foo 123
+                            (dofoo2 111) + :foo`, 123 + 456 + 456);
 
-  await this.assert_equals('name 5 "foo :foo', 5);
-  await this.assert_equals('name "a "foo :foo', 'a');
-  await this.assert_equals('name [a b] "foo :foo', ["a", "b"]);
-  await this.assert_equals('name "gamma "m  name "delta :m :gamma', 'delta');
+  await this.assert_equals(`name 5 "foo :foo`, 5);
+  await this.assert_equals(`name "a "foo :foo`, 'a');
+  await this.assert_equals(`name [a b] "foo :foo`, ["a", "b"]);
+  await this.assert_equals(`name "gamma "m
+                            name "delta :m
+                            :gamma`, 'delta');
 
-  await this.assert_equals('to dofoo ' +
-                '  local "foo ' +
-                '  make "foo 456' +
-                '  output :foo ' +
-                'end ' +
-                'make "foo 123 ' +
-                'dofoo + :foo', 456 + 123);
+  await this.assert_equals(`to dofoo
+                              local "foo
+                              make "foo 456
+                              output :foo
+                            end
+                            make "foo 123
+                            dofoo + :foo`, 456 + 123);
 
-  await this.assert_equals('to dofoo ' +
-                '  localmake "foo 456' +
-                '  output :foo ' +
-                'end ' +
-                'make "foo 123 ' +
-                'dofoo + :foo', 456 + 123);
+  await this.assert_equals(`to dofoo
+                              localmake "foo 456
+                              output :foo
+                            end
+                            make "foo 123
+                            dofoo + :foo`, 456 + 123);
 
-  await this.assert_equals('make "baz 321 thing "baz', 321);
-  await this.assert_equals('make "baz "a thing "baz', 'a');
-  await this.assert_equals('make "baz [a b c] thing "baz', ["a", "b", "c"]);
+  await this.assert_equals(`make "baz 321 thing "baz`, 321);
+  await this.assert_equals(`make "baz "a thing "baz`, 'a');
+  await this.assert_equals(`make "baz [a b c] thing "baz`, ["a", "b", "c"]);
 
-  await this.assert_equals('global "foo 1', 1); // Doesn't actually test anything
-  await this.assert_equals('(global "foo "bar) 1', 1); // Doesn't actually test anything
+  await this.assert_equals(`global "foo 1`, 1); // Doesn't actually test anything
+  await this.assert_equals(`(global "foo "bar) 1`, 1); // Doesn't actually test anything
 
-  await this.assert_equals('procedurep "notdefined', 0);
-  await this.assert_equals('to foo end  procedurep "foo', 1);
-  await this.assert_equals('procedure? "notdefined', 0);
-  await this.assert_equals('to foo end  procedure? "foo', 1);
+  await this.assert_equals(`procedurep "notdefined`, 0);
+  await this.assert_equals(`to foo end
+                            procedurep "foo`, 1);
+  await this.assert_equals(`procedure? "notdefined`, 0);
+  await this.assert_equals(`to foo end
+                            procedure? "foo`, 1);
 
-  await this.assert_equals('primitivep "notdefined', 0);
-  await this.assert_equals('to foo end  primitivep "foo', 0);
-  await this.assert_equals('primitivep "sentence', 1);
-  await this.assert_equals('primitive? "notdefined', 0);
-  await this.assert_equals('to foo end  primitive? "foo', 0);
-  await this.assert_equals('primitive? "sentence', 1);
+  await this.assert_equals(`primitivep "notdefined`, 0);
+  await this.assert_equals(`to foo end
+                            primitivep "foo`, 0);
+  await this.assert_equals(`primitivep "sentence`, 1);
+  await this.assert_equals(`primitive? "notdefined`, 0);
+  await this.assert_equals(`to foo end
+                            primitive? "foo`, 0);
+  await this.assert_equals(`primitive? "sentence`, 1);
 
-  await this.assert_equals('definedp "notdefined', 0);
-  await this.assert_equals('to foo end  definedp "foo', 1);
-  await this.assert_equals('definedp "sentence', 0);
-  await this.assert_equals('defined? "notdefined', 0);
-  await this.assert_equals('to foo end  defined? "foo', 1);
-  await this.assert_equals('defined? "sentence', 0);
+  await this.assert_equals(`definedp "notdefined`, 0);
+  await this.assert_equals(`to foo end
+                            definedp "foo`, 1);
+  await this.assert_equals(`definedp "sentence`, 0);
+  await this.assert_equals(`defined? "notdefined`, 0);
+  await this.assert_equals(`to foo end
+                            defined? "foo`, 1);
+  await this.assert_equals(`defined? "sentence`, 0);
 
-  await this.assert_equals('namep "notdefined', 0);
-  await this.assert_equals('make "foo 5 namep "foo', 1);
+  await this.assert_equals(`namep "notdefined`, 0);
+  await this.assert_equals(`make "foo 5 namep "foo`, 1);
 
   // 7.3 Property Lists
 
-  await this.assert_equals('plistp "lname', 0);
-  await this.assert_equals('pprop "lname "pname 123  gprop "lname "pname', 123);
-  await this.assert_equals('gprop "lname "nosuchprop', []);
-  await this.assert_equals('plist "lname', ["pname", 123]);
-  await this.assert_equals('plistp "lname', 1);
-  await this.assert_equals('remprop "lname "pname  plist "lname', []);
-  await this.assert_equals('plistp "lname', 0);
-  await this.assert_equals('pprop "lname "pname 123  gprop "LNAME "PNAME', 123);
+  await this.assert_equals(`plistp "lname`, 0);
+  await this.assert_equals(`pprop "lname "pname 123
+                            gprop "lname "pname`, 123);
+  await this.assert_equals(`gprop "lname "nosuchprop`, []);
+  await this.assert_equals(`plist "lname`, ["pname", 123]);
+  await this.assert_equals(`plistp "lname`, 1);
+  await this.assert_equals(`remprop "lname "pname
+                            plist "lname`, []);
+  await this.assert_equals(`plistp "lname`, 0);
+  await this.assert_equals(`pprop "lname "pname 123
+                            gprop "LNAME "PNAME`, 123);
 
   // 7.4 Workspace Predicates
   // (tested above)
@@ -1489,108 +1815,358 @@ QUnit.test("Workspace Management", async function(t) {
   // 7.5 Workspace Queries
   //
 
-  await this.assert_equals('unburyall erall  contents', [[], [], []]);
+  await this.assert_equals(`unburyall
+                            erall
+                            contents`, [[], [], []]);
 
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  contents', [['b'], ['a'], ['c']]);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  procedures', ['b']);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            contents`, [['b'], ['a'], ['c']]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            procedures`, ['b']);
 
-  await this.assert_equals('memberp "firsts primitives', 1);
-  await this.assert_equals('memberp "nopenopefirsts primitives', 0);
+  await this.assert_equals(`memberp "firsts
+                            primitives`, 1);
+  await this.assert_equals(`memberp "nopenopefirsts
+                            primitives`, 0);
 
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  globals', ['a']);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  names', [[], ['a']]);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  plists', [[], [], ['c']]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            globals`, ['a']);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            names`, [[], ['a']]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            plists`, [[], [], ['c']]);
 
-  await this.assert_equals('namelist "a', [[], ['a']]);
-  await this.assert_equals('namelist [a]', [[], ['a']]);
-  await this.assert_equals('namelist [a b c]', [[], ['a', 'b', 'c']]);
-  await this.assert_equals('pllist "a', [[], [], ['a']]);
-  await this.assert_equals('pllist [a]', [[], [], ['a']]);
-  await this.assert_equals('pllist [a b c]', [[], [], ['a', 'b', 'c']]);
+  await this.assert_equals(`namelist "a`, [[], ['a']]);
+  await this.assert_equals(`namelist [a]`, [[], ['a']]);
+  await this.assert_equals(`namelist [a b c]`, [[], ['a', 'b', 'c']]);
+  await this.assert_equals(`pllist "a`, [[], [], ['a']]);
+  await this.assert_equals(`pllist [a]`, [[], [], ['a']]);
+  await this.assert_equals(`pllist [a b c]`, [[], [], ['a', 'b', 'c']]);
 
-  await this.assert_equals('to foo end  arity "foo', [0, 0, 0]);
-  await this.assert_equals('to foo :a end  arity "foo', [1, 1, 1]);
-  await this.assert_equals('to foo :a :b end  arity "foo', [2, 2, 2]);
-  await this.assert_equals('to foo [:a 1] end  arity "foo', [0, 0, 1]);
-  await this.assert_equals('to foo [:a 1] [:b 1] end  arity "foo', [0, 0, 2]);
-  await this.assert_equals('to foo :a [:b 1] end  arity "foo', [1, 1, 2]);
-  await this.assert_equals('to foo :a :b [:c 1] end  arity "foo', [2, 2, 3]);
-  await this.assert_equals('to foo [:r] end  arity "foo', [0, 0, -1]);
-  await this.assert_equals('to foo :a [:r] end  arity "foo', [1, 1, -1]);
-  await this.assert_equals('to foo :a :b [:r] end  arity "foo', [2, 2, -1]);
-  await this.assert_equals('to foo [:a 1] [:r] end  arity "foo', [0, 0, -1]);
-  await this.assert_equals('to foo [:a 1] [:b 1] [:r] end  arity "foo', [0, 0, -1]);
-  await this.assert_equals('to foo :a [:b 1] [:r] end  arity "foo', [1, 1, -1]);
-  await this.assert_equals('to foo :a :b [:c 1] [:r] end  arity "foo', [2, 2, -1]);
+  await this.assert_equals(`to foo end
+                            arity "foo`, [0, 0, 0]);
+  await this.assert_equals(`to foo :a end
+                            arity "foo`, [1, 1, 1]);
+  await this.assert_equals(`to foo :a :b end
+                            arity "foo`, [2, 2, 2]);
+  await this.assert_equals(`to foo [:a 1] end
+                            arity "foo`, [0, 0, 1]);
+  await this.assert_equals(`to foo [:a 1] [:b 1] end
+                            arity "foo`, [0, 0, 2]);
+  await this.assert_equals(`to foo :a [:b 1] end
+                            arity "foo`, [1, 1, 2]);
+  await this.assert_equals(`to foo :a :b [:c 1] end
+                            arity "foo`, [2, 2, 3]);
+  await this.assert_equals(`to foo [:r] end
+                            arity "foo`, [0, 0, -1]);
+  await this.assert_equals(`to foo :a [:r] end
+                            arity "foo`, [1, 1, -1]);
+  await this.assert_equals(`to foo :a :b [:r] end
+                            arity "foo`, [2, 2, -1]);
+  await this.assert_equals(`to foo [:a 1] [:r] end
+                            arity "foo`, [0, 0, -1]);
+  await this.assert_equals(`to foo [:a 1] [:b 1] [:r] end
+                            arity "foo`, [0, 0, -1]);
+  await this.assert_equals(`to foo :a [:b 1] [:r] end
+                            arity "foo`, [1, 1, -1]);
+  await this.assert_equals(`to foo :a :b [:c 1] [:r] end
+                            arity "foo`, [2, 2, -1]);
 
-  await this.assert_equals('to foo 0 end  arity "foo', [0, 0, 0]);
-  await this.assert_equals('to foo :a 1 end  arity "foo', [1, 1, 1]);
-  await this.assert_equals('to foo :a :b 2 end  arity "foo', [2, 2, 2]);
-  await this.assert_equals('to foo [:a 1] 0 end  arity "foo', [0, 0, 1]);
-  await this.assert_equals('to foo [:a 1] 1 end  arity "foo', [0, 1, 1]);
-  await this.assert_equals('to foo [:a 1] [:b 1] 0 end  arity "foo', [0, 0, 2]);
-  await this.assert_equals('to foo [:a 1] [:b 1] 1 end  arity "foo', [0, 1, 2]);
-  await this.assert_equals('to foo [:a 1] [:b 1] 2 end  arity "foo', [0, 2, 2]);
-  await this.assert_equals('to foo :a [:b 1] 1 end  arity "foo', [1, 1, 2]);
-  await this.assert_equals('to foo :a [:b 1] 2 end  arity "foo', [1, 2, 2]);
-  await this.assert_equals('to foo :a :b [:c 1] 2 end  arity "foo', [2, 2, 3]);
-  await this.assert_equals('to foo :a :b [:c 1] 3 end  arity "foo', [2, 3, 3]);
-  await this.assert_equals('to foo [:r] 4 end  arity "foo', [0, 4, -1]);
-  await this.assert_equals('to foo :a [:r] 4 end  arity "foo', [1, 4, -1]);
-  await this.assert_equals('to foo :a :b [:r] 4 end  arity "foo', [2, 4, -1]);
-  await this.assert_equals('to foo :a [:b 1] [:r] 4 end  arity "foo', [1, 4, -1]);
-  await this.assert_equals('to foo [:a 1] [:r] 4 end  arity "foo', [0, 4, -1]);
-  await this.assert_equals('to foo [:a 1] [:b 1] [:r] 4 end  arity "foo', [0, 4, -1]);
-  await this.assert_equals('to foo :a :b [:c 1] [:r] 4 end  arity "foo', [2, 4, -1]);
+  await this.assert_equals(`to foo 0 end
+                            arity "foo`, [0, 0, 0]);
+  await this.assert_equals(`to foo :a 1 end
+                            arity "foo`, [1, 1, 1]);
+  await this.assert_equals(`to foo :a :b 2 end
+                            arity "foo`, [2, 2, 2]);
+  await this.assert_equals(`to foo [:a 1] 0 end
+                            arity "foo`, [0, 0, 1]);
+  await this.assert_equals(`to foo [:a 1] 1 end
+                            arity "foo`, [0, 1, 1]);
+  await this.assert_equals(`to foo [:a 1] [:b 1] 0 end
+                            arity "foo`, [0, 0, 2]);
+  await this.assert_equals(`to foo [:a 1] [:b 1] 1 end
+                            arity "foo`, [0, 1, 2]);
+  await this.assert_equals(`to foo [:a 1] [:b 1] 2 end
+                            arity "foo`, [0, 2, 2]);
+  await this.assert_equals(`to foo :a [:b 1] 1 end
+                            arity "foo`, [1, 1, 2]);
+  await this.assert_equals(`to foo :a [:b 1] 2 end
+                            arity "foo`, [1, 2, 2]);
+  await this.assert_equals(`to foo :a :b [:c 1] 2 end
+                            arity "foo`, [2, 2, 3]);
+  await this.assert_equals(`to foo :a :b [:c 1] 3 end
+                            arity "foo`, [2, 3, 3]);
+  await this.assert_equals(`to foo [:r] 4 end
+                            arity "foo`, [0, 4, -1]);
+  await this.assert_equals(`to foo :a [:r] 4 end
+                            arity "foo`, [1, 4, -1]);
+  await this.assert_equals(`to foo :a :b [:r] 4 end
+                            arity "foo`, [2, 4, -1]);
+  await this.assert_equals(`to foo :a [:b 1] [:r] 4 end
+                            arity "foo`, [1, 4, -1]);
+  await this.assert_equals(`to foo [:a 1] [:r] 4 end
+                            arity "foo`, [0, 4, -1]);
+  await this.assert_equals(`to foo [:a 1] [:b 1] [:r] 4 end
+                            arity "foo`, [0, 4, -1]);
+  await this.assert_equals(`to foo :a :b [:c 1] [:r] 4 end
+                            arity "foo`, [2, 4, -1]);
 
-  await this.assert_equals('unburyall erall  make "a 1  make "b 2  to a output 1 end  to b output 2 end  erase [[a] [b]]  contents', [['b'], ['a'], []]);
-  await this.assert_equals('unburyall erall  make "a 1  make "b 2  to a output 1 end  to b output 2 end  erall  contents', [[], [], []]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            make "b 2
+                            to a output 1 end
+                            to b output 2 end
+                            erase [[a] [b]]
+                            contents`, [['b'], ['a'], []]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            make "b 2
+                            to a output 1 end
+                            to b output 2 end
+                            erall
+                            contents`, [[], [], []]);
   // TODO: erase + redefp
 
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  erps [[b]]  contents', [[], ['a'], ['c']]);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  erns [[a]]  contents', [['b'], [], ['c']]);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  erpls [[c]]  contents', [['b'], ['a'], []]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            erps [[b]]
+                            contents`, [[], ['a'], ['c']]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            erns [[a]]
+                            contents`, [['b'], [], ['c']]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            erpls [[c]]
+                            contents`, [['b'], ['a'], []]);
 
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  ern "a  contents', [['b'], [], ['c']]);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  ern [a]  contents', [['b'], [], ['c']]);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  erpl "c  contents', [['b'], ['a'], []]);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  erpl [c]  contents', [['b'], ['a'], []]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            ern "a
+                            contents`, [['b'], [], ['c']]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            ern [a]
+                            contents`, [['b'], [], ['c']]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            erpl "c
+                            contents`, [['b'], ['a'], []]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            erpl [c]
+                            contents`, [['b'], ['a'], []]);
 
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  bury [[b]]  contents', [[], ['a'], ['c']]);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  bury [[] [a]]  contents', [['b'], [], ['c']]);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  bury [[] [] [c]]  contents', [['b'], ['a'], []]);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  buryall  contents', [[], [], []]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            bury [[b]]
+                            contents`, [[], ['a'], ['c']]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            bury [[] [a]]
+                            contents`, [['b'], [], ['c']]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            bury [[] [] [c]]
+                            contents`, [['b'], ['a'], []]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            buryall
+                            contents`, [[], [], []]);
 
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  buryall unbury [[b]]  contents', [['b'], [], []]);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  buryall unbury [[] [a]]  contents', [[], ['a'], []]);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  buryall unbury [[] [] [c]]  contents', [[], [], ['c']]);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  buryall  unburyall  contents', [['b'], ['a'], ['c']]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            buryall unbury [[b]]
+                            contents`, [['b'], [], []]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            buryall unbury [[] [a]]
+                            contents`, [[], ['a'], []]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            buryall unbury [[] [] [c]]
+                            contents`, [[], [], ['c']]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            buryall
+                            unburyall
+                            contents`, [['b'], ['a'], ['c']]);
 
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  buriedp [[b]]', 0);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  bury [[b]]  buriedp [[b]]', 1);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  bury [[b]]  buriedp [[] [a]]', 0);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  bury [[b]]  buriedp [[] [] [c]]', 0);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  buriedp [[] [a]]', 0);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  bury [[] [a]]  buriedp [[b]]', 0);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  bury [[] [a]]  buriedp [[] [a]]', 1);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  bury [[] [a]]  buriedp [[] [] [c]]', 0);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  buriedp [[] [] [c]]', 0);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  bury [[] [] [c]]  buriedp [[b]]', 0);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  bury [[] [] [c]]  buriedp [[] [a]]', 0);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  bury [[] [] [c]]  buriedp [[] [] [c]]', 1);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            buriedp [[b]]`, 0);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            bury [[b]]
+                            buriedp [[b]]`, 1);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            bury [[b]]
+                            buriedp [[] [a]]`, 0);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            bury [[b]]
+                            buriedp [[] [] [c]]`, 0);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            buriedp [[] [a]]`, 0);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            bury [[] [a]]
+                            buriedp [[b]]`, 0);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            bury [[] [a]]
+                            buriedp [[] [a]]`, 1);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            bury [[] [a]]
+                            buriedp [[] [] [c]]`, 0);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            buriedp [[] [] [c]]`, 0);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            bury [[] [] [c]]
+                            buriedp [[b]]`, 0);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            bury [[] [] [c]]
+                            buriedp [[] [a]]`, 0);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            bury [[] [] [c]]
+                            buriedp [[] [] [c]]`, 1);
 
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  buryname "a  contents', [['b'], [], ['c']]);
-  await this.assert_equals('unburyall erall  make "a 1  to b output 2 end  pprop "c "d "e  buryall unburyname "a  contents', [[], ['a'], []]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            buryname "a
+                            contents`, [['b'], [], ['c']]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "a 1
+                            to b output 2 end
+                            pprop "c "d "e
+                            buryall unburyname "a
+                            contents`, [[], ['a'], []]);
 
-  await this.assert_equals('buried', [['b'], [], ['c']]);
+  await this.assert_equals(`buried`, [['b'], [], ['c']]);
   // TODO: tests when STEP and TRACE are actually implemented.
-  await this.assert_equals('stepped', [[],[],[]]);
-  await this.assert_equals('traced', [[],[],[]]);
+  await this.assert_equals(`stepped`, [[],[],[]]);
+  await this.assert_equals(`traced`, [[],[],[]]);
 
   // 7.6 Workspace Inspection
   // 7.7 Workspace Control
 
-  await this.assert_equals('pprop "pl "p 1  erase [[] [] [pl]]  gprop "pl "p', []);
+  await this.assert_equals(`pprop "pl "p 1
+                            erase [[] [] [pl]]
+                            gprop "pl "p`, []);
 
 });
 
@@ -1599,96 +2175,174 @@ QUnit.test("Control Structures", async function(t) {
   //
   // 8.1 Control
   //
-  await this.assert_equals('make "c 0  run [ ]  :c', 0);
-  await this.assert_equals('make "c 0  run [ make "c 5 ]  :c', 5);
+  await this.assert_equals(`make "c 0
+                            run [ ]
+                            :c`, 0);
+  await this.assert_equals(`make "c 0
+                            run [ make "c 5 ]
+                            :c`, 5);
 
-  await this.assert_equals('run [1]', 1);
-  await this.assert_error('show run [ ]', 'No output from procedure');
+  await this.assert_equals(`run [1]`, 1);
+  await this.assert_error(`show run [ ]`, 'No output from procedure');
 
-  await this.assert_equals('runresult [ make "x 1 ]', []);
-  await this.assert_equals('runresult [ 1 + 2 ]', [3]);
+  await this.assert_equals(`runresult [ make "x 1 ]`, []);
+  await this.assert_equals(`runresult [ 1 + 2 ]`, [3]);
 
-  await this.assert_equals('make "c 0  repeat 5 [ make "c :c + 1 ]  :c', 5);
-  await this.assert_equals('make "c 0  repeat 4 [ make "c :c + repcount ]  :c', 10);
-  await this.assert_equals('make "c 0  repeat 4 [ make "c :c + # ]  :c', 10);
+  await this.assert_equals(`make "c 0
+                            repeat 5 [
+                              make "c :c + 1
+                            ]
+                            :c`, 5);
+  await this.assert_equals(`make "c 0
+                            repeat 4 [
+                              make "c :c + repcount
+                            ]
+                            :c`, 10);
+  await this.assert_equals(`make "c 0
+                            repeat 4 [
+                              make "c :c + #
+                            ]
+                            :c`, 10);
 
-  await this.assert_equals('make "c 0  to foo forever [ make "c :c + 1 if repcount = 5 [ stop ] ] end  foo  :c', 5);
-  await this.assert_equals('make "c 0  to foo forever [ make "c :c + repcount if repcount = 4 [ stop ] ] end  foo  :c', 10);
+  await this.assert_equals(`make "c 0
+                            to foo
+                              forever [
+                                make "c :c + 1
+                                if repcount = 5 [ stop ]
+                              ]
+                            end
+                            foo
+                            :c`, 5);
+  await this.assert_equals(`make "c 0
+                            to foo
+                              forever [
+                                make "c :c + repcount
+                                if repcount = 4 [ stop ]
+                              ]
+                            end
+                            foo
+                            :c`, 10);
 
-  await this.assert_equals('make "r "a  if 1 [ make "r "b ]  :r', 'b');
-  await this.assert_equals('make "r "a  if 0 [ make "r "b ]  :r', 'a');
-  await this.assert_equals('if 1 [ "a ]', 'a');
-  await this.assert_error('show if 0 [ "a ]', 'No output from procedure');
-  await this.assert_equals('make "r "a  if [1<2] [ make "r "b ]  :r', 'b');
-  await this.assert_equals('make "r "a  if [1>2] [ make "r "b ]  :r', 'a');
-  await this.assert_equals('if [1<2] [ "a ]', 'a');
-  await this.assert_error('show if [1>2] [ "a ]', 'No output from procedure');
+  await this.assert_equals(`make "r "a
+                            if 1 [ make "r "b ]
+                            :r`, 'b');
+  await this.assert_equals(`make "r "a
+                            if 0 [ make "r "b ]
+                            :r`, 'a');
+  await this.assert_equals(`if 1 [ "a ]`, 'a');
+  await this.assert_error(`show if 0 [ "a ]`, 'No output from procedure');
+  await this.assert_equals(`make "r "a
+                            if [1<2] [ make "r "b ]
+                            :r`, 'b');
+  await this.assert_equals(`make "r "a
+                            if [1>2] [ make "r "b ]
+                            :r`, 'a');
+  await this.assert_equals(`if [1<2] [ "a ]`, 'a');
+  await this.assert_error(`show if [1>2] [ "a ]`, 'No output from procedure');
 
-  await this.assert_equals('(if 1 [ make "r "a ] [ make "r "b ])  :r', 'a');
-  await this.assert_equals('(if 0 [ make "r "a ] [ make "r "b ])  :r', 'b');
-  await this.assert_equals('(if 1 [ "a ] [ "b ])', 'a');
-  await this.assert_equals('(if 0 [ "a ] [ "b ])', 'b');
-  await this.assert_equals('(if [1<2] [ make "r "a ] [ make "r "b ])  :r', 'a');
-  await this.assert_equals('(if [1>2] [ make "r "a ] [ make "r "b ])  :r', 'b');
-  await this.assert_equals('(if [1<2] [ "a ] [ "b ])', 'a');
-  await this.assert_equals('(if [1>2] [ "a ] [ "b ])', 'b');
+  await this.assert_equals(`(if 1 [ make "r "a ] [ make "r "b ])
+                            :r`, 'a');
+  await this.assert_equals(`(if 0 [ make "r "a ] [ make "r "b ])
+                            :r`, 'b');
+  await this.assert_equals(`(if 1 [ "a ] [ "b ])`, 'a');
+  await this.assert_equals(`(if 0 [ "a ] [ "b ])`, 'b');
+  await this.assert_equals(`(if [1<2] [ make "r "a ] [ make "r "b ])
+                            :r`, 'a');
+  await this.assert_equals(`(if [1>2] [ make "r "a ] [ make "r "b ])
+                            :r`, 'b');
+  await this.assert_equals(`(if [1<2] [ "a ] [ "b ])`, 'a');
+  await this.assert_equals(`(if [1>2] [ "a ] [ "b ])`, 'b');
 
-  await this.assert_equals('ifelse 1 [ make "r "a ] [ make "r "b ]  :r', 'a');
-  await this.assert_equals('ifelse 0 [ make "r "a ] [ make "r "b ]  :r', 'b');
-  await this.assert_equals('ifelse 1 [ "a ] [ "b ]', 'a');
-  await this.assert_equals('ifelse 0 [ "a ] [ "b ]', 'b');
-  await this.assert_equals('ifelse [1<2] [ make "r "a ] [ make "r "b ]  :r', 'a');
-  await this.assert_equals('ifelse [1>2] [ make "r "a ] [ make "r "b ]  :r', 'b');
-  await this.assert_equals('ifelse [1<2] [ "a ] [ "b ]', 'a');
-  await this.assert_equals('ifelse [1>2] [ "a ] [ "b ]', 'b');
+  await this.assert_equals(`ifelse 1 [ make "r "a ] [ make "r "b ]
+                            :r`, 'a');
+  await this.assert_equals(`ifelse 0 [ make "r "a ] [ make "r "b ]
+                            :r`, 'b');
+  await this.assert_equals(`ifelse 1 [ "a ] [ "b ]`, 'a');
+  await this.assert_equals(`ifelse 0 [ "a ] [ "b ]`, 'b');
+  await this.assert_equals(`ifelse [1<2] [ make "r "a ] [ make "r "b ]
+                            :r`, 'a');
+  await this.assert_equals(`ifelse [1>2] [ make "r "a ] [ make "r "b ]
+                            :r`, 'b');
+  await this.assert_equals(`ifelse [1<2] [ "a ] [ "b ]`, 'a');
+  await this.assert_equals(`ifelse [1>2] [ "a ] [ "b ]`, 'b');
 
-  await this.assert_equals('to foo if 1 [ output "a ] output "b end  foo', 'a');
-  await this.assert_equals('to foo if 0 [ output "a ] output "b end  foo', 'b');
+  await this.assert_equals(`to foo if 1 [ output "a ] output "b end
+                            foo`, 'a');
+  await this.assert_equals(`to foo if 0 [ output "a ] output "b end
+                            foo`, 'b');
 
-  await this.assert_equals('make "c 1  test 2 > 1  iftrue  [ make "c 2 ]  :c', 2);
-  await this.assert_equals('make "c 1  test 2 > 1  ift  [ make "c 2 ]  :c', 2);
-  await this.assert_equals('make "c 1  test 2 > 1  iffalse [ make "c 2 ]  :c', 1);
-  await this.assert_equals('make "c 1  test 2 > 1  iff [ make "c 2 ]  :c', 1);
+  await this.assert_equals(`make "c 1
+                            test 2 > 1
+                            iftrue  [ make "c 2 ]
+                            :c`, 2);
+  await this.assert_equals(`make "c 1
+                            test 2 > 1
+                            ift [ make "c 2 ]
+                            :c`, 2);
+  await this.assert_equals(`make "c 1
+                            test 2 > 1
+                            iffalse [ make "c 2 ]
+                            :c`, 1);
+  await this.assert_equals(`make "c 1
+                            test 2 > 1
+                            iff [ make "c 2 ]
+                            :c`, 1);
 
-  await this.assert_equals('test 2 > 1  iftrue  [ "a ]', 'a');
-  await this.assert_error('test 1 > 2  show iftrue  [ "a ]', 'No output from procedure');
-  await this.assert_equals('test 1 > 2  iffalse [ "a ]', 'a');
-  await this.assert_error('test 2 > 1  show iffalse [ "a ]', 'No output from procedure');
+  await this.assert_equals(`test 2 > 1
+                            iftrue [ "a ]`, 'a');
+  await this.assert_error(`test 1 > 2
+                            show iftrue [ "a ]`, 'No output from procedure');
+  await this.assert_equals(`test 1 > 2
+                            iffalse [ "a ]`, 'a');
+  await this.assert_error(`test 2 > 1
+                           show iffalse [ "a ]`, 'No output from procedure');
 
   // Introduce new scope, since root scope persists across tests.
-  await this.assert_error('to x iftrue [ "a ] end  x', 'IFTRUE: Called without TEST');
-  await this.assert_error('to x iffalse [ "b ] end  x', 'IFFALSE: Called without TEST');
+  await this.assert_error(`to x iftrue [ "a ] end
+                           x`, 'IFTRUE: Called without TEST');
+  await this.assert_error(`to x iffalse [ "b ] end
+                           x`, 'IFFALSE: Called without TEST');
 
-  await this.assert_equals('to foo forever [ if repcount = 5 [ make "c 234 stop ] ] end  foo  :c', 234);
+  await this.assert_equals(`to foo forever [ if repcount = 5 [ make "c 234 stop ] ] end
+                            foo  :c`, 234);
 
-  await this.assert_stream('catch "x [ show "a throw "x show "c ] show "b', 'a\nb\n');
-  await this.assert_equals('catch "x [ show "a (throw "x "z) show "b ]', 'z');
-  await this.assert_error('catch "x [ throw "q ]', 'No CATCH for tag Q');
-  await this.assert_error('throw "q', 'No CATCH for tag Q');
+  await this.assert_stream(`catch "x [ show "a throw "x show "c ]
+                            show "b`, 'a\nb\n');
+  await this.assert_equals(`catch "x [ show "a (throw "x "z)
+                            show "b ]`, 'z');
+  await this.assert_error(`catch "x [ throw "q ]`, 'No CATCH for tag Q');
+  await this.assert_error(`throw "q`, 'No CATCH for tag Q');
 
-  await this.assert_equals('catch "x [ show "a throw "x show "b ] error',
+  await this.assert_equals(`catch "x [ show "a throw "x show "b ]
+                            error`,
                      [21, 'No CATCH for tag X', 'THROW', -1]);
-  await this.assert_equals('catch "x [ show "a (throw "x "z) show "b ] error',
+  await this.assert_equals(`catch "x [ show "a (throw "x "z) show "b ]
+                            error`,
                      [35, 'No CATCH for tag X', 'THROW', -1]);
-  await this.assert_equals('catch "ERROR [ show 1 / 0 ] error',
+  await this.assert_equals(`catch "ERROR [ show 1 / 0 ]
+                            error`,
                      [4, 'Division by zero', 'SHOW', -1]);
 
   let now;
   this.queue(() => { now = Date.now(); });
-  await this.assert_equals('wait 60/6', undefined);
+  await this.assert_equals(`wait 60/6`, undefined);
   this.queue(() => { t.ok((Date.now() - now) >= (1000/6)); });
 
-  await this.assert_equals('forever [ if repcount = 5 [ bye ] ]', undefined);
+  await this.assert_equals(`forever [ if repcount = 5 [ bye ] ]`, undefined);
 
-  await this.assert_equals('to foo output 123 end  foo', 123);
-  await this.assert_equals('to foo op 123 end  foo', 123);
-
-
-  await this.assert_equals('to foo .maybeoutput 5 end  foo', 5);
-  await this.assert_equals('to foo .maybeoutput make "c 0 end  foo', undefined);
+  await this.assert_equals(`to foo output 123 end
+                            foo`, 123);
+  await this.assert_equals(`to foo op 123 end
+                            foo`, 123);
 
 
-  await this.assert_equals('ignore 1 > 2', undefined);
+  await this.assert_equals(`to foo .maybeoutput 5 end
+                            foo`, 5);
+  await this.assert_equals(`to foo .maybeoutput make "c 0 end
+                            foo`, undefined);
+
+
+  await this.assert_equals(`ignore 1 > 2`, undefined);
 
   await this.assert_equals('`[foo baz ,[bf [a b c]] garply ,@[bf [a b c]]]',
                      [ 'foo', 'baz', ['b', 'c'], 'garply', 'b', 'c']);
@@ -1696,303 +2350,428 @@ QUnit.test("Control Structures", async function(t) {
   await this.assert_equals('make "n "x `[:,:n]', [':x']);
 
 
-  await this.assert_equals('make "x 0  for [ r 1 5 ] [ make "x :x + :r ]  :x', 15);
-  await this.assert_equals('make "x 0  for [ r 0 10 2 ] [ make "x :x + :r ]  :x', 30);
+  await this.assert_equals(`make "x 0
+                            for [ r 1 5 ] [ make "x :x + :r ]
+                            :x`, 15);
+  await this.assert_equals(`make "x 0
+                            for [ r 0 10 2 ] [ make "x :x + :r ]
+                            :x`, 30);
 
-  await this.assert_equals('make "x 0  for [ r 10 0 -2 ] [ make "x :x + :r ]  :x', 30);
-  await this.assert_equals('make "x 0  for [ r 10 0 -2-2 ] [ make "x :x + :r ]  :x', 18);
+  await this.assert_equals(`make "x 0
+                            for [ r 10 0 -2 ] [ make "x :x + :r ]
+                            :x`, 30);
+  await this.assert_equals(`make "x 0
+                            for [ r 10 0 -2-2 ] [ make "x :x + :r ]
+                            :x`, 18);
 
-  await this.assert_equals('make "x 0  for [ r 10 10 ] [ make "x :x + :r ]  :x', 10);
-  await this.assert_equals('make "x 0  for [ r 10 10 1 ] [ make "x :x + :r ]  :x', 10);
-  await this.assert_equals('make "x 0  for [ r 10 10 -1 ] [ make "x :x + :r ]  :x', 10);
+  await this.assert_equals(`make "x 0
+                            for [ r 10 10 ] [ make "x :x + :r ]
+                            :x`, 10);
+  await this.assert_equals(`make "x 0
+                            for [ r 10 10 1 ] [ make "x :x + :r ]
+                            :x`, 10);
+  await this.assert_equals(`make "x 0
+                            for [ r 10 10 -1 ] [ make "x :x + :r ]
+                            :x`, 10);
 
-  await this.assert_equals('make "x 0  for [ r 10 20 -1 ] [ make "x :x + :r ]  :x', 0);
-  await this.assert_equals('make "x 0  for [ r 20 10 1 ] [ make "x :x + :r ]  :x', 0);
+  await this.assert_equals(`make "x 0
+                            for [ r 10 20 -1 ] [ make "x :x + :r ]
+                            :x`, 0);
+  await this.assert_equals(`make "x 0
+                            for [ r 20 10 1 ] [ make "x :x + :r ]
+                            :x`, 0);
 
-  await this.assert_equals('make "x 0  for [i [sum 2 -1] 10 2] [make "x :x + :i]  :x', 25);
-  await this.assert_equals('make "x 0  for [i 1 [sum 11 -1] 2] [make "x :x + :i]  :x', 25);
-  await this.assert_equals('make "x 0  for [i 1 10 [sum 3 -1]] [make "x :x + :i]  :x', 25);
+  await this.assert_equals(`make "x 0
+                            for [i [sum 2 -1] 10 2] [make "x :x + :i]
+                            :x`, 25);
+  await this.assert_equals(`make "x 0
+                            for [i 1 [sum 11 -1] 2] [make "x :x + :i]
+                            :x`, 25);
+  await this.assert_equals(`make "x 0
+                            for [i 1 10 [sum 3 -1]] [make "x :x + :i]
+                            :x`, 25);
 
-  await this.assert_equals('make "x 0  dotimes [ i 5 ] [ make "x :x + :i ]  :x', 15);
-  await this.assert_equals('make "x 0  dotimes [ i 0 ] [ make "x :x + :i ]  :x', 0);
+  await this.assert_equals(`make "x 0
+                            dotimes [ i 5 ] [ make "x :x + :i ]
+                            :x`, 15);
+  await this.assert_equals(`make "x 0
+                            dotimes [ i 0 ] [ make "x :x + :i ]
+                            :x`, 0);
 
-  await this.assert_equals('make "x 0  do.while [ make "x :x + 1 ] :x < 10  :x', 10);
-  await this.assert_equals('make "x 0  do.while [ make "x :x + 1 ] [:x < 10]  :x', 10);
-  await this.assert_equals('make "x 0  do.while [ make "x :x+1 ] :x < 10  :x', 10);
-  await this.assert_equals('make "x 0  do.while [ make "x :x + 1 ] [:x<10]  :x', 10);
-  await this.assert_equals('make "x 0  while :x < 10 [ make "x :x + 1 ]     :x', 10);
-  await this.assert_equals('make "x 0  while [:x < 10] [ make "x :x + 1 ]     :x', 10);
-  await this.assert_equals('make "x 0  while :x < 10 [ make "x :x+1 ]     :x', 10);
-  await this.assert_equals('make "x 0  while [:x<10] [ make "x :x + 1 ]     :x', 10);
+  await this.assert_equals(`make "x 0
+                            do.while [ make "x :x + 1 ] :x < 10
+                            :x`, 10);
+  await this.assert_equals(`make "x 0
+                            do.while [ make "x :x + 1 ] [:x < 10]
+                            :x`, 10);
+  await this.assert_equals(`make "x 0
+                            do.while [ make "x :x+1 ] :x < 10
+                            :x`, 10);
+  await this.assert_equals(`make "x 0
+                            do.while [ make "x :x + 1 ] [:x<10]
+                            :x`, 10);
+  await this.assert_equals(`make "x 0
+                            while :x < 10 [ make "x :x + 1 ]
+                            :x`, 10);
+  await this.assert_equals(`make "x 0
+                            while [:x < 10] [ make "x :x + 1 ]
+                            :x`, 10);
+  await this.assert_equals(`make "x 0
+                            while :x < 10 [ make "x :x+1 ]
+                            :x`, 10);
+  await this.assert_equals(`make "x 0
+                            while [:x<10] [ make "x :x + 1 ]
+                            :x`, 10);
 
-  await this.assert_equals('make "x 0  do.until [ make "x :x + 1 ] :x > 10  :x', 11);
-  await this.assert_equals('make "x 0  do.until [ make "x :x + 1 ] [:x > 10]  :x', 11);
-  await this.assert_equals('make "x 0  do.until [ make "x :x+1 ] :x > 10  :x', 11);
-  await this.assert_equals('make "x 0  do.until [ make "x :x + 1 ] [:x>10]  :x', 11);
-  await this.assert_equals('make "x 0  until :x > 10 [ make "x :x + 1 ]     :x', 11);
-  await this.assert_equals('make "x 0  until [:x > 10] [ make "x :x + 1 ]     :x', 11);
-  await this.assert_equals('make "x 0  until :x > 10 [ make "x :x+1 ]     :x', 11);
-  await this.assert_equals('make "x 0  until [:x>10] [ make "x :x + 1 ]     :x', 11);
+  await this.assert_equals(`make "x 0
+                            do.until [ make "x :x + 1 ] :x > 10
+                            :x`, 11);
+  await this.assert_equals(`make "x 0
+                            do.until [ make "x :x + 1 ] [:x > 10]
+                            :x`, 11);
+  await this.assert_equals(`make "x 0
+                            do.until [ make "x :x+1 ] :x > 10
+                            :x`, 11);
+  await this.assert_equals(`make "x 0
+                            do.until [ make "x :x + 1 ] [:x>10]
+                            :x`, 11);
+  await this.assert_equals(`make "x 0
+                            until :x > 10 [ make "x :x + 1 ]
+                            :x`, 11);
+  await this.assert_equals(`make "x 0
+                            until [:x > 10] [ make "x :x + 1 ]
+                            :x`, 11);
+  await this.assert_equals(`make "x 0
+                            until :x > 10 [ make "x :x+1 ]
+                            :x`, 11);
+  await this.assert_equals(`make "x 0
+                            until [:x>10] [ make "x :x + 1 ]
+                            :x`, 11);
 
-  await this.assert_equals('to vowelp :letter ' +
-                     '  output case :letter [ [[a e i o u] "true] [else "false] ] ' +
-                     'end ' +
-                     '(list vowelp "a vowelp "b', ['true', 'false']);
+  await this.assert_equals(`to vowelp :letter
+                              output case :letter [ [[a e i o u] "true] [else "false] ]
+                            end
+                            (list vowelp "a vowelp "b`, ['true', 'false']); // TODO: Is lack of closing ) intentional?
 
-  await this.assert_equals('to evenp :n ' +
-                     '  output not bitand :n 1 ' +
-                     'end ' +
-                     'to evens :numbers ' +
-                     '  op cond [ [ [emptyp :numbers]      [] ] ' +
-                     '            [ [evenp first :numbers] ' +
-                     '              fput first :numbers evens butfirst :numbers] '+
-                     '            [ else evens butfirst :numbers] '+
-                     ' ] ' +
-                     'end ' +
-                     'evens [ 1 2 3 4 5 6 ]', ['2', '4', '6']);
+  await this.assert_equals(`to evenp :n
+                              output not bitand :n 1
+                            end
+                            to evens :numbers
+                              op cond [
+                                [ [emptyp :numbers]
+                                  []
+                                ]
+                                [ [evenp first :numbers]
+                                  fput first :numbers evens butfirst :numbers
+                                ]
+                                [ else
+                                  evens butfirst :numbers
+                                ]
+                              ]
+                            end
+                            evens [ 1 2 3 4 5 6 ]`, ['2', '4', '6']);
 
-  await this.assert_equals('cond [ [ [2<3] "yep ] [ else "nope ]]', 'yep');
-  await this.assert_equals('cond [ [ [2>3] "yep ] [ else "nope ]]', 'nope');
+  await this.assert_equals(`cond [ [ [2<3] "yep ] [ else "nope ]]`, 'yep');
+  await this.assert_equals(`cond [ [ [2>3] "yep ] [ else "nope ]]`, 'nope');
 
   //
   // 8.2 Template-based Iteration
   //
 
-  await this.run("to add_async :a :b output .promise :a + :b end");
-  await this.run("to numberp_async :a output .promise numberp :a end");
+  await this.run(`to add_async :a :b output .promise :a + :b end`);
+  await this.run(`to numberp_async :a output .promise numberp :a end`);
 
-  await this.assert_equals('apply "word ["a "b "c]', '"a"b"c');
-  await this.assert_equals('apply "add_async [1 2]', 3);
-  await this.assert_equals('apply [? * ?] [3 4]', 9);
-  await this.assert_equals('apply [?1] [3 4]', '3');
-  await this.assert_equals('apply [?2] [3 4]', '4');
-  await this.assert_equals('apply [?1 * ?2] [3 4]', 12);
+  await this.assert_equals(`apply "word ["a "b "c]`, '"a"b"c');
+  await this.assert_equals(`apply "add_async [1 2]`, 3);
+  await this.assert_equals(`apply [? * ?] [3 4]`, 9);
+  await this.assert_equals(`apply [?1] [3 4]`, '3');
+  await this.assert_equals(`apply [?2] [3 4]`, '4');
+  await this.assert_equals(`apply [?1 * ?2] [3 4]`, 12);
 
-  await this.assert_equals('invoke "word "a', 'a');
-  await this.assert_equals('(invoke "word "a "b "c)', 'abc');
-  await this.assert_equals('(invoke "word)', '');
-  await this.assert_equals('(invoke "add_async 1 2)', 3);
-  await this.assert_equals('(invoke [?1] 3 4)', 3);
-  await this.assert_equals('(invoke [?2] 3 4)', 4);
-  await this.assert_equals('(invoke [? * ?] 3 4)', 9);
-  await this.assert_equals('(invoke [?1 * ?2] 3 4)', 12);
+  await this.assert_equals(`invoke "word "a`, 'a');
+  await this.assert_equals(`(invoke "word "a "b "c)`, 'abc');
+  await this.assert_equals(`(invoke "word)`, '');
+  await this.assert_equals(`(invoke "add_async 1 2)`, 3);
+  await this.assert_equals(`(invoke [?1] 3 4)`, 3);
+  await this.assert_equals(`(invoke [?2] 3 4)`, 4);
+  await this.assert_equals(`(invoke [? * ?] 3 4)`, 9);
+  await this.assert_equals(`(invoke [?1 * ?2] 3 4)`, 12);
 
-  await this.assert_equals('make "x 0  to addx :a make "x :x+:a end  foreach [ 1 2 3 4 5 ] "addx  :x', 15);
-  await this.assert_equals('make "x 0  to addx :a make "x :x+:a end  foreach [ 1 2 3 4 5 ] [addx ?]  :x', 15);
-  await this.assert_equals('make "x 0  to addx :a make "x .promise :x+:a end  foreach [ 1 2 3 4 5 ] "addx  :x', 15);
-  await this.assert_equals('make "x 0  to addx :a make "x .promise :x+:a end  foreach [ 1 2 3 4 5 ] [addx ?]  :x', 15);
-  await this.assert_equals('make "x (word)  foreach [ a b c ] [ make "x (word :x ? # ", ) ]  :x', 'a1,b2,c3,');
+  await this.assert_equals(`make "x 0
+                            to addx :a make "x :x+:a end
+                            foreach [ 1 2 3 4 5 ] "addx
+                            :x`, 15);
+  await this.assert_equals(`make "x 0
+                            to addx :a make "x :x+:a end
+                            foreach [ 1 2 3 4 5 ] [addx ?]
+                            :x`, 15);
+  await this.assert_equals(`make "x 0
+                            to addx :a make "x .promise :x+:a end
+                            foreach [ 1 2 3 4 5 ] "addx
+                            :x`, 15);
+  await this.assert_equals(`make "x 0
+                            to addx :a make "x .promise :x+:a end
+                            foreach [ 1 2 3 4 5 ] [addx ?]
+                            :x`, 15);
+  await this.assert_equals(`make "x (word)
+                            foreach [ a b c ] [ make "x (word :x ? # ", ) ]
+                            :x`, 'a1,b2,c3,');
 
-  await this.assert_equals('to double :x output :x * 2 end  map "double [ 1 2 3 ]', [2, 4, 6]);
-  await this.assert_equals('to double :x output :x * 2 end  map [double ?] [ 1 2 3 ]', [2, 4, 6]);
-  await this.assert_equals('to double :x output .promise :x * 2 end  map "double [ 1 2 3 ]', [2, 4, 6]);
-  await this.assert_equals('to double :x output .promise :x * 2 end  map [double ?] [ 1 2 3 ]', [2, 4, 6]);
-  await this.assert_equals('map [? * ?] [2 3 4 5]', [4, 9, 16, 25]);
-  await this.assert_equals('map [? * #] [2 3 4 5]', [2, 6, 12, 20]);
-  await this.assert_equals('to foo :a output (word :a #) end  map "foo [ 7 8 9 ]', ['71', '82', '93']);
+  await this.assert_equals(`to double :x output :x * 2 end
+                            map "double [ 1 2 3 ]`, [2, 4, 6]);
+  await this.assert_equals(`to double :x output :x * 2 end
+                            map [double ?] [ 1 2 3 ]`, [2, 4, 6]);
+  await this.assert_equals(`to double :x output .promise :x * 2 end
+                            map "double [ 1 2 3 ]`, [2, 4, 6]);
+  await this.assert_equals(`to double :x output .promise :x * 2 end
+                            map [double ?] [ 1 2 3 ]`, [2, 4, 6]);
+  await this.assert_equals(`map [? * ?] [2 3 4 5]`, [4, 9, 16, 25]);
+  await this.assert_equals(`map [? * #] [2 3 4 5]`, [2, 6, 12, 20]);
+  await this.assert_equals(`to foo :a output (word :a #) end
+                            map "foo [ 7 8 9 ]`, ['71', '82', '93']);
 
-  await this.assert_equals('(map "sum [1 2 3] [40 50 60] [700 800 900])', [741, 852, 963]);
-  await this.assert_equals('(map "item [2 1 2 3] [john paul george ringo])', ['o', 'p', 'e', 'n']);
+  await this.assert_equals(`(map "sum [1 2 3] [40 50 60] [700 800 900])`, [741, 852, 963]);
+  await this.assert_equals(`(map "item [2 1 2 3] [john paul george ringo])`, ['o', 'p', 'e', 'n']);
 
-  await this.assert_equals('to odd :x output :x % 2 end  filter "odd [ 1 2 3 ]', ["1", "3"]);
-  await this.assert_equals('to odd :x output :x % 2 end  filter [odd ?] [ 1 2 3 ]', ["1", "3"]);
-  await this.assert_equals('to odd :x output .promise :x % 2 end  filter "odd [ 1 2 3 ]', ["1", "3"]);
-  await this.assert_equals('to odd :x output .promise :x % 2 end  filter [odd ?] [ 1 2 3 ]', ["1", "3"]);
-  await this.assert_equals('filter "numberp [ 1 "a 2 "b ]', ["1", "2"]);
-  await this.assert_equals('filter [numberp ?] [ 1 "a 2 "b ]', ["1", "2"]);
-  await this.assert_equals('filter [# % 2] [ a b c d e f ]', ['a', 'c', 'e']);
-  await this.assert_equals('to oddpos :x output # % 2 end  filter "oddpos [ a b c d e f ]', ['a', 'c', 'e']);
-  await this.assert_equals('filter [(modulo # 2) <> 0] [ a b c d e f ]', ['a', 'c', 'e']);
+  await this.assert_equals(`to odd :x output :x % 2 end
+                            filter "odd [ 1 2 3 ]`, ["1", "3"]);
+  await this.assert_equals(`to odd :x output :x % 2 end
+                            filter [odd ?] [ 1 2 3 ]`, ["1", "3"]);
+  await this.assert_equals(`to odd :x output .promise :x % 2 end
+                            filter "odd [ 1 2 3 ]`, ["1", "3"]);
+  await this.assert_equals(`to odd :x output .promise :x % 2 end
+                            filter [odd ?] [ 1 2 3 ]`, ["1", "3"]);
+  await this.assert_equals(`filter "numberp [ 1 "a 2 "b ]`, ["1", "2"]);
+  await this.assert_equals(`filter [numberp ?] [ 1 "a 2 "b ]`, ["1", "2"]);
+  await this.assert_equals(`filter [# % 2] [ a b c d e f ]`, ['a', 'c', 'e']);
+  await this.assert_equals(`to oddpos :x output # % 2 end
+                            filter "oddpos [ a b c d e f ]`, ['a', 'c', 'e']);
+  await this.assert_equals(`filter [(modulo # 2) <> 0] [ a b c d e f ]`, ['a', 'c', 'e']);
 
-  await this.assert_equals('find "numberp (list "a "b "c 4 "e "f )', 4);
-  await this.assert_equals('find "numberp (list "a "b "c "d "e "f )', []);
-  await this.assert_equals('find "numberp_async (list "a "b "c 4 "e "f )', 4);
-  await this.assert_equals('find "numberp_async (list "a "b "c "d "e "f )', []);
-  await this.assert_equals('find [? > 5] [2 4 6 8]', '6');
-  await this.assert_equals('find [# = 3] [2 4 6 8]', '6');
-  await this.assert_equals('to third :x output # = 3 end  find "third [2 4 6 8]', '6');
+  await this.assert_equals(`find "numberp (list "a "b "c 4 "e "f )`, 4);
+  await this.assert_equals(`find "numberp (list "a "b "c "d "e "f )`, []);
+  await this.assert_equals(`find "numberp_async (list "a "b "c 4 "e "f )`, 4);
+  await this.assert_equals(`find "numberp_async (list "a "b "c "d "e "f )`, []);
+  await this.assert_equals(`find [? > 5] [2 4 6 8]`, '6');
+  await this.assert_equals(`find [# = 3] [2 4 6 8]`, '6');
+  await this.assert_equals(`to third :x output # = 3 end
+                            find "third [2 4 6 8]`, '6');
 
-  await this.assert_equals('reduce "sum [ 1 2 3 4 ]', 10);
-  await this.assert_equals('(reduce "sum [ 1 2 3 4 ] 10)', 20);
-  await this.assert_equals('reduce "add_async [ 1 2 3 4 ]', 10);
-  await this.assert_equals('(reduce [?1] [ 1 2 3 4 ]', '1');
-  await this.assert_equals('(reduce [?2] [ 1 2 3 4 ]', '4');
-  await this.assert_equals('(reduce [?1 * ?2] [ 1 2 3 4 ])', 24);
-  await this.assert_equals('(reduce [?1 + ?2] [ 1 2 3 4 ])', 10);
-  await this.assert_equals('(reduce [?1 - ?2] [ 1 2 3 4 ])', -2);
+  await this.assert_equals(`reduce "sum [ 1 2 3 4 ]`, 10);
+  await this.assert_equals(`(reduce "sum [ 1 2 3 4 ] 10)`, 20);
+  await this.assert_equals(`reduce "add_async [ 1 2 3 4 ]`, 10);
+  await this.assert_equals(`(reduce [?1] [ 1 2 3 4 ]`, '1');
+  await this.assert_equals(`(reduce [?2] [ 1 2 3 4 ]`, '4');
+  await this.assert_equals(`(reduce [?1 * ?2] [ 1 2 3 4 ])`, 24);
+  await this.assert_equals(`(reduce [?1 + ?2] [ 1 2 3 4 ])`, 10);
+  await this.assert_equals(`(reduce [?1 - ?2] [ 1 2 3 4 ])`, -2);
 
-  await this.assert_equals('(crossmap "word [a b c] [1 2 3 4])',
+  await this.assert_equals(`(crossmap "word [a b c] [1 2 3 4])`,
                      ['a1', 'a2', 'a3', 'a4', 'b1', 'b2', 'b3', 'b4', 'c1', 'c2', 'c3', 'c4']);
-  await this.assert_equals('(crossmap "word [a b] [1 2])', ['a1', 'a2', 'b1', 'b2']);
-  await this.assert_equals('crossmap "word [[a b] [1 2]]', ['a1', 'a2', 'b1', 'b2']);
-  await this.assert_equals('crossmap [?1 * ?2 * ?3] [[2 3] [4 5] [6 7]]', [48, 56, 60, 70, 72, 84, 90, 105]);
+  await this.assert_equals(`(crossmap "word [a b] [1 2])`, ['a1', 'a2', 'b1', 'b2']);
+  await this.assert_equals(`crossmap "word [[a b] [1 2]]`, ['a1', 'a2', 'b1', 'b2']);
+  await this.assert_equals(`crossmap [?1 * ?2 * ?3] [[2 3] [4 5] [6 7]]`, [48, 56, 60, 70, 72, 84, 90, 105]);
 
   // TODO: Order of operations
   // TODO: Structures, lists of lists
 });
 
 QUnit.test("Error Messages", async function(t) {
-  await this.assert_error("to foo end show foo", "No output from procedure", 5);
-  await this.assert_error("[ 1 2", "Expected ']'", 26);
-  await this.assert_error("{ 1 2", "Expected '}'", 27);
-  await this.assert_error("[ 1 2 }", "Unexpected '}'", 27);
-  await this.assert_error("{ 1 2 ]", "Unexpected ']'", 26);
-  await this.assert_error('make "a { 1 2 3 }@1.5', "Don't know what to do with 0.5", 9);
+  await this.assert_error(`to foo end
+                           show foo`, "No output from procedure", 5);
+  await this.assert_error(`[ 1 2`, "Expected ']'", 26);
+  await this.assert_error(`{ 1 2`, "Expected '}'", 27);
+  await this.assert_error(`[ 1 2 }`, "Unexpected '}'", 27);
+  await this.assert_error(`{ 1 2 ]`, "Unexpected ']'", 26);
+  await this.assert_error(`make "a { 1 2 3 }@1.5`, "Don't know what to do with 0.5", 9);
 
-  //this.assert_error("!@#$", "Couldn't parse: '!@#$'");
-  await this.assert_error("show :nosuchvar", "Don't know about variable NOSUCHVAR", 11);
-  await this.assert_error("1 / 0", "Division by zero", 4);
-  await this.assert_error("1 % 0", "Division by zero", 4);
-  await this.assert_error("1 + -", "Unexpected end of instructions");
-  await this.assert_error("( 1 + 2", "Expected ')'", 10);
-  await this.assert_error("( 1 + 2 3", "Expected ')', saw 3", 10);
-  await this.assert_error("nosuchproc", "Don't know how to NOSUCHPROC", 24);
-  await this.assert_error("1 + \"1+2", "Expected number", 4);
-  await this.assert_error("1 + []", "Expected number", 4);
-  await this.assert_error("1 + ignore 1", "Expected number", 4);
-  await this.assert_error("(minus [])", "Expected number", 4);
-  await this.assert_error("make [] 123", "Expected string", 4);
-  await this.assert_error("(def [])", "Expected string", 4);
-  await this.assert_error("erase ignore 1", "ERASE: Expected list", 4);
+  //this.assert_error(`!@#$`, "Couldn't parse: '!@#$'");
+  await this.assert_error(`show :nosuchvar`, "Don't know about variable NOSUCHVAR", 11);
+  await this.assert_error(`1 / 0`, "Division by zero", 4);
+  await this.assert_error(`1 % 0`, "Division by zero", 4);
+  await this.assert_error(`1 + -`, "Unexpected end of instructions");
+  await this.assert_error(`( 1 + 2`, "Expected ')'", 10);
+  await this.assert_error(`( 1 + 2 3`, "Expected ')', saw 3", 10);
+  await this.assert_error(`nosuchproc`, "Don't know how to NOSUCHPROC", 24);
+  await this.assert_error(`1 + \"1+2`, "Expected number", 4);
+  await this.assert_error(`1 + []`, "Expected number", 4);
+  await this.assert_error(`1 + ignore 1`, "Expected number", 4);
+  await this.assert_error(`(minus [])`, "Expected number", 4);
+  await this.assert_error(`make [] 123`, "Expected string", 4);
+  await this.assert_error(`(def [])`, "Expected string", 4);
+  await this.assert_error(`erase ignore 1`, "ERASE: Expected list", 4);
 
-  await this.assert_error('fd50', "Need a space between FD and 50", 39);
+  await this.assert_error(`fd50`, "Need a space between FD and 50", 39);
 
-  await this.assert_error("(erase {})", "ERASE: Expected list", 4);
-  await this.assert_error("(map \"show {})", "MAP: Expected list", 4);
-  await this.assert_error("(map \"sum [1 2] [1])", "MAP: Expected lists of equal length", 4);
-  await this.assert_error("to 123", "TO: Expected identifier");
-  await this.assert_error("to +", "TO: Expected identifier");
-  await this.assert_error("to fd :x bk :x end", "TO: Can't redefine primitive FD", 22);
-  await this.assert_error("define \"fd [[x] [bk :x]]", "DEFINE: Can't redefine primitive FD", 22);
-  await this.assert_error("define \"fd [[x]]", "DEFINE: Expected list of length 2", 4);
-  await this.assert_error("def \"nosuchproc", "DEF: Don't know how to NOSUCHPROC", 24);
-  await this.assert_error("def \"def", "DEF: Can't show definition of primitive DEF", 22);
-  await this.assert_error("text \"nosuchproc", "TEXT: Don't know how to NOSUCHPROC", 24);
-  await this.assert_error("text \"text", "TEXT: Can't show definition of primitive TEXT", 22);
-  await this.assert_error("text \"nosuchproc", "TEXT: Don't know how to NOSUCHPROC", 24);
-  await this.assert_error("text \"def", "TEXT: Can't show definition of primitive DEF", 22);
-  await this.assert_error("item 5 [ 1 2 ]", "ITEM: Index out of bounds", 4);
-  await this.assert_error("copydef \"newname \"nosuchproc", "COPYDEF: Don't know how to NOSUCHPROC", 24);
-  await this.assert_error("to foo end  copydef \"to \"foo", "COPYDEF: Can't overwrite special TO", 4);
-  await this.assert_error("to foo end  copydef \"show \"foo", "COPYDEF: Can't overwrite primitives unless REDEFP is TRUE", 4);
-  await this.assert_error("erase [ [ TO ] [ ] ]", "Can't ERASE special TO", 4);
-  await this.assert_error("erase [ [ SHOW ] [ ] ]", "Can't ERASE primitives unless REDEFP is TRUE", 4);
-  await this.assert_error("do.while 1 2", "DO.WHILE: Expected block", 4);
-  await this.assert_error("while 1 2", "WHILE: Expected block", 4);
-  await this.assert_error("do.until 1 2", "DO.UNTIL: Expected block", 4);
-  await this.assert_error("until 1 2", "UNTIL: Expected block", 4);
-  await this.assert_error("apply \"nosuch [ 1 2 ]", "APPLY: Don't know how to NOSUCH", 24);
-  await this.assert_error("apply \"to [ 1 2 ]", "Can't apply APPLY to special TO", 4);
-  await this.assert_error("apply \"while [ 1 2 ]", "Can't apply APPLY to special WHILE", 4);
-  await this.assert_error("foreach [ 1 2 ] \"nosuch", "FOREACH: Don't know how to NOSUCH", 24);
-  await this.assert_error("foreach [ 1 2 ] \"to", "Can't apply FOREACH to special TO", 4);
-  await this.assert_error("foreach [ 1 2 ] \"while", "Can't apply FOREACH to special WHILE", 4);
-  await this.assert_error("invoke \"nosuch [ 1 2 ]", "INVOKE: Don't know how to NOSUCH", 24);
-  await this.assert_error("invoke \"to [ 1 2 ]", "Can't apply INVOKE to special TO", 4);
-  await this.assert_error("invoke \"while [ 1 2 ]", "Can't apply INVOKE to special WHILE", 4);
-  await this.assert_error("map \"nosuch [ 1 2 ]", "MAP: Don't know how to NOSUCH", 24);
-  await this.assert_error("map \"to [ 1 2 ]", "Can't apply MAP to special TO", 4);
-  await this.assert_error("map \"while [ 1 2 ]", "Can't apply MAP to special WHILE", 4);
-  await this.assert_error("filter \"nosuch [ 1 2 ]", "FILTER: Don't know how to NOSUCH", 24);
-  await this.assert_error("filter \"to [ 1 2 ]", "Can't apply FILTER to special TO", 4);
-  await this.assert_error("filter \"while [ 1 2 ]", "Can't apply FILTER to special WHILE", 4);
-  await this.assert_error("find \"nosuch [ 1 2 ]", "FIND: Don't know how to NOSUCH", 24);
-  await this.assert_error("find \"to [ 1 2 ]", "Can't apply FIND to special TO", 4);
-  await this.assert_error("find \"while [ 1 2 ]", "Can't apply FIND to special WHILE", 4);
-  await this.assert_error("reduce \"nosuch [ 1 2 ]", "REDUCE: Don't know how to NOSUCH", 24);
-  await this.assert_error("reduce \"to [ 1 2 ]", "Can't apply REDUCE to special TO", 4);
-  await this.assert_error("reduce \"while [ 1 2 ]", "Can't apply REDUCE to special WHILE", 4);
-  await this.assert_error("0", "Don't know what to do with 0", 9);
-  await this.assert_error("1 + 2", "Don't know what to do with 3", 9);
-  await this.assert_error("to foo output 123 end  foo", "Don't know what to do with 123", 9);
-  await this.assert_error('setpos []', 'SETPOS: Expected list of length 2', 4);
-  await this.assert_error('setpos [1 2 3]', 'SETPOS: Expected list of length 2', 4);
-  await this.assert_error('towards []', 'TOWARDS: Expected list of length 2', 4);
-  await this.assert_error('item 3 { 1 2 }', 'ITEM: Index out of bounds', 4);
-  await this.assert_error('setitem 3 { 1 2 } 0', 'SETITEM: Index out of bounds', 4);
+  await this.assert_error(`(erase {})`, "ERASE: Expected list", 4);
+  await this.assert_error(`(map \"show {})`, "MAP: Expected list", 4);
+  await this.assert_error(`(map \"sum [1 2] [1])`, "MAP: Expected lists of equal length", 4);
+  await this.assert_error(`to 123`, "TO: Expected identifier");
+  await this.assert_error(`to +`, "TO: Expected identifier");
+  await this.assert_error(`to fd :x bk :x end`, "TO: Can't redefine primitive FD", 22);
+  await this.assert_error(`define \"fd [[x] [bk :x]]`, "DEFINE: Can't redefine primitive FD", 22);
+  await this.assert_error(`define \"fd [[x]]`, "DEFINE: Expected list of length 2", 4);
+  await this.assert_error(`def \"nosuchproc`, "DEF: Don't know how to NOSUCHPROC", 24);
+  await this.assert_error(`def \"def`, "DEF: Can't show definition of primitive DEF", 22);
+  await this.assert_error(`text \"nosuchproc`, "TEXT: Don't know how to NOSUCHPROC", 24);
+  await this.assert_error(`text \"text`, "TEXT: Can't show definition of primitive TEXT", 22);
+  await this.assert_error(`text \"nosuchproc`, "TEXT: Don't know how to NOSUCHPROC", 24);
+  await this.assert_error(`text \"def`, "TEXT: Can't show definition of primitive DEF", 22);
+  await this.assert_error(`item 5 [ 1 2 ]`, "ITEM: Index out of bounds", 4);
+  await this.assert_error(`copydef \"newname \"nosuchproc`, "COPYDEF: Don't know how to NOSUCHPROC", 24);
+  await this.assert_error(`to foo end
+                           copydef \"to \"foo`, "COPYDEF: Can't overwrite special TO", 4);
+  await this.assert_error(`to foo end
+                           copydef \"show \"foo`, "COPYDEF: Can't overwrite primitives unless REDEFP is TRUE", 4);
+  await this.assert_error(`erase [ [ TO ] [ ] ]`, "Can't ERASE special TO", 4);
+  await this.assert_error(`erase [ [ SHOW ] [ ] ]`, "Can't ERASE primitives unless REDEFP is TRUE", 4);
+  await this.assert_error(`do.while 1 2`, "DO.WHILE: Expected block", 4);
+  await this.assert_error(`while 1 2`, "WHILE: Expected block", 4);
+  await this.assert_error(`do.until 1 2`, "DO.UNTIL: Expected block", 4);
+  await this.assert_error(`until 1 2`, "UNTIL: Expected block", 4);
+  await this.assert_error(`apply \"nosuch [ 1 2 ]`, "APPLY: Don't know how to NOSUCH", 24);
+  await this.assert_error(`apply \"to [ 1 2 ]`, "Can't apply APPLY to special TO", 4);
+  await this.assert_error(`apply \"while [ 1 2 ]`, "Can't apply APPLY to special WHILE", 4);
+  await this.assert_error(`foreach [ 1 2 ] \"nosuch`, "FOREACH: Don't know how to NOSUCH", 24);
+  await this.assert_error(`foreach [ 1 2 ] \"to`, "Can't apply FOREACH to special TO", 4);
+  await this.assert_error(`foreach [ 1 2 ] \"while`, "Can't apply FOREACH to special WHILE", 4);
+  await this.assert_error(`invoke \"nosuch [ 1 2 ]`, "INVOKE: Don't know how to NOSUCH", 24);
+  await this.assert_error(`invoke \"to [ 1 2 ]`, "Can't apply INVOKE to special TO", 4);
+  await this.assert_error(`invoke \"while [ 1 2 ]`, "Can't apply INVOKE to special WHILE", 4);
+  await this.assert_error(`map \"nosuch [ 1 2 ]`, "MAP: Don't know how to NOSUCH", 24);
+  await this.assert_error(`map \"to [ 1 2 ]`, "Can't apply MAP to special TO", 4);
+  await this.assert_error(`map \"while [ 1 2 ]`, "Can't apply MAP to special WHILE", 4);
+  await this.assert_error(`filter \"nosuch [ 1 2 ]`, "FILTER: Don't know how to NOSUCH", 24);
+  await this.assert_error(`filter \"to [ 1 2 ]`, "Can't apply FILTER to special TO", 4);
+  await this.assert_error(`filter \"while [ 1 2 ]`, "Can't apply FILTER to special WHILE", 4);
+  await this.assert_error(`find \"nosuch [ 1 2 ]`, "FIND: Don't know how to NOSUCH", 24);
+  await this.assert_error(`find \"to [ 1 2 ]`, "Can't apply FIND to special TO", 4);
+  await this.assert_error(`find \"while [ 1 2 ]`, "Can't apply FIND to special WHILE", 4);
+  await this.assert_error(`reduce \"nosuch [ 1 2 ]`, "REDUCE: Don't know how to NOSUCH", 24);
+  await this.assert_error(`reduce \"to [ 1 2 ]`, "Can't apply REDUCE to special TO", 4);
+  await this.assert_error(`reduce \"while [ 1 2 ]`, "Can't apply REDUCE to special WHILE", 4);
+  await this.assert_error(`0`, "Don't know what to do with 0", 9);
+  await this.assert_error(`1 + 2`, "Don't know what to do with 3", 9);
+  await this.assert_error(`to foo output 123 end
+                           foo`, "Don't know what to do with 123", 9);
+  await this.assert_error(`setpos []`, 'SETPOS: Expected list of length 2', 4);
+  await this.assert_error(`setpos [1 2 3]`, 'SETPOS: Expected list of length 2', 4);
+  await this.assert_error(`towards []`, 'TOWARDS: Expected list of length 2', 4);
+  await this.assert_error(`item 3 { 1 2 }`, 'ITEM: Index out of bounds', 4);
+  await this.assert_error(`setitem 3 { 1 2 } 0`, 'SETITEM: Index out of bounds', 4);
 
 });
 
 QUnit.test("Regression Tests", async function(t) {
-  await this.assert_error('ern "i  make "x :i + 1', "Don't know about variable I");
-  await this.assert_equals('make "x 0  repeat 3 [ for [ i 1 4 ] [ make "x :x + 1 ] ]  :x', 12);
-  await this.assert_error('ern "i  for [i 0 100 :i+1] []', "Don't know about variable I");
-  await this.assert_error('ern "i  for [i 0 100 :i + 1] []', "Don't know about variable I");
-  await this.assert_equals('make "i 5  make "x 0  for [ i 0 100 :i ] [ make "x :x + :i ]  :x', 1050);
-  await this.assert_error("fd 100 50 rt 90", "Don't know what to do with 50");
-  await this.assert_equals("to foo output 123 end  make \"v foo", undefined);
-  await this.assert_equals("to foo end", undefined);
-  await this.assert_equals("setpos [ -1 0 ]  123", 123);
-  await this.assert_equals("to foo output 234 end foo", 234);
-  await this.assert_equals("to foo output 234 END foo", 234);
-  await this.assert_error("to whatever fd 100", "TO: Expected END");
-  await this.assert_equals('"abc;def', "abc");
-  await this.assert_equals('"abc\\;def', "abc;def");
-  await this.assert_equals('"abc\\\\def', "abc\\def");
-  await this.assert_equals('"a\\ b', 'a b');
-  await this.assert_equals('repeat 1 [ make "v "abc\\;def ]  :v', "abc\\;def");
-  await this.assert_error('repeat 1 [ make "v "abc;def ]  :v', "Expected ']'");
-  await this.assert_equals('make "a [ a b c ]  make "b :a  pop "a  :b', ["a", "b", "c"]);
-  await this.assert_equals('to foo :BAR output :BAR end  foo 1', 1);
-  await this.assert_equals('(word "a (char 10) "b)', 'a\nb');
+  await this.assert_error(`ern "i
+                           make "x :i + 1`, "Don't know about variable I");
+  await this.assert_equals(`make "x 0
+                            repeat 3 [
+                              for [ i 1 4 ] [ make "x :x + 1 ]
+                            ]
+                            :x`, 12);
+  await this.assert_error(`ern "i
+                           for [i 0 100 :i+1] []`, "Don't know about variable I");
+  await this.assert_error(`ern "i
+                           for [i 0 100 :i + 1] []`, "Don't know about variable I");
+  await this.assert_equals(`make "i 5
+                            make "x 0
+                            for [ i 0 100 :i ] [ make "x :x + :i ]
+                            :x`, 1050);
+  await this.assert_error(`fd 100 50 rt 90`, "Don't know what to do with 50");
+  await this.assert_equals(`to foo output 123 end
+                            make \"v foo`, undefined);
+  await this.assert_equals(`to foo end`, undefined);
+  await this.assert_equals(`setpos [ -1 0 ]
+                            123`, 123);
+  await this.assert_equals(`to foo output 234 end
+                            foo`, 234);
+  await this.assert_equals(`to foo output 234 END
+                            foo`, 234);
+  await this.assert_error(`to whatever fd 100`, "TO: Expected END");
+  await this.assert_equals(`"abc;def`, "abc");
+  await this.assert_equals(`"abc\\;def`, "abc;def");
+  await this.assert_equals(`"abc\\\\def`, "abc\\def");
+  await this.assert_equals(`"a\\ b`, 'a b');
+  await this.assert_equals(`repeat 1 [ make "v "abc\\;def ]
+                            :v`, "abc\\;def");
+  await this.assert_error(`repeat 1 [ make "v "abc;def ]
+                            :v`, "Expected ']'");
+  await this.assert_equals(`make "a [ a b c ]
+                            make "b :a
+                            pop "a
+                            :b`, ["a", "b", "c"]);
+  await this.assert_equals(`to foo :BAR output :BAR end
+                            foo 1`, 1);
+  await this.assert_equals(`(word "a (char 10) "b)`, 'a\nb');
 
-  await this.assert_equals('equalp "1 1', 1);
-  await this.assert_equals('equalp 1 "1', 1);
-  await this.assert_equals('equalp "1.0 1', 1);
-  await this.assert_equals('equalp 1.0 "1', 1);
-  await this.assert_equals('equalp "1 1.0', 1);
-  await this.assert_equals('equalp 1 "1.0', 1);
-  await this.assert_equals('equalp "1 "1.0', 0);
+  await this.assert_equals(`equalp "1 1`, 1);
+  await this.assert_equals(`equalp 1 "1`, 1);
+  await this.assert_equals(`equalp "1.0 1`, 1);
+  await this.assert_equals(`equalp 1.0 "1`, 1);
+  await this.assert_equals(`equalp "1 1.0`, 1);
+  await this.assert_equals(`equalp 1 "1.0`, 1);
+  await this.assert_equals(`equalp "1 "1.0`, 0);
 
-  await this.assert_equals('make "a { 1 }  make "b :a  setitem 1 :a 2  item 1 :b', 2);
-  await this.assert_equals('show "b\n1', 1);
+  await this.assert_equals(`make "a { 1 }
+                            make "b :a
+                            setitem 1 :a 2
+                            item 1 :b`, 2);
+  await this.assert_equals(`show "b\n1`, 1);
 
-  await this.assert_equals('to f output 1 end (f + 1)', 2);
-  await this.assert_equals('setpos [150 150]  setheading 0  fd 10  pos ', [150, -140]);
+  await this.assert_equals(`to f output 1 end
+                           (f + 1)`, 2);
+  await this.assert_equals(`setpos [150 150]
+                            setheading 0
+                            fd 10
+                            pos `, [150, -140]);
 
-  await this.assert_equals(
-    'make "a 0  do.while [ make "a :a + 1 ] notequalp :a 5  :a', 5);
+  await this.assert_equals(`make "a 0
+                            do.while [
+                              make "a :a + 1
+                            ] notequalp :a 5
+                            :a`, 5);
 
-  await this.run('foreach [ 1 2 3 4 5 ] ".verify_bound_ignore');
-  await this.assert_equals('map ".verify_bound_identity [ 1 2 ]', ['1', '2']);
-  await this.assert_equals('filter ".verify_bound_identity [ 1 2 ]', ['1', '2']);
-  await this.assert_equals('find ".verify_bound_identity [ 1 ]', '1');
-  await this.run('reduce ".verify_bound_ignore [ 1 2 ]');
-  await this.run('ignore crossmap ".verify_bound_ignore [[ 1 2 ] [ 3 4 ]]');
+  await this.run(`foreach [ 1 2 3 4 5 ] ".verify_bound_ignore`);
+  await this.assert_equals(`map ".verify_bound_identity [ 1 2 ]`, ['1', '2']);
+  await this.assert_equals(`filter ".verify_bound_identity [ 1 2 ]`, ['1', '2']);
+  await this.assert_equals(`find ".verify_bound_identity [ 1 ]`, '1');
+  await this.run(`reduce ".verify_bound_ignore [ 1 2 ]`);
+  await this.run(`ignore crossmap ".verify_bound_ignore [[ 1 2 ] [ 3 4 ]]`);
 
-  await this.assert_equals('forever [ bye ] 123', undefined);
-  await this.assert_equals('for [ i 1 2 ] [ bye ] 123', undefined);
-  await this.assert_equals('dotimes [ i 1 ] [ bye ] 123', undefined);
-  await this.assert_equals('do.while [ bye ] [ 1 = 1 ] 123', undefined);
-  await this.assert_equals('while [ 1 = 1 ] [ bye ] 123', undefined);
-  await this.assert_equals('do.until [ bye ] [ 1 = 0 ] 123', undefined);
-  await this.assert_equals('until [ 1 = 0 ] [ bye ] 123', undefined);
+  await this.assert_equals(`forever [ bye ] 123`, undefined);
+  await this.assert_equals(`for [ i 1 2 ] [ bye ] 123`, undefined);
+  await this.assert_equals(`dotimes [ i 1 ] [ bye ] 123`, undefined);
+  await this.assert_equals(`do.while [ bye ] [ 1 = 1 ] 123`, undefined);
+  await this.assert_equals(`while [ 1 = 1 ] [ bye ] 123`, undefined);
+  await this.assert_equals(`do.until [ bye ] [ 1 = 0 ] 123`, undefined);
+  await this.assert_equals(`until [ 1 = 0 ] [ bye ] 123`, undefined);
 
   await this.assert_equals(`make "s []
-                      repeat 3 [
-                        foreach [5 6 7] [queue "s (word repcount #)]
-                      ]
-                      :s`,
-                     ['11', '12', '13', '21', '22', '23', '31', '32', '33']);
+                            repeat 3 [
+                              foreach [5 6 7] [queue "s (word repcount #)]
+                            ]
+                            :s`,
+                           ['11', '12', '13', '21', '22', '23', '31', '32', '33']);
 
   await this.assert_stream(`foreach [a] [show ?]`, 'a\n');
 });
 
 QUnit.test("API Tests", async function(t) {
   // LogoInterpeter#copydef(newname, oldname)
-  await this.assert_error('yup', "Don't know how to YUP");
-  await this.assert_error('nope', "Don't know how to NOPE");
+  await this.assert_error(`yup`, "Don't know how to YUP");
+  await this.assert_error(`nope`, "Don't know how to NOPE");
 
   this.queue(() => {
     this.interpreter.copydef('yup', 'true');
     this.interpreter.copydef('nope', 'false');
   });
-  await this.assert_equals('yup', 1);
-  await this.assert_equals('nope', 0);
+  await this.assert_equals(`yup`, 1);
+  await this.assert_equals(`nope`, 0);
 
   // LogoInterpreter#localize
-  await this.assert_error("1 / 0", "Division by zero");
-  await this.assert_error("item 5 [ 1 2 ]", "ITEM: Index out of bounds");
+  await this.assert_error(`1 / 0`, "Division by zero");
+  await this.assert_error(`item 5 [ 1 2 ]`, "ITEM: Index out of bounds");
   this.queue(() => {
     this.interpreter.localize = function(s) {
       return {
@@ -2001,12 +2780,13 @@ QUnit.test("API Tests", async function(t) {
       }[s];
     };
   });
-  await this.assert_error("1 / 0", "Divido per nulo");
-  await this.assert_error("item 5 [ 1 2 ]", "ITEM: Indekso ekster limojn");
+  await this.assert_error(`1 / 0`, "Divido per nulo");
+  await this.assert_error(`item 5 [ 1 2 ]`, "ITEM: Indekso ekster limojn");
 
   // LogoInterpreter#keywordAlias
-  await this.assert_error('to foo output 2 fino  foo', "TO: Expected END");
-  await this.assert_equals('case 2 [[[1] "a"] [alie "b]]', undefined);
+  await this.assert_error(`to foo output 2 fino
+                           foo`, "TO: Expected END");
+  await this.assert_equals(`case 2 [[[1] "a"] [alie "b]]`, undefined);
   this.queue(() => {
     this.interpreter.keywordAlias = function(s) {
       return {
@@ -2015,8 +2795,9 @@ QUnit.test("API Tests", async function(t) {
       }[s];
     };
   });
-  await this.assert_equals('case 2 [[[1] "a"] [alie "b]]', 'b');
-  await this.assert_equals('to foo output 2 fino  foo', 2);
+  await this.assert_equals(`case 2 [[[1] "a"] [alie "b]]`, 'b');
+  await this.assert_equals(`to foo output 2 fino
+                            foo`, 2);
 
   // LogoInterpreter#colorAlias
   const done = t.async();
@@ -2026,7 +2807,7 @@ QUnit.test("API Tests", async function(t) {
       hookCalled = hookCalled || (s === 'internationalorange');
     };
   });
-  await this.run('setpencolor "internationalorange');
+  await this.run(`setpencolor "internationalorange`);
   this.queue(() => {
     t.ok(hookCalled);
     done();
@@ -2395,6 +3176,6 @@ QUnit.test("Arity of Primitives", async function(t) {
   arities.forEach(async pair => {
     const proc = pair[0];
     const arity = pair[1];
-    await this.assert_equals('arity "' + proc, arity);
+    await this.assert_equals(`arity "` + proc, arity);
   });
 });
