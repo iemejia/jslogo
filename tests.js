@@ -2171,7 +2171,7 @@ QUnit.test("Workspace Management", async function(t) {
 });
 
 QUnit.test("Control Structures", async function(t) {
-  t.expect(156);
+  t.expect(160);
   //
   // 8.1 Control
   //
@@ -2452,6 +2452,8 @@ QUnit.test("Control Structures", async function(t) {
                               output case :letter [ [[a e i o u] "true] [else "false] ]
                             end
                             (list vowelp "a vowelp "b`, ['true', 'false']); // TODO: Is lack of closing ) intentional?
+  await this.assert_equals(`case 1 [ [ [1] 1+1 ] [ else 2+2 ]]`, 2);
+  await this.assert_equals(`case 2 [ [ [1] 1+1 ] [ else 2+2 ]]`, 4);
 
   await this.assert_equals(`to evenp :n
                               output not bitand :n 1
@@ -2473,7 +2475,8 @@ QUnit.test("Control Structures", async function(t) {
 
   await this.assert_equals(`cond [ [ [2<3] "yep ] [ else "nope ]]`, 'yep');
   await this.assert_equals(`cond [ [ [2>3] "yep ] [ else "nope ]]`, 'nope');
-
+  await this.assert_equals(`cond [ [ [2<3] 1+1 ] [ else 2+2 ]]`, 2);
+  await this.assert_equals(`cond [ [ [2>3] 1+1 ] [ else 2+2 ]]`, 4);
   //
   // 8.2 Template-based Iteration
   //

@@ -635,6 +635,9 @@ function LogoInterpreter(turtle, stream, savehook) {
     }
   }
 
+  // Needed when a list is treated as an expression or statements, e.g.:
+  // input: [ ':x>10' ]              (one word)
+  // output: [ ':x', '>', '10' ]     (three words)
   function reparse(list) {
     return parse(stringify_nodecorate(list).replace(/([\\;])/g, '\\$1'));
   }
@@ -3223,9 +3226,9 @@ function LogoInterpreter(turtle, stream, savehook) {
       const clause = lexpr(clauses[i]);
       const first = clause.shift();
       if (isKeyword(first, 'ELSE'))
-        return evaluateExpression(clause);
+        return evaluateExpression(reparse(clause));
       if (lexpr(first).some(x => equal(x, value)))
-        return evaluateExpression(clause);
+        return evaluateExpression(reparse(clause));
     }
     return undefined;
   });
@@ -3236,10 +3239,10 @@ function LogoInterpreter(turtle, stream, savehook) {
       const clause = lexpr(clauses.shift());
       const first = clause.shift();
       if (isKeyword(first, 'ELSE'))
-        return await evaluateExpression(clause);
+        return await evaluateExpression(reparse(clause));
       const result = await evaluateExpression(reparse(lexpr(first)));
       if (result)
-        return await evaluateExpression(clause);
+        return await evaluateExpression(reparse(clause));
     }
     return undefined;
   });
