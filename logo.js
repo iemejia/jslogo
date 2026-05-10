@@ -926,6 +926,8 @@ function LogoInterpreter(turtle, stream, savehook) {
       while (tokenlist.length && !peek(tokenlist, [')'])) {
         args.push(expression(tokenlist));
       }
+      if (!tokenlist.length || tokenlist[0] !== ')')
+            throw err("Expected ')'", ERRORS.MISSING_PAREN);
       tokenlist.shift(); // Consume ')'
 
       if (args.length < procedure.minimum)

@@ -2451,7 +2451,7 @@ QUnit.test("Control Structures", async function(t) {
   await this.assert_equals(`to vowelp :letter
                               output case :letter [ [[a e i o u] "true] [else "false] ]
                             end
-                            (list vowelp "a vowelp "b`, ['true', 'false']); // TODO: Is lack of closing ) intentional?
+                            (list vowelp "a vowelp "b)`, ['true', 'false']);
   await this.assert_equals(`case 1 [ [ [1] 1+1 ] [ else 2+2 ]]`, 2);
   await this.assert_equals(`case 2 [ [ [1] 1+1 ] [ else 2+2 ]]`, 4);
 
@@ -2563,8 +2563,8 @@ QUnit.test("Control Structures", async function(t) {
   await this.assert_equals(`reduce "sum [ 1 2 3 4 ]`, 10);
   await this.assert_equals(`(reduce "sum [ 1 2 3 4 ] 10)`, 20);
   await this.assert_equals(`reduce "add_async [ 1 2 3 4 ]`, 10);
-  await this.assert_equals(`(reduce [?1] [ 1 2 3 4 ]`, '1');
-  await this.assert_equals(`(reduce [?2] [ 1 2 3 4 ]`, '4');
+  await this.assert_equals(`(reduce [?1] [ 1 2 3 4 ])`, '1');
+  await this.assert_equals(`(reduce [?2] [ 1 2 3 4 ])`, '4');
   await this.assert_equals(`(reduce [?1 * ?2] [ 1 2 3 4 ])`, 24);
   await this.assert_equals(`(reduce [?1 + ?2] [ 1 2 3 4 ])`, 10);
   await this.assert_equals(`(reduce [?1 - ?2] [ 1 2 3 4 ])`, -2);
@@ -2758,6 +2758,7 @@ QUnit.test("Regression Tests", async function(t) {
                            ['11', '12', '13', '21', '22', '23', '31', '32', '33']);
 
   await this.assert_stream(`foreach [a] [show ?]`, 'a\n');
+  await this.assert_error(`(list 1 2 3`, "Expected ')'");
 });
 
 QUnit.test("API Tests", async function(t) {
