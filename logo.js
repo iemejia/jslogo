@@ -379,7 +379,7 @@ function LogoInterpreter(turtle, stream, savehook) {
     }
 
     let atoms = [],
-        prev, r;
+        prev;
 
     const stream = new Stream(string);
     while (stream.peek()) {
@@ -2632,8 +2632,16 @@ function LogoInterpreter(turtle, stream, savehook) {
   // 7.7 Workspace Control
   //
 
+  function contentslist(list) {
+    if (list !== undefined && Type(list) === 'word')
+      list = [list];
+    if (list !== undefined && list.length && Type(list[0]) === 'word')
+      list = [list];
+    return lexpr(list);
+  }
+
   def("erase", list => {
-    list = lexpr(list);
+    list = contentslist(list);
 
     // Delete procedures
     if (list.length) {
@@ -2756,7 +2764,7 @@ function LogoInterpreter(turtle, stream, savehook) {
   });
 
   def("bury", list => {
-    list = lexpr(list);
+    list = contentslist(list);
 
     // Bury procedures
     if (list.length) {
@@ -2815,7 +2823,7 @@ function LogoInterpreter(turtle, stream, savehook) {
   });
 
   def("unbury", list => {
-    list = lexpr(list);
+    list = contentslist(list);
 
     // Procedures
     if (list.length) {
@@ -2874,14 +2882,13 @@ function LogoInterpreter(turtle, stream, savehook) {
   });
 
   def(["buriedp", "buried?"], list => {
-    list = lexpr(list);
-    let name;
+    list = contentslist(list);
 
     // Procedures
     if (list.length) {
       const procs = lexpr(list.shift());
       if (procs.length) {
-        name = sexpr(procs[0]);
+        const name = sexpr(procs[0]);
         return (this.routines.has(name) && this.routines.get(name).buried) ? 1 : 0;
       }
     }
@@ -2890,7 +2897,7 @@ function LogoInterpreter(turtle, stream, savehook) {
     if (list.length) {
       const vars = lexpr(list.shift());
       if (vars.length) {
-        name = sexpr(vars[0]);
+        const name = sexpr(vars[0]);
         // TODO: global only?
         return (this.scopes[0].has(name) && this.scopes[0].get(name).buried) ? 1 : 0;
       }
@@ -2900,7 +2907,7 @@ function LogoInterpreter(turtle, stream, savehook) {
     if (list.length) {
       const plists = lexpr(list.shift());
       if (plists.length) {
-        name = sexpr(plists[0]);
+        const name = sexpr(plists[0]);
         return (this.plists.has(name) && this.plists.get(name).buried) ? 1 : 0;
       }
     }

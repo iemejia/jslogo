@@ -1483,7 +1483,7 @@ QUnit.test("Graphics", async function(t) {
 });
 
 QUnit.test("Workspace Management", async function(t) {
-  t.expect(197);
+  t.expect(206);
 
   //
   // 7.1 Procedure Definition
@@ -1933,230 +1933,300 @@ QUnit.test("Workspace Management", async function(t) {
 
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            make "b 2
-                            to a output 1 end
-                            to b output 2 end
-                            erase [[a] [b]]
-                            contents`, [['b'], ['a'], []]);
+                            make "aa 1
+                            make "bb 2
+                            to aa output 1 end
+                            to bb output 2 end
+                            erase [[aa] [bb]]
+                            contents`, [['bb'], ['aa'], []]);
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            make "b 2
-                            to a output 1 end
-                            to b output 2 end
+                            make "aa 1
+                            make "bb 2
+                            to aa output 1 end
+                            to bb output 2 end
+                            erase [[aa bb]]
+                            contents`, [[], ['aa', 'bb'], []]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "aa 1
+                            make "bb 2
+                            to aa output 1 end
+                            to bb output 2 end
+                            erase "aa
+                            contents`, [['bb'], ['aa', 'bb'], []]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "aa 1
+                            make "bb 2
+                            to aa output 1 end
+                            to bb output 2 end
                             erall
                             contents`, [[], [], []]);
   // TODO: erase + redefp
 
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            erps [[b]]
-                            contents`, [[], ['a'], ['c']]);
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            erps [[bb]]
+                            contents`, [[], ['aa'], ['cc']]);
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            erns [[a]]
-                            contents`, [['b'], [], ['c']]);
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            erns [[aa]]
+                            contents`, [['bb'], [], ['cc']]);
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            erpls [[c]]
-                            contents`, [['b'], ['a'], []]);
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            erpls [[cc]]
+                            contents`, [['bb'], ['aa'], []]);
 
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            ern "a
-                            contents`, [['b'], [], ['c']]);
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            ern "aa
+                            contents`, [['bb'], [], ['cc']]);
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            ern [a]
-                            contents`, [['b'], [], ['c']]);
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            ern [aa]
+                            contents`, [['bb'], [], ['cc']]);
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            erpl "c
-                            contents`, [['b'], ['a'], []]);
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            erpl "cc
+                            contents`, [['bb'], ['aa'], []]);
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            erpl [c]
-                            contents`, [['b'], ['a'], []]);
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            erpl [cc]
+                            contents`, [['bb'], ['aa'], []]);
 
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            bury [[b]]
-                            contents`, [[], ['a'], ['c']]);
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            bury [[bb]]
+                            contents`, [[], ['aa'], ['cc']]);
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            bury [[] [a]]
-                            contents`, [['b'], [], ['c']]);
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            bury [[] [aa]]
+                            contents`, [['bb'], [], ['cc']]);
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            bury [[] [] [c]]
-                            contents`, [['b'], ['a'], []]);
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            bury [[] [] [cc]]
+                            contents`, [['bb'], ['aa'], []]);
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
                             buryall
                             contents`, [[], [], []]);
 
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            buryall unbury [[b]]
-                            contents`, [['b'], [], []]);
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            buryall
+                            unbury [[bb]]
+                            contents`, [['bb'], [], []]);
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            buryall unbury [[] [a]]
-                            contents`, [[], ['a'], []]);
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            buryall
+                            unbury [bb]
+                            contents`, [['bb'], [], []]);
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            buryall unbury [[] [] [c]]
-                            contents`, [[], [], ['c']]);
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            buryall
+                            unbury "bb
+                            contents`, [['bb'], [], []]);
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            buryall
+                            unbury [[] [aa]]
+                            contents`, [[], ['aa'], []]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            buryall
+                            unbury [[] [] [cc]]
+                            contents`, [[], [], ['cc']]);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
                             buryall
                             unburyall
-                            contents`, [['b'], ['a'], ['c']]);
+                            contents`, [['bb'], ['aa'], ['cc']]);
 
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            buriedp [[b]]`, 0);
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            buriedp [[bb]]`, 0);
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            bury [[b]]
-                            buriedp [[b]]`, 1);
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            bury [[bb]]
+                            buriedp [[bb]]`, 1);
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            bury [[b]]
-                            buriedp [[] [a]]`, 0);
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            bury [[bb]]
+                            buriedp [bb]`, 1);
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            bury [[b]]
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            bury [[bb]]
+                            buriedp "bb`, 1);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            bury [[bb]]
+                            buriedp [[] [aa]]`, 0);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            bury [[bb]]
+                            buriedp [[] [] [cc]]`, 0);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            buriedp [[] [aa]]`, 0);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            bury [[] [aa]]
+                            buriedp [[bb]]`, 0);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            bury [[] [aa]]
+                            buriedp [[] [aa]]`, 1);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            bury [[] [aa]]
+                            buriedp [[] [] [cc]]`, 0);
+  await this.assert_equals(`unburyall
+                            erall
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
                             buriedp [[] [] [c]]`, 0);
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            buriedp [[] [a]]`, 0);
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            bury [[] [] [cc]]
+                            buriedp [[bb]]`, 0);
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            bury [[] [a]]
-                            buriedp [[b]]`, 0);
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            bury [[] [] [cc]]
+                            buriedp [[] [aa]]`, 0);
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            bury [[] [a]]
-                            buriedp [[] [a]]`, 1);
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            bury [[] [] [cc]]
+                            buriedp [[] [] [cc]]`, 1);
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            bury [[] [a]]
-                            buriedp [[] [] [c]]`, 0);
+                            to aa output 1 end
+                            to bb output 2 end
+                            to cc output 3 end
+                            bury "bb
+                            contents`, [['aa', 'cc'], [], []]);
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            buriedp [[] [] [c]]`, 0);
+                            to aa output 1 end
+                            to bb output 2 end
+                            to cc output 3 end
+                            bury [bb]
+                            contents`, [['aa', 'cc'], [], []]);
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            bury [[] [] [c]]
-                            buriedp [[b]]`, 0);
-  await this.assert_equals(`unburyall
-                            erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            bury [[] [] [c]]
-                            buriedp [[] [a]]`, 0);
-  await this.assert_equals(`unburyall
-                            erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            bury [[] [] [c]]
-                            buriedp [[] [] [c]]`, 1);
+                            to aa output 1 end
+                            to bb output 2 end
+                            to cc output 3 end
+                            bury [aa cc]
+                            contents`, [['bb'], [], []]);
 
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            buryname "a
-                            contents`, [['b'], [], ['c']]);
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            buryname "aa
+                            contents`, [['bb'], [], ['cc']]);
   await this.assert_equals(`unburyall
                             erall
-                            make "a 1
-                            to b output 2 end
-                            pprop "c "d "e
-                            buryall unburyname "a
-                            contents`, [[], ['a'], []]);
+                            make "aa 1
+                            to bb output 2 end
+                            pprop "cc "dd "ee
+                            buryall unburyname "aa
+                            contents`, [[], ['aa'], []]);
 
-  await this.assert_equals(`buried`, [['b'], [], ['c']]);
+  await this.assert_equals(`buried`, [['bb'], [], ['cc']]);
   // TODO: tests when STEP and TRACE are actually implemented.
   await this.assert_equals(`stepped`, [[],[],[]]);
   await this.assert_equals(`traced`, [[],[],[]]);
