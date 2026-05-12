@@ -3104,6 +3104,14 @@ function LogoInterpreter(turtle, stream, savehook) {
         const instructionlist = reparse(member);
         const result = await this.execute(instructionlist, {returnResult: true});
         out = out.concat(result);
+      } else if (Type(member) === 'word' && /^,@.+/.test(member)) {
+        const instructionlist = [member.substring(2)];
+        const result = await this.execute(instructionlist, {returnResult: true});
+        out = out.concat(result);
+      } else if (Type(member) === 'word' && /^,.+/.test(member)) {
+        const instructionlist = [member.substring(1)];
+        const result = await this.execute(instructionlist, {returnResult: true});
+        out.push(result);
       } else if (Type(member) === 'word' && /^",/.test(member)) {
         const instructionlist = reparse(member.substring(2));
         const result = await this.execute(instructionlist, {returnResult: true});

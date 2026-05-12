@@ -2171,7 +2171,7 @@ QUnit.test("Workspace Management", async function(t) {
 });
 
 QUnit.test("Control Structures", async function(t) {
-  t.expect(160);
+  t.expect(167);
   //
   // 8.1 Control
   //
@@ -2348,7 +2348,13 @@ QUnit.test("Control Structures", async function(t) {
                      [ 'foo', 'baz', ['b', 'c'], 'garply', 'b', 'c']);
   await this.assert_equals('make "n "x `[",:n]', ['"x']);
   await this.assert_equals('make "n "x `[:,:n]', [':x']);
-
+  await this.assert_equals('make "foo "BAR  ` [ ,:foo ]', ['BAR']);
+  await this.assert_equals('make "foo "BAR  ` [ , :foo ]', ['BAR']);
+  await this.assert_equals('make "foo "BAR  ` [ ,[:foo] ]', ['BAR']);
+  await this.assert_equals('make "foo [1 2 3]  ` [ ,:foo ]', [['1', '2', '3']]);
+  await this.assert_equals('make "foo [1 2 3]  ` [ , :foo ]', [['1', '2', '3']]);
+  await this.assert_equals('make "foo [1 2 3]  ` [ ,@:foo ]', ['1', '2', '3']);
+  await this.assert_equals('make "foo [1 2 3]  ` [ ,@ :foo ]', ['1', '2', '3']);
 
   await this.assert_equals(`make "x 0
                             for [ r 1 5 ] [ make "x :x + :r ]
