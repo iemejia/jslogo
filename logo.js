@@ -2454,10 +2454,10 @@ function LogoInterpreter(turtle, stream, savehook) {
     propname = sexpr(propname);
     const plist = this.plists.get(plistname);
     if (plist) {
-      plist['delete'](propname);
+      plist.delete(propname);
       if (plist.empty()) {
         // TODO: Do this? Loses state, e.g. unburies if buried
-        this.plists['delete'](plistname);
+        this.plists.delete(plistname);
       }
     }
   });
@@ -2634,53 +2634,47 @@ function LogoInterpreter(turtle, stream, savehook) {
 
   function contentslist(list) {
     if (list !== undefined && Type(list) === 'word')
-      list = [list];
-    if (list !== undefined && list.length && Type(list[0]) === 'word')
-      list = [list];
-    return lexpr(list);
+      return [[list], [], []];
+    if (list !== undefined && Type(list) === 'list' && list.length && Type(list[0]) === 'word')
+      return [lexpr(list), [], []];
+    list = lexpr(list);
+    while (list && list.length < 3)
+      list.push([]);
+    return [lexpr(list[0]), lexpr(list[1]), lexpr(list[2])];
   }
 
   def("erase", list => {
-    list = contentslist(list);
+    const [procs, vars, plists] = contentslist(list);
 
     // Delete procedures
-    if (list.length) {
-      const procs = lexpr(list.shift());
-      procs.forEach(name => {
-        name = sexpr(name);
-        if (this.routines.has(name)) {
-          if (this.routines.get(name).special)
-            throw err("Can't {_PROC_} special {name:U}", { name: name }, ERRORS.BAD_INPUT);
-          if (!this.routines.get(name).primitive || maybegetvar("redefp")) {
-            this.routines['delete'](name);
-            saveproc(name);
-          } else {
-            throw err("Can't {_PROC_} primitives unless REDEFP is TRUE", ERRORS.BAD_INPUT);
-          }
+    procs.forEach(name => {
+      name = sexpr(name);
+      if (this.routines.has(name)) {
+        if (this.routines.get(name).special)
+          throw err("Can't {_PROC_} special {name:U}", { name: name }, ERRORS.BAD_INPUT);
+        if (!this.routines.get(name).primitive || maybegetvar("redefp")) {
+          this.routines.delete(name);
+          saveproc(name);
+        } else {
+          throw err("Can't {_PROC_} primitives unless REDEFP is TRUE", ERRORS.BAD_INPUT);
         }
-      });
-    }
+      }
+    });
 
     // Delete variables
-    if (list.length) {
-      const vars = lexpr(list.shift());
-      // TODO: global only?
-      this.scopes.forEach(scope => {
-        vars.forEach(name => {
-          name = sexpr(name);
-          scope['delete'](name);
-        });
+    // TODO: global only?
+    this.scopes.forEach(scope => {
+      vars.forEach(name => {
+        name = sexpr(name);
+        scope.delete(name);
       });
-    }
+    });
 
     // Delete property lists
-    if (list.length) {
-      const plists = lexpr(list.shift());
-      plists.forEach(name => {
-        name = sexpr(name);
-        this.plists['delete'](name);
-      });
-    }
+    plists.forEach(name => {
+      name = sexpr(name);
+      this.plists.delete(name);
+    });
   });
 
   // TODO: lots of redundant logic here -- clean this up
@@ -2688,7 +2682,7 @@ function LogoInterpreter(turtle, stream, savehook) {
     this.routines.keys()
       .filter(x => !this.routines.get(x).primitive && !this.routines.get(x).buried)
       .forEach(name => {
-        this.routines['delete'](name);
+        this.routines.delete(name);
         saveproc(name);
       });
 
@@ -2696,14 +2690,14 @@ function LogoInterpreter(turtle, stream, savehook) {
       scope.keys()
         .filter(x => !scope.get(x).buried)
         .forEach(name => {
-          scope['delete'](name);
+          scope.delete(name);
         });
     });
 
     this.plists.keys()
       .filter(x => !this.plists.get(x).buried)
       .forEach(name => {
-        this.plists['delete'](name);
+        this.plists.delete(name);
       });
   });
 
@@ -2711,7 +2705,7 @@ function LogoInterpreter(turtle, stream, savehook) {
     this.routines.keys()
       .filter(x => !this.routines.get(x).primitive && !this.routines.get(x).buried)
       .forEach(name => {
-        this.routines['delete'](name);
+        this.routines.delete(name);
         saveproc(name);
       });
   });
@@ -2721,7 +2715,7 @@ function LogoInterpreter(turtle, stream, savehook) {
       scope.keys()
         .filter(x => !scope.get(x).buried)
         .forEach(name => {
-          scope['delete'](name);
+          scope.delete(name);
         });
     });
   });
@@ -2730,7 +2724,7 @@ function LogoInterpreter(turtle, stream, savehook) {
     this.plists.keys()
       .filter(x => !this.plists.get(x).buried)
       .forEach(key => {
-        this.plists['delete'](key);
+        this.plists.delete(key);
       });
   });
 
@@ -2744,7 +2738,7 @@ function LogoInterpreter(turtle, stream, savehook) {
     this.scopes.forEach(scope => {
       varnamelist.forEach(name => {
         name = sexpr(name);
-        scope['delete'](name);
+        scope.delete(name);
       });
     });
   });
@@ -2759,45 +2753,36 @@ function LogoInterpreter(turtle, stream, savehook) {
 
     plnamelist.forEach(name => {
       name = sexpr(name);
-      this.plists['delete'](name);
+      this.plists.delete(name);
     });
   });
 
   def("bury", list => {
-    list = contentslist(list);
+    const [procs, vars, plists] = contentslist(list);
 
     // Bury procedures
-    if (list.length) {
-      const procs = lexpr(list.shift());
-      procs.forEach(name => {
-        name = sexpr(name);
-        if (this.routines.has(name))
-          this.routines.get(name).buried = true;
-      });
-    }
+    procs.forEach(name => {
+      name = sexpr(name);
+      if (this.routines.has(name))
+        this.routines.get(name).buried = true;
+    });
 
     // Bury variables
-    if (list.length) {
-      const vars = lexpr(list.shift());
-      // TODO: global only?
-      this.scopes.forEach(scope => {
-        vars.forEach(name => {
-          name = sexpr(name);
-          if (scope.has(name))
-            scope.get(name).buried = true;
-        });
+    // TODO: global only?
+    this.scopes.forEach(scope => {
+      vars.forEach(name => {
+        name = sexpr(name);
+        if (scope.has(name))
+          scope.get(name).buried = true;
       });
-    }
+    });
 
     // Bury property lists
-    if (list.length) {
-      const plists = lexpr(list.shift());
-      plists.forEach(name => {
-        name = sexpr(name);
-        if (this.plists.has(name))
-          this.plists.get(name).buried = true;
-      });
-    }
+    plists.forEach(name => {
+      name = sexpr(name);
+      if (this.plists.has(name))
+        this.plists.get(name).buried = true;
+    });
   });
 
   def("buryall", () => {
@@ -2823,40 +2808,31 @@ function LogoInterpreter(turtle, stream, savehook) {
   });
 
   def("unbury", list => {
-    list = contentslist(list);
+    const [procs, vars, plists] = contentslist(list);
 
     // Procedures
-    if (list.length) {
-      const procs = lexpr(list.shift());
-      procs.forEach(name => {
-        name = sexpr(name);
-        if (this.routines.has(name))
-          this.routines.get(name).buried = false;
-      });
-    }
+    procs.forEach(name => {
+      name = sexpr(name);
+      if (this.routines.has(name))
+        this.routines.get(name).buried = false;
+    });
 
     // Variables
-    if (list.length) {
-      const vars = lexpr(list.shift());
-      // TODO: global only?
-      this.scopes.forEach(scope => {
-        vars.forEach(name => {
-          name = sexpr(name);
-          if (scope.has(name))
-            scope.get(name).buried = false;
-        });
+    // TODO: global only?
+    this.scopes.forEach(scope => {
+      vars.forEach(name => {
+        name = sexpr(name);
+        if (scope.has(name))
+          scope.get(name).buried = false;
       });
-    }
+    });
 
     // Property lists
-    if (list.length) {
-      const plists = lexpr(list.shift());
-      plists.forEach(name => {
-        name = sexpr(name);
-        if (this.plists.has(name))
-          this.plists.get(name).buried = false;
-      });
-    }
+    plists.forEach(name => {
+      name = sexpr(name);
+      if (this.plists.has(name))
+        this.plists.get(name).buried = false;
+    });
   });
 
   def("unburyall", () => {
@@ -2882,34 +2858,25 @@ function LogoInterpreter(turtle, stream, savehook) {
   });
 
   def(["buriedp", "buried?"], list => {
-    list = contentslist(list);
+    const [procs, vars, plists] = contentslist(list);
 
     // Procedures
-    if (list.length) {
-      const procs = lexpr(list.shift());
-      if (procs.length) {
-        const name = sexpr(procs[0]);
-        return (this.routines.has(name) && this.routines.get(name).buried) ? 1 : 0;
-      }
+    if (procs.length) {
+      const name = sexpr(procs[0]);
+      return (this.routines.has(name) && this.routines.get(name).buried) ? 1 : 0;
     }
 
     // Variables
-    if (list.length) {
-      const vars = lexpr(list.shift());
-      if (vars.length) {
-        const name = sexpr(vars[0]);
-        // TODO: global only?
-        return (this.scopes[0].has(name) && this.scopes[0].get(name).buried) ? 1 : 0;
-      }
+    if (vars.length) {
+      const name = sexpr(vars[0]);
+      // TODO: global only?
+      return (this.scopes[0].has(name) && this.scopes[0].get(name).buried) ? 1 : 0;
     }
 
     // Property lists
-    if (list.length) {
-      const plists = lexpr(list.shift());
-      if (plists.length) {
-        const name = sexpr(plists[0]);
-        return (this.plists.has(name) && this.plists.get(name).buried) ? 1 : 0;
-      }
+    if (plists.length) {
+      const name = sexpr(plists[0]);
+      return (this.plists.has(name) && this.plists.get(name).buried) ? 1 : 0;
     }
 
     return 0;
