@@ -2241,7 +2241,7 @@ QUnit.test("Workspace Management", async function(t) {
 });
 
 QUnit.test("Control Structures", async function(t) {
-  t.expect(167);
+  t.expect(172);
   //
   // 8.1 Control
   //
@@ -2595,6 +2595,13 @@ QUnit.test("Control Structures", async function(t) {
   await this.assert_equals(`make "x (word)
                             foreach [ a b c ] [ make "x (word :x ? # ", ) ]
                             :x`, 'a1,b2,c3,');
+  await this.assert_equals(`make "s []
+                            to note
+                              queue "s ?rest
+                              output false
+                            end
+                            foreach [31 32 33 34] "note
+                            :s`, [['32', '33', '34'], ['33', '34'], ['34'], []]);
 
   await this.assert_equals(`to double :x output :x * 2 end
                             map "double [ 1 2 3 ]`, [2, 4, 6]);
@@ -2608,6 +2615,8 @@ QUnit.test("Control Structures", async function(t) {
   await this.assert_equals(`map [? * #] [2 3 4 5]`, [2, 6, 12, 20]);
   await this.assert_equals(`to foo :a output (word :a #) end
                             map "foo [ 7 8 9 ]`, ['71', '82', '93']);
+  await this.assert_equals(`map [?rest] [1 2 3 4]`, [['2', '3', '4'], ['3', '4'], ['4'], []]);
+  await this.assert_equals(`(map [?rest] [5 6] [7 8])`, [['6'], []]);
 
   await this.assert_equals(`(map "sum [1 2 3] [40 50 60] [700 800 900])`, [741, 852, 963]);
   await this.assert_equals(`(map "item [2 1 2 3] [john paul george ringo])`, ['o', 'p', 'e', 'n']);
@@ -2626,6 +2635,13 @@ QUnit.test("Control Structures", async function(t) {
   await this.assert_equals(`to oddpos :x output # % 2 end
                             filter "oddpos [ a b c d e f ]`, ['a', 'c', 'e']);
   await this.assert_equals(`filter [(modulo # 2) <> 0] [ a b c d e f ]`, ['a', 'c', 'e']);
+  await this.assert_equals(`make "s []
+                            to note
+                              queue "s ?rest
+                              output true
+                            end
+                            ignore filter "note [11 12 13 14]
+                            :s`, [['12', '13', '14'], ['13', '14'], ['14'], []]);
 
   await this.assert_equals(`find "numberp (list "a "b "c 4 "e "f )`, 4);
   await this.assert_equals(`find "numberp (list "a "b "c "d "e "f )`, []);
@@ -2635,6 +2651,13 @@ QUnit.test("Control Structures", async function(t) {
   await this.assert_equals(`find [# = 3] [2 4 6 8]`, '6');
   await this.assert_equals(`to third :x output # = 3 end
                             find "third [2 4 6 8]`, '6');
+  await this.assert_equals(`make "s []
+                            to note
+                              queue "s ?rest
+                              output false
+                            end
+                            ignore find "note [21 22 23 24]
+                            :s`, [['22', '23', '24'], ['23', '24'], ['24'], []]);
 
   await this.assert_equals(`reduce "sum [ 1 2 3 4 ]`, 10);
   await this.assert_equals(`(reduce "sum [ 1 2 3 4 ] 10)`, 20);

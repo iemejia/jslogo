@@ -855,7 +855,7 @@ function LogoInterpreter(turtle, stream, savehook) {
         varname = atom.substring(1);
         return () => getvar(varname);
       }
-      if (atom.charAt(0) === '?') {
+      if (atom.match(/^\?\d*$/)) {
         // template slot
         return () => getslot(atom.substring(1));
       }
@@ -2970,8 +2970,11 @@ function LogoInterpreter(turtle, stream, savehook) {
     }
   });
 
+  const TEMPLATE_ITERCOUNT_NAME = 'template.itercount';
+  const TEMPLATE_LISTS_NAME = 'template.lists';
+
   def(["repcount"], () => this.repcount);
-  def(["#"], () => this.itercount ?? this.repcount);
+  def(["#"], () => maybegetvar(TEMPLATE_ITERCOUNT_NAME) ?? this.repcount);
 
   def("if", async (tf, statements, statements2=undefined) => {
     if (Type(tf) === 'list')
@@ -3314,19 +3317,22 @@ function LogoInterpreter(turtle, stream, savehook) {
     const routine = processTemplate(template);
     list = lexpr(list);
 
-    // TODO: ?REST
-
-    const old_itercount = this.itercount;
-    let count = 0;
+    self.scopes.push(new StringMap(true));
     try {
+      setlocal(TEMPLATE_LISTS_NAME, list);
+      let count = 0;
       while (list.length) {
-        this.itercount = ++count;
+        setlocal(TEMPLATE_ITERCOUNT_NAME, ++count);
         await routine.call(this, list.shift());
         await yieldIfNeeded();
       }
     } finally {
-      this.itercount = old_itercount;
+      self.scopes.pop();
     }
+  });
+
+  def("?rest", () => {
+    return getvar(TEMPLATE_LISTS_NAME).slice(getvar(TEMPLATE_ITERCOUNT_NAME));
   });
 
   def("map", async (template, ...lists) => {
@@ -3335,11 +3341,10 @@ function LogoInterpreter(turtle, stream, savehook) {
     if (!lists.length)
       throw err("{_PROC_}: Expected list", ERRORS.BAD_INPUT);
 
-    // TODO: ?REST
-
-    const old_itercount = this.itercount;
-    let count = 0;
+    self.scopes.push(new StringMap(true));
     try {
+      setlocal(TEMPLATE_LISTS_NAME, lists[0]);
+      let count = 0;
       const mapped = [];
       while (lists[0].length) {
         const args = lists.map(l => {
@@ -3347,14 +3352,15 @@ function LogoInterpreter(turtle, stream, savehook) {
             throw err("{_PROC_}: Expected lists of equal length", ERRORS.BAD_INPUT);
           return l.shift();
         });
-        this.itercount = ++count;
+        setlocal(TEMPLATE_ITERCOUNT_NAME, ++count);
+        //setlocal(TEMPLATE_LISTS_NAME, lists);
         const value = await routine.apply(this, args);
         mapped.push(value);
         await yieldIfNeeded();
       }
       return mapped;
     } finally {
-      this.itercount = old_itercount;
+      self.scopes.pop();
     }
   }, {minimum: 2, default: 2, maximum: -1});
 
@@ -3365,15 +3371,14 @@ function LogoInterpreter(turtle, stream, savehook) {
     const routine = processTemplate(template, {returnResult: true});
     list = lexpr(list);
 
-    // TODO: ?REST
-
-    const old_itercount = this.itercount;
-    let count = 0;
+    self.scopes.push(new StringMap(true));
     try {
+      setlocal(TEMPLATE_LISTS_NAME, list);
+      let count = 0;
       const filtered = [];
       while (list.length) {
         const item = list.shift();
-        this.itercount = ++count;
+        setlocal(TEMPLATE_ITERCOUNT_NAME, ++count);
         const value = await routine.call(this, item);
         if (value)
           filtered.push(item);
@@ -3381,7 +3386,7 @@ function LogoInterpreter(turtle, stream, savehook) {
       }
       return filtered;
     } finally {
-      this.itercount = old_itercount;
+      self.scopes.pop();
     }
   });
 
@@ -3389,14 +3394,13 @@ function LogoInterpreter(turtle, stream, savehook) {
     const routine = processTemplate(template, {returnResult: true});
     list = lexpr(list);
 
-    // TODO: ?REST
-
-    const old_itercount = this.itercount;
-    let count = 0;
+    self.scopes.push(new StringMap(true));
     try {
+      setlocal(TEMPLATE_LISTS_NAME, list);
+      let count = 0;
       while (list.length) {
         const item = list.shift();
-        this.itercount = ++count;
+        setlocal(TEMPLATE_ITERCOUNT_NAME, ++count);
         const value = await routine.call(this, item);
         if (value)
           return item;
@@ -3404,12 +3408,12 @@ function LogoInterpreter(turtle, stream, savehook) {
       }
       return [];
     } finally {
-      this.itercount = old_itercount;
+      self.scopes.pop();
     }
   });
 
   def("reduce", async (template, list, initial=undefined) => {
-    var routine = processTemplate(template, {returnResult: true});
+    const routine = processTemplate(template, {returnResult: true});
     list = lexpr(list);
     let value = initial !== undefined ? initial : list.pop();
 
