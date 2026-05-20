@@ -3105,27 +3105,26 @@ function LogoInterpreter(turtle, stream, savehook) {
   });
 
   def("for", async (control, statements) => {
-    control = reparse(lexpr(control));
+    control = lexpr(control);
     statements = reparse(lexpr(statements));
 
     function sign(x) { return x < 0 ? -1 : x > 0 ? 1 : 0; }
 
-    const varname = sexpr(control.shift());
+    const varname = sexpr(control[0]);
 
     async function helper(r) {
-      if (Type(r) === 'list')
-        return await evaluateExpression(reparse(r));
-      return r;
+      if (Type(r) !== 'list')
+        r = [r];
+      return await evaluateExpression(reparse(r));
     }
 
-    let start = await helper(await evaluateExpression(control));
+    let start = await helper(control[1]);
     let current = start;
 
-    let limit = await helper(await evaluateExpression(control));
+    let limit = await helper(control[2]);
 
-    let step = await helper(control.length
-      ? await evaluateExpression(control)
-      : (limit < start ? -1 : 1));
+    let step = control.length === 4 ? await helper(control[3])
+        : (limit < start ? -1 : 1);
 
     while (sign(current - limit) !== sign(step)) {
       setlocal(varname, current);

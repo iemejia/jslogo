@@ -33,6 +33,5 @@ Logo Links
 To Do
 -----
 * Document deviations from UCB Logo standard
-* Make these examples all work: [Logo 15-word challenge](http://www.mathcats.com/gallery/15wordcontest.html)
+* Make these examples all work: [Logo 15-word challenge](http://www.mathcats.com/gallery/15wordcontest.html) (only 1 is failing)
 * Tail-call optimization
-* Make execution async so you can watch the turtle move

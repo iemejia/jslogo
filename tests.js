@@ -2774,8 +2774,10 @@ QUnit.test("Regression Tests", async function(t) {
                             :x`, 12);
   await this.assert_error(`ern "i
                            for [i 0 100 :i+1] []`, "Don't know about variable I");
-  await this.assert_error(`ern "i
-                           for [i 0 100 :i + 1] []`, "Don't know about variable I");
+  await this.assert_equals(`ern "i
+                            make "x 0
+                            for [i 0 100 :i + 1] [ make "x :x + :i ]
+                            :x`, 5050); // If control length not 4, step isn't used at all
   await this.assert_equals(`make "i 5
                             make "x 0
                             for [ i 0 100 :i ] [ make "x :x + :i ]
