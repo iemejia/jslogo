@@ -20,15 +20,12 @@ Logo Examples
 Logo Links
 ----------
 * [Logo](https://en.wikipedia.org/wiki/Logo_%28programming_language%29) on Wikipedia
-* Other Logo implementations that run in a Web browser:
-  * [papert - logo in your browser](http://logo.twentygototen.org/) ([source code](https://code.google.com/p/papert/))
-  * [Curly Logo](https://github.com/drj11/curlylogo)
 * [The Logo Foundation](http://el.media.mit.edu/logo-foundation/)
 * [Berkeley Logo (UCBLogo)](https://www.cs.berkeley.edu/~bh/logo.html)
-* [The Logo Tree Project](http://elica.net/download/papers/LogoTreeProject.pdf)
-* [Ian Bicking on Logo](http://blog.ianbicking.org/2007/10/19/logo/)
+* [The Logo Tree Project](https://pavel.it.fmi.uni-sofia.bg/logotree/)
+* [Ian Bicking on Logo](https://ianbicking.org/blog/2007/10/logo)
 * [PyLogo](http://pylogo.sourceforge.net/)
-* [Introduction to Computer Programming](http://www.bfoit.org/itp/itp.html)
+* [Introduction to Computer Programming](http://www.guyhaas.com/bfoit/itp/itp.html)
 * [Logo 15-word challenge](http://www.mathcats.com/gallery/15wordcontest.html)
 
 To Do
