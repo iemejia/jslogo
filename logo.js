@@ -271,7 +271,7 @@ function LogoInterpreter(turtle, stream, savehook) {
 
   class Stream {
     constructor(string) {
-      this._string = string;
+      this._string = String(string);
       this._index = 0;
       this._skip();
     }
@@ -1065,8 +1065,7 @@ function LogoInterpreter(turtle, stream, savehook) {
   //----------------------------------------------------------------------
   // Execute a sequence of statements
   //----------------------------------------------------------------------
-  self.execute = async (statements, options) => {
-    options = Object(options);
+  self.execute = async (statements, options = {}) => {
     // Operate on a copy so the original is not destroyed
     statements = statements.slice();
 
@@ -1104,8 +1103,7 @@ function LogoInterpreter(turtle, stream, savehook) {
     return promise;
   };
 
-  self.run = (string, options) => {
-    options = Object(options);
+  self.run = (string, options = {}) => {
     return self.queueTask(async () => {
       // Parse it
       const atoms = parse(string);
@@ -1334,20 +1332,20 @@ function LogoInterpreter(turtle, stream, savehook) {
     const length = (def === undefined) ? inputs.length : def;
 
     // Closure over inputs and block to handle scopes, arguments and outputs
-    const func = async (...args) => {
+    return to_arity(async (...args) => {
       // Define a new scope
       const scope = new StringMap(true);
       self.scopes.push(scope);
 
-      let i = 0, op;
+      let i = 0;
       for (; i < inputs.length && i < args.length; ++i)
         scope.set(inputs[i], {value: args[i]});
       for (; i < inputs.length + optional_inputs.length && i < args.length; ++i) {
-        op = optional_inputs[i - inputs.length];
+        const op = optional_inputs[i - inputs.length];
         scope.set(op[0], {value: args[i]});
       }
       for (; i < inputs.length + optional_inputs.length; ++i) {
-        op = optional_inputs[i - inputs.length];
+        const op = optional_inputs[i - inputs.length];
         scope.set(op[0], {value: evaluateExpression(reparse(op[1]))});
       }
       if (rest)
@@ -1364,9 +1362,7 @@ function LogoInterpreter(turtle, stream, savehook) {
       } finally {
         self.scopes.pop();
       }
-    };
-
-    return to_arity(func, length);
+    }, length);
   }
 
 
@@ -2113,10 +2109,9 @@ function LogoInterpreter(turtle, stream, savehook) {
 
   def("filled", async (fillcolor, statements) => {
     fillcolor = parseColor(fillcolor);
-    statements = reparse(lexpr(statements));
     turtle.beginpath();
     try {
-      await this.execute(statements);
+      await runNoResult(statements);
     } finally {
       turtle.fillpath(fillcolor);
     }
@@ -2157,11 +2152,10 @@ function LogoInterpreter(turtle, stream, savehook) {
     index = aexpr(index)|0;
     if (index < 1)
       throw err("{_PROC_}: Expected positive turtle index", ERRORS.BAD_INPUT);
-    statements = reparse(lexpr(statements));
     const originalturtle = turtle.currentturtle;
     turtle.currentturtle = index - 1;
     try {
-      await this.execute(statements);
+      await runNoResult(statements);
     } finally {
       turtle.currentturtle = originalturtle;
     }
@@ -2907,14 +2901,20 @@ function LogoInterpreter(turtle, stream, savehook) {
   // 8.1 Control
   //
 
+  function run(statements) {
+    return self.execute(reparse(statements), {returnResult: true});
+  }
+
+  function runNoResult(statements) {
+    return self.execute(reparse(statements));
+  }
+
   def("run", statements => {
-    statements = reparse(lexpr(statements));
-    return this.execute(statements, {returnResult: true});
+    return run(statements);
   });
 
   def("runresult", async statements => {
-    statements = reparse(lexpr(statements));
-    const result = await this.execute(statements, {returnResult: true});
+    const result = await run(statements);
     if (result !== undefined)
       return [result];
     else
@@ -2923,13 +2923,12 @@ function LogoInterpreter(turtle, stream, savehook) {
 
   def("repeat", async (count, statements) => {
     count = aexpr(count);
-    statements = reparse(lexpr(statements));
     const old_repcount = this.repcount;
     let i = 1;
     try {
       while (i <= count) {
         this.repcount = i++;
-        await this.execute(statements);
+        await runNoResult(statements);
         await yieldIfNeeded();
       }
     } finally {
@@ -2938,13 +2937,12 @@ function LogoInterpreter(turtle, stream, savehook) {
   });
 
   def("forever", async statements => {
-    statements = reparse(lexpr(statements));
     const old_repcount = this.repcount;
     let i = 1;
     try {
       for (;;) {
         this.repcount = i++;
-        await this.execute(statements);
+        await runNoResult(statements);
         await yieldIfNeeded();
       }
     } finally {
@@ -2963,12 +2961,10 @@ function LogoInterpreter(turtle, stream, savehook) {
       tf = evaluateExpression(reparse(tf));
 
     tf = aexpr(await tf);
-    statements = reparse(lexpr(statements));
     if (!statements2) {
-      return tf ? this.execute(statements, {returnResult: true}) : undefined;
+      return tf ? run(statements) : undefined;
     } else {
-      statements2 = reparse(lexpr(statements2));
-      return this.execute(tf ? statements : statements2, {returnResult: true});
+      return run(tf ? statements : statements2);
     }
   }, {maximum: 3});
 
@@ -2977,10 +2973,8 @@ function LogoInterpreter(turtle, stream, savehook) {
       tf = evaluateExpression(reparse(tf));
 
     tf = aexpr(await tf);
-    statements1 = reparse(lexpr(statements1));
-    statements2 = reparse(lexpr(statements2));
 
-    return this.execute(tf ? statements1 : statements2, {returnResult: true});
+    return run(tf ? statements1 : statements2);
   });
 
   def("test", async tf => {
@@ -2993,19 +2987,17 @@ function LogoInterpreter(turtle, stream, savehook) {
   });
 
   def(["iftrue", "ift"], statements => {
-    statements = reparse(lexpr(statements));
     const tf = this.scopes.at(-1)._test;
     if (tf === undefined)
       throw err('{_PROC_}: Called without TEST', ERRORS.NO_TEST);
-    return tf ? this.execute(statements, {returnResult: true}) : undefined;
+    return tf ? run(statements) : undefined;
   });
 
   def(["iffalse", "iff"], statements => {
-    statements = reparse(lexpr(statements));
     const tf = this.scopes.at(-1)._test;
     if (tf === undefined)
       throw err('{_PROC_}: Called without TEST', ERRORS.NO_TEST);
-    return !tf ? this.execute(statements, {returnResult: true}) : undefined;
+    return !tf ? run(statements) : undefined;
   });
 
   def("stop", () => {
@@ -3020,9 +3012,8 @@ function LogoInterpreter(turtle, stream, savehook) {
 
   def("catch", async (tag, instructionlist) => {
     tag = sexpr(tag).toUpperCase();
-    instructionlist = reparse(lexpr(instructionlist));
     try {
-      return await this.execute(instructionlist, {returnResult: true});
+      return await run(instructionlist);
     } catch(error) {
       if (!(error instanceof LogoError) || error.tag !== tag)
         throw error;
@@ -3083,34 +3074,18 @@ function LogoInterpreter(turtle, stream, savehook) {
       // commas at the same depth as the backquote in which they are
       // found."
       if (member === ',' && list.length) {
-        member = list.shift();
-        if (Type(member) === 'word')
-          member = [member];
-        const instructionlist = reparse(member);
-        const result = await this.execute(instructionlist, {returnResult: true});
-        out.push(result);
+        out.push(await run(list.shift()));
       } else if (member === ',@' && list.length) {
-        member = list.shift();
-        if (Type(member) === 'word')
-          member = [member];
-        const instructionlist = reparse(member);
-        const result = await this.execute(instructionlist, {returnResult: true});
-        out = out.concat(result);
+        out = out.concat(await run(list.shift()));
       } else if (Type(member) === 'word' && /^,@.+/.test(member)) {
-        const instructionlist = [member.substring(2)];
-        const result = await this.execute(instructionlist, {returnResult: true});
-        out = out.concat(result);
+        out = out.concat(await run(member.substring(2)));
       } else if (Type(member) === 'word' && /^,.+/.test(member)) {
-        const instructionlist = [member.substring(1)];
-        const result = await this.execute(instructionlist, {returnResult: true});
-        out.push(result);
+        out.push(await run(member.substring(1)));
       } else if (Type(member) === 'word' && /^",/.test(member)) {
-        const instructionlist = reparse(member.substring(2));
-        const result = await this.execute(instructionlist, {returnResult: true});
+        const result = await run(member.substring(2));
         out.push('"' + (Type(result) === 'list' ? result[0] : result));
       } else if (Type(member) === 'word' && /^:,/.test(member)) {
-        const instructionlist = reparse(member.substring(2));
-        const result = await this.execute(instructionlist, {returnResult: true});
+        const result = await run(member.substring(2));
         out.push(':' + (Type(result) === 'list' ? result[0] : result));
       } else {
         out.push(member);
@@ -3121,7 +3096,6 @@ function LogoInterpreter(turtle, stream, savehook) {
 
   def("for", async (control, statements) => {
     control = lexpr(control);
-    statements = reparse(lexpr(statements));
 
     function sign(x) { return x < 0 ? -1 : x > 0 ? 1 : 0; }
 
@@ -3137,7 +3111,7 @@ function LogoInterpreter(turtle, stream, savehook) {
 
     while (sign(current - limit) !== sign(step)) {
       setlocal(varname, current);
-      await this.execute(statements);
+      await runNoResult(statements);
       current += step;
       await yieldIfNeeded();
     }
@@ -3145,13 +3119,12 @@ function LogoInterpreter(turtle, stream, savehook) {
 
   def("dotimes", async (control, statements) => {
     control = reparse(lexpr(control));
-    statements = reparse(lexpr(statements));
 
     const varname = sexpr(control.shift());
     const times = aexpr(await evaluateExpression(control));
     for (let current = 1; current <= times; ++current) {
       setlocal(varname, current);
-      await this.execute(statements);
+      await runNoResult(statements);
       await yieldIfNeeded();
     }
   });
@@ -3163,9 +3136,9 @@ function LogoInterpreter(turtle, stream, savehook) {
   }
 
   def("do.while", async (block, tfexpression) => {
-    block = reparse(lexpr(checkevalblock(block)));
+    block = checkevalblock(block);
     for (;;) {
-      await this.execute(block);
+      await runNoResult(block);
       let tf = await tfexpression();
       if (Type(tf) === 'list')
         tf = await evaluateExpression(reparse(tf));
@@ -3176,22 +3149,22 @@ function LogoInterpreter(turtle, stream, savehook) {
   }, {noeval: true});
 
   def("while", async (tfexpression, block) => {
-    block = reparse(lexpr(checkevalblock(block)));
+    block = checkevalblock(block);
     for (;;) {
       let tf = await tfexpression();
       if (Type(tf) === 'list')
         tf = await evaluateExpression(reparse(tf));
       if (!tf)
         break;
-      await this.execute(block);
+      await runNoResult(block);
       await yieldIfNeeded();
     }
   }, {noeval: true});
 
   def("do.until", async (block, tfexpression) => {
-    block = reparse(lexpr(checkevalblock(block)));
+    block = checkevalblock(block);
     for (;;) {
-      await this.execute(block);
+      await runNoResult(block);
       let tf = await tfexpression();
       if (Type(tf) === 'list')
         tf = await evaluateExpression(reparse(tf));
@@ -3202,14 +3175,14 @@ function LogoInterpreter(turtle, stream, savehook) {
   }, {noeval: true});
 
   def("until", async (tfexpression, block) => {
-    block = reparse(lexpr(checkevalblock(block)));
+    block = checkevalblock(block);
     for (;;) {
       let tf = await tfexpression();
       if (Type(tf) === 'list')
         tf = await evaluateExpression(reparse(tf));
       if (tf)
         break;
-      await this.execute(block);
+      await runNoResult(block);
       await yieldIfNeeded();
     }
   }, {noeval: true});
@@ -3246,27 +3219,24 @@ function LogoInterpreter(turtle, stream, savehook) {
   // 8.2 Template-based Iteration
   //
 
-  function processTemplate(template, options) {
-    let routine;
+  function processTemplate(template, options = {}) {
     if (Type(template) === 'list') {
       if (template.length >= 2 && Type(template[0]) === 'list' && Type(template[1]) === 'list') {
         // 'procedure text' form
-        routine = defineProc(undefined, ...parseDefineList(template));
+        return defineProc(undefined, ...parseDefineList(template));
       } else if (template.length > 1 && Type(template[0]) === 'list') {
         // 'named-slot' a.k.a. 'lambda' form
         const vars = template.shift();
-        template = reparse(lexpr(template));
-        routine = async function(...args) {
+        return async function(...args) {
           vars.forEach((name, index) => { setlocal(name, args[index]); });
-          return await self.execute(template, options);
+          return await (options.returnResult ? run(template) : runNoResult(template));
         };
       } else {
         // 'explicit-slot' form
-        template = reparse(lexpr(template));
-        routine = async function(...args) {
+        return async function(...args) {
           self.slots = (name) => args[name === '' ? 0 : name - 1];
           try {
-            return await self.execute(template, options);
+            return await (options.returnResult ? run(template) : runNoResult(template));
           } finally {
             self.slots = undefined;
           }
@@ -3275,14 +3245,13 @@ function LogoInterpreter(turtle, stream, savehook) {
     } else {
       // 'named-procedure' form
       const procname = sexpr(template);
-
-      routine = self.routines.get(procname);
+      const routine = self.routines.get(procname);
       if (!routine)
         throw err("{_PROC_}: Don't know how to {name:U}", { name: procname }, ERRORS.BAD_PROC);
       if (routine.special || routine.noeval)
         throw err("Can't apply {_PROC_} to special {name:U}", { name: procname }, ERRORS.BAD_INPUT);
+      return routine;
     }
-    return routine;
   }
 
 

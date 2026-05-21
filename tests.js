@@ -2241,7 +2241,7 @@ QUnit.test("Workspace Management", async function(t) {
 });
 
 QUnit.test("Control Structures", async function(t) {
-  t.expect(204);
+  t.expect(209);
   //
   // 8.1 Control
   //
@@ -2252,11 +2252,16 @@ QUnit.test("Control Structures", async function(t) {
                             run [ make "c 5 ]
                             :c`, 5);
 
+  await this.assert_equals(`run "1`, 1);
+  await this.assert_equals(`run 1`, 1);
   await this.assert_equals(`run [1]`, 1);
   await this.assert_error(`show run [ ]`, 'No output from procedure');
 
   await this.assert_equals(`runresult [ make "x 1 ]`, []);
   await this.assert_equals(`runresult [ 1 + 2 ]`, [3]);
+  await this.assert_equals(`runresult "1+2`, [3]);
+  await this.assert_equals(`runresult "1`, [1]);
+  await this.assert_equals(`runresult 1`, [1]);
 
   await this.assert_equals(`make "c 0
                             repeat 5 [
