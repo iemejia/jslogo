@@ -2241,7 +2241,7 @@ QUnit.test("Workspace Management", async function(t) {
 });
 
 QUnit.test("Control Structures", async function(t) {
-  t.expect(172);
+  t.expect(179);
   //
   // 8.1 Control
   //
@@ -2566,6 +2566,8 @@ QUnit.test("Control Structures", async function(t) {
   await this.assert_equals(`apply [?1] [3 4]`, '3');
   await this.assert_equals(`apply [?2] [3 4]`, '4');
   await this.assert_equals(`apply [?1 * ?2] [3 4]`, 12);
+  await this.assert_equals(`apply [[x y] [output :x * :y]] [3 4]`, 12);
+
 
   await this.assert_equals(`invoke "word "a`, 'a');
   await this.assert_equals(`(invoke "word "a "b "c)`, 'abc');
@@ -2575,6 +2577,7 @@ QUnit.test("Control Structures", async function(t) {
   await this.assert_equals(`(invoke [?2] 3 4)`, 4);
   await this.assert_equals(`(invoke [? * ?] 3 4)`, 9);
   await this.assert_equals(`(invoke [?1 * ?2] 3 4)`, 12);
+  await this.assert_equals(`(invoke [[x y] [output :x * :y]] 3 4)`, 12);
 
   await this.assert_equals(`make "x 0
                             to addx :a make "x :x+:a end
@@ -2595,6 +2598,9 @@ QUnit.test("Control Structures", async function(t) {
   await this.assert_equals(`make "x (word)
                             foreach [ a b c ] [ make "x (word :x ? # ", ) ]
                             :x`, 'a1,b2,c3,');
+  await this.assert_equals(`make "x 0
+                            foreach [ 1 2 3 4 5 ] [[n] [make "x :x + :n]]
+                            :x`, 15);
   await this.assert_equals(`make "s []
                             to note
                               queue "s ?rest
@@ -2612,7 +2618,9 @@ QUnit.test("Control Structures", async function(t) {
   await this.assert_equals(`to double :x output .promise :x * 2 end
                             map [double ?] [ 1 2 3 ]`, [2, 4, 6]);
   await this.assert_equals(`map [? * ?] [2 3 4 5]`, [4, 9, 16, 25]);
+  await this.assert_equals(`map [[x] [output :x * :x]] [2 3 4 5]`, [4, 9, 16, 25]);
   await this.assert_equals(`map [? * #] [2 3 4 5]`, [2, 6, 12, 20]);
+  await this.assert_equals(`map [[x] [output :x * #]] [2 3 4 5]`, [2, 6, 12, 20]);
   await this.assert_equals(`to foo :a output (word :a #) end
                             map "foo [ 7 8 9 ]`, ['71', '82', '93']);
   await this.assert_equals(`map [?rest] [1 2 3 4]`, [['2', '3', '4'], ['3', '4'], ['4'], []]);
@@ -2635,6 +2643,7 @@ QUnit.test("Control Structures", async function(t) {
   await this.assert_equals(`to oddpos :x output # % 2 end
                             filter "oddpos [ a b c d e f ]`, ['a', 'c', 'e']);
   await this.assert_equals(`filter [(modulo # 2) <> 0] [ a b c d e f ]`, ['a', 'c', 'e']);
+  await this.assert_equals(`filter [[x] [output :x % 2]] [ 1 2 3 ]`, ["1", "3"]);
   await this.assert_equals(`make "s []
                             to note
                               queue "s ?rest
@@ -2651,6 +2660,7 @@ QUnit.test("Control Structures", async function(t) {
   await this.assert_equals(`find [# = 3] [2 4 6 8]`, '6');
   await this.assert_equals(`to third :x output # = 3 end
                             find "third [2 4 6 8]`, '6');
+  await this.assert_equals(`find [[x] [output :x > 5]] [2 4 6 8]`, '6');
   await this.assert_equals(`make "s []
                             to note
                               queue "s ?rest

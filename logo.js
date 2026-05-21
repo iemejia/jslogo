@@ -1292,18 +1292,40 @@ function LogoInterpreter(turtle, stream, savehook) {
     if (!sawEnd)
       throw err("TO: Expected END", ERRORS.BAD_INPUT);
 
-    defineProc(name, inputs, optional_inputs, rest, length, block);
+    defineAndSaveProc(name, inputs, optional_inputs, rest, length, block);
   }, {special: true});
 
-  function defineProc(name, inputs, optional_inputs, rest, def, block) {
+  function defineAndSaveProc(name, inputs, optional_inputs, rest, def, block) {
     if (self.routines.has(name) && self.routines.get(name).primitive)
       throw err("{_PROC_}: Can't redefine primitive {name:U}", { name: name },
                 ERRORS.IS_PRIMITIVE);
 
+    const proc = defineProc(name, inputs, optional_inputs, rest, def, block);
+    self.routines.set(name, proc);
+
+    // For DEF de-serialization
+    proc.inputs = inputs;
+    proc.optional_inputs = optional_inputs;
+    proc.rest = rest;
+    proc.def = def;
+    proc.block = block;
+
+    proc.minimum = inputs.length;
+    proc.default = proc.length;
+    proc.maximum = rest ? -1 : inputs.length + optional_inputs.length;
+
+    saveproc(name, self.definition(name, proc));
+  }
+
+  function defineProc(name, inputs, optional_inputs, rest, def, block) {
     if (def !== undefined &&
         (def < inputs.length || (!rest && def > inputs.length + optional_inputs.length))) {
-      throw err("{_PROC_}: Bad default number of inputs for {name:U}", {name: name},
-               ERRORS.BAD_INPUT);
+      if (name) {
+        throw err("{_PROC_}: Bad default number of inputs for {name:U}", {name: name},
+                  ERRORS.BAD_INPUT);
+      } else {
+        throw err("{_PROC_}: Bad default number of inputs for lambda", ERRORS.BAD_INPUT);
+      }
     }
 
     const length = (def === undefined) ? inputs.length : def;
@@ -1341,21 +1363,7 @@ function LogoInterpreter(turtle, stream, savehook) {
       }
     };
 
-    const proc = to_arity(func, length);
-    self.routines.set(name, proc);
-
-    // For DEF de-serialization
-    proc.inputs = inputs;
-    proc.optional_inputs = optional_inputs;
-    proc.rest = rest;
-    proc.def = def;
-    proc.block = block;
-
-    proc.minimum = inputs.length;
-    proc.default = length;
-    proc.maximum = rest ? -1 : inputs.length + optional_inputs.length;
-
-    saveproc(name, self.definition(name, proc));
+    return to_arity(func, length);
   }
 
 
@@ -2305,6 +2313,10 @@ function LogoInterpreter(turtle, stream, savehook) {
     if (list.length != 2)
       throw err("{_PROC_}: Expected list of length 2", ERRORS.BAD_INPUT);
 
+    defineAndSaveProc(name, ...parseDefineList(list));
+  });
+
+  function parseDefineList(list) {
     const inputs = [];
     const optional_inputs = [];
     let rest = undefined;
@@ -2351,8 +2363,8 @@ function LogoInterpreter(turtle, stream, savehook) {
       throw err("{_PROC_}: Unexpected inputs", ERRORS.BAD_INPUT);
     }
 
-    defineProc(name, inputs, optional_inputs, rest, def, block);
-  });
+    return [inputs, optional_inputs, rest, def, block];
+  }
 
   def("text", name => {
     const proc = this.routines.get(sexpr(name));
@@ -3240,16 +3252,24 @@ function LogoInterpreter(turtle, stream, savehook) {
   function processTemplate(template, options) {
     let routine;
     if (Type(template) === 'list') {
-      // 'explicit-slot' form
-      template = reparse(lexpr(template));
-      routine = async function(...args) {
-        self.slots = (name) => args[name === '' ? 0 : name - 1];
-        try {
-          return await self.execute(template, options);
-        } finally {
-          self.slots = undefined;
-        }
-      };
+      if (template.length >= 2 && Type(template[0]) === 'list' && Type(template[1]) === 'list') {
+        // 'procedure text' form
+        routine = defineProc(undefined, ...parseDefineList(template));
+      } else if (template.length > 1 && Type(template[0]) === 'list') {
+        // 'named slot' a.k.a. 'lambda' form
+        throw new Error("'named-slot' template form not supported");
+      } else {
+        // 'explicit-slot' form
+        template = reparse(lexpr(template));
+        routine = async function(...args) {
+          self.slots = (name) => args[name === '' ? 0 : name - 1];
+          try {
+            return await self.execute(template, options);
+          } finally {
+            self.slots = undefined;
+          }
+        };
+      }
     } else {
       // 'named-procedure' form
       const procname = sexpr(template);
