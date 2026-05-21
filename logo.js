@@ -56,7 +56,7 @@ function LogoInterpreter(turtle, stream, savehook) {
 
   function format(string, params) {
     return string.replace(/{(\w+)(:[UL])?}/g, (m, n, o) => {
-      const s = (n === '_PROC_') ? self.stack[self.stack.length - 1] : String(params[n]);
+      const s = (n === '_PROC_') ? self.stack.at(-1) : String(params[n]);
       switch (o) {
         case ':U': return s.toUpperCase();
         case ':L': return s.toLowerCase();
@@ -98,7 +98,7 @@ function LogoInterpreter(turtle, stream, savehook) {
     this.message = message || format(__('No CATCH for tag {tag}'), {tag: tag});
     this.tag = tag;
     this.value = value;
-    this.proc = self.stack[self.stack.length - 1];
+    this.proc = self.stack.at(-1);
     this.code = -1; // TODO: Support code.
     this.line = -1; // TODO: Support line.
   }
@@ -635,11 +635,14 @@ function LogoInterpreter(turtle, stream, savehook) {
     }
   }
 
-  // Needed when a list is treated as an expression or statements, e.g.:
-  // input: [ ':x>10' ]              (one word)
+  // Needed when a word or list is treated as an expression or statements, e.g.:
+  // input: ':x>10' or [ ':x>10' ] or [ ':x>', '10' ]
   // output: [ ':x', '>', '10' ]     (three words)
-  function reparse(list) {
-    return parse(stringify_nodecorate(list).replace(/([\\;])/g, '\\$1'));
+  function reparse(thing) {
+    if (Type(thing) === 'list') {
+      thing = stringify_nodecorate(thing).replace(/([\\;])/g, '\\$1');
+    }
+    return parse(thing);
   }
 
   function maybegetvar(name) {
@@ -685,13 +688,13 @@ function LogoInterpreter(turtle, stream, savehook) {
   }
 
   function local(name) {
-    const scope = self.scopes[self.scopes.length - 1];
+    const scope = self.scopes.at(-1);
     scope.set(sexpr(name), {value: undefined});
   }
 
   function setlocal(name, value) {
     value = copy(value);
-    const scope = self.scopes[self.scopes.length - 1];
+    const scope = self.scopes.at(-1);
     scope.set(sexpr(name), {value: value});
   }
 
@@ -1491,7 +1494,7 @@ function LogoInterpreter(turtle, stream, savehook) {
 
   def("firsts", list => lexpr(list).map(x => x[0]));
 
-  def("last", list => { list = lexpr(list); return list[list.length - 1]; });
+  def("last", list => { list = lexpr(list); return list.at(-1); });
 
   def(["butfirst", "bf"], list => sifw(list, lexpr(list).slice(1)));
 
@@ -1552,7 +1555,7 @@ function LogoInterpreter(turtle, stream, savehook) {
   def("split", (thing, list) => {
     const l = lexpr(list);
     return lexpr(list)
-      .reduce((ls, i) => (equal(i, thing) ? ls.push([]) : ls[ls.length - 1].push(i), ls), [[]])
+      .reduce((ls, i) => (equal(i, thing) ? ls.push([]) : ls.at(-1).push(i), ls), [[]])
       .filter(l => l.length > 0)
       .map(e => sifw(list, e));
   });
@@ -2986,12 +2989,12 @@ function LogoInterpreter(turtle, stream, savehook) {
 
     tf = aexpr(await tf);
     // NOTE: A property on the scope, not within the scope
-    this.scopes[this.scopes.length - 1]._test = tf;
+    this.scopes.at(-1)._test = tf;
   });
 
   def(["iftrue", "ift"], statements => {
     statements = reparse(lexpr(statements));
-    const tf = this.scopes[this.scopes.length - 1]._test;
+    const tf = this.scopes.at(-1)._test;
     if (tf === undefined)
       throw err('{_PROC_}: Called without TEST', ERRORS.NO_TEST);
     return tf ? this.execute(statements, {returnResult: true}) : undefined;
@@ -2999,7 +3002,7 @@ function LogoInterpreter(turtle, stream, savehook) {
 
   def(["iffalse", "iff"], statements => {
     statements = reparse(lexpr(statements));
-    const tf = this.scopes[this.scopes.length - 1]._test;
+    const tf = this.scopes.at(-1)._test;
     if (tf === undefined)
       throw err('{_PROC_}: Called without TEST', ERRORS.NO_TEST);
     return !tf ? this.execute(statements, {returnResult: true}) : undefined;
@@ -3124,18 +3127,12 @@ function LogoInterpreter(turtle, stream, savehook) {
 
     const varname = sexpr(control[0]);
 
-    async function helper(r) {
-      if (Type(r) !== 'list')
-        r = [r];
-      return await evaluateExpression(reparse(r));
-    }
-
-    let start = await helper(control[1]);
+    let start = await evaluateExpression(reparse(control[1]));
     let current = start;
 
-    let limit = await helper(control[2]);
+    let limit = await evaluateExpression(reparse(control[2]));
 
-    let step = control.length === 4 ? await helper(control[3])
+    let step = control.length === 4 ? await evaluateExpression(reparse(control[3]))
         : (limit < start ? -1 : 1);
 
     while (sign(current - limit) !== sign(step)) {
@@ -3327,6 +3324,24 @@ function LogoInterpreter(turtle, stream, savehook) {
   });
 
   def("map", async (template, ...lists) => {
+    const result = [];
+    await map(template, lists, thing => { result.push(thing); });
+    return result;
+  }, {minimum: 2, default: 2, maximum: -1});
+
+  def("map.se", async (template, ...lists) => {
+    let result = [];
+    await map(template, lists, thing => {
+      if (Type(thing) === 'list') {
+        result = result.concat(thing);
+      } else {
+        result.push(thing);
+      }
+    });
+    return result;
+  }, {minimum: 2, default: 2, maximum: -1});
+
+  async function map(template, lists, handle) {
     const routine = processTemplate(template, {returnResult: true});
     lists = lists.map(lexpr);
     if (!lists.length)
@@ -3344,19 +3359,14 @@ function LogoInterpreter(turtle, stream, savehook) {
           return l.shift();
         });
         setlocal(TEMPLATE_ITERCOUNT_NAME, ++count);
-        //setlocal(TEMPLATE_LISTS_NAME, lists);
-        const value = await routine.apply(this, args);
-        mapped.push(value);
+        handle(await routine.apply(this, args));
         await yieldIfNeeded();
       }
       return mapped;
     } finally {
       self.scopes.pop();
     }
-  }, {minimum: 2, default: 2, maximum: -1});
-
-
-  // Not Supported: map.se
+  }
 
   def("filter", async (template, list) => {
     const routine = processTemplate(template, {returnResult: true});

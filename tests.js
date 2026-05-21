@@ -2635,6 +2635,27 @@ QUnit.test("Control Structures", async function(t) {
   await this.assert_equals(`(map "sum [1 2 3] [40 50 60] [700 800 900])`, [741, 852, 963]);
   await this.assert_equals(`(map "item [2 1 2 3] [john paul george ringo])`, ['o', 'p', 'e', 'n']);
 
+  await this.assert_equals(`to double :x output :x * 2 end
+                            map.se "double [ 1 2 3 ]`, [2, 4, 6]);
+  await this.assert_equals(`to double :x output :x * 2 end
+                            map.se [double ?] [ 1 2 3 ]`, [2, 4, 6]);
+  await this.assert_equals(`to double :x output .promise :x * 2 end
+                            map.se "double [ 1 2 3 ]`, [2, 4, 6]);
+  await this.assert_equals(`to double :x output .promise :x * 2 end
+                            map.se [double ?] [ 1 2 3 ]`, [2, 4, 6]);
+  await this.assert_equals(`map.se [? * ?] [2 3 4 5]`, [4, 9, 16, 25]);
+  await this.assert_equals(`map.se [[x] [output :x * :x]] [2 3 4 5]`, [4, 9, 16, 25]);
+  await this.assert_equals(`map.se [? * #] [2 3 4 5]`, [2, 6, 12, 20]);
+  await this.assert_equals(`map.se [[x] :x * #] [2 3 4 5]`, [2, 6, 12, 20]);
+  await this.assert_equals(`map.se [[x] [output :x * #]] [2 3 4 5]`, [2, 6, 12, 20]);
+  await this.assert_equals(`to foo :a output (word :a #) end
+                            map.se "foo [ 7 8 9 ]`, ['71', '82', '93']);
+  await this.assert_equals(`map.se [?rest] [1 2 3 4]`, ['2', '3', '4', '3', '4', '4']);
+  await this.assert_equals(`(map.se [?rest] [5 6] [7 8])`, ['6']);
+
+  await this.assert_equals(`(map.se "sum [1 2 3] [40 50 60] [700 800 900])`, [741, 852, 963]);
+  await this.assert_equals(`(map.se "item [2 1 2 3] [john paul george ringo])`, ['o', 'p', 'e', 'n']);
+
   await this.assert_equals(`to odd :x output :x % 2 end
                             filter "odd [ 1 2 3 ]`, ["1", "3"]);
   await this.assert_equals(`to odd :x output :x % 2 end
