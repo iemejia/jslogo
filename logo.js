@@ -3256,8 +3256,13 @@ function LogoInterpreter(turtle, stream, savehook) {
         // 'procedure text' form
         routine = defineProc(undefined, ...parseDefineList(template));
       } else if (template.length > 1 && Type(template[0]) === 'list') {
-        // 'named slot' a.k.a. 'lambda' form
-        throw new Error("'named-slot' template form not supported");
+        // 'named-slot' a.k.a. 'lambda' form
+        const vars = template.shift();
+        template = reparse(lexpr(template));
+        routine = async function(...args) {
+          vars.forEach((name, index) => { setlocal(name, args[index]); });
+          return await self.execute(template, options);
+        };
       } else {
         // 'explicit-slot' form
         template = reparse(lexpr(template));

@@ -2241,7 +2241,7 @@ QUnit.test("Workspace Management", async function(t) {
 });
 
 QUnit.test("Control Structures", async function(t) {
-  t.expect(179);
+  t.expect(190);
   //
   // 8.1 Control
   //
@@ -2566,6 +2566,7 @@ QUnit.test("Control Structures", async function(t) {
   await this.assert_equals(`apply [?1] [3 4]`, '3');
   await this.assert_equals(`apply [?2] [3 4]`, '4');
   await this.assert_equals(`apply [?1 * ?2] [3 4]`, 12);
+  await this.assert_equals(`apply [[x y] :x * :y] [3 4]`, 12);
   await this.assert_equals(`apply [[x y] [output :x * :y]] [3 4]`, 12);
 
 
@@ -2577,6 +2578,7 @@ QUnit.test("Control Structures", async function(t) {
   await this.assert_equals(`(invoke [?2] 3 4)`, 4);
   await this.assert_equals(`(invoke [? * ?] 3 4)`, 9);
   await this.assert_equals(`(invoke [?1 * ?2] 3 4)`, 12);
+  await this.assert_equals(`(invoke [[x y] :x * :y] 3 4)`, 12);
   await this.assert_equals(`(invoke [[x y] [output :x * :y]] 3 4)`, 12);
 
   await this.assert_equals(`make "x 0
@@ -2599,6 +2601,9 @@ QUnit.test("Control Structures", async function(t) {
                             foreach [ a b c ] [ make "x (word :x ? # ", ) ]
                             :x`, 'a1,b2,c3,');
   await this.assert_equals(`make "x 0
+                            foreach [ 1 2 3 4 5 ] [[n] make "x :x + :n]
+                            :x`, 15);
+  await this.assert_equals(`make "x 0
                             foreach [ 1 2 3 4 5 ] [[n] [make "x :x + :n]]
                             :x`, 15);
   await this.assert_equals(`make "s []
@@ -2620,6 +2625,7 @@ QUnit.test("Control Structures", async function(t) {
   await this.assert_equals(`map [? * ?] [2 3 4 5]`, [4, 9, 16, 25]);
   await this.assert_equals(`map [[x] [output :x * :x]] [2 3 4 5]`, [4, 9, 16, 25]);
   await this.assert_equals(`map [? * #] [2 3 4 5]`, [2, 6, 12, 20]);
+  await this.assert_equals(`map [[x] :x * #] [2 3 4 5]`, [2, 6, 12, 20]);
   await this.assert_equals(`map [[x] [output :x * #]] [2 3 4 5]`, [2, 6, 12, 20]);
   await this.assert_equals(`to foo :a output (word :a #) end
                             map "foo [ 7 8 9 ]`, ['71', '82', '93']);
@@ -2643,6 +2649,7 @@ QUnit.test("Control Structures", async function(t) {
   await this.assert_equals(`to oddpos :x output # % 2 end
                             filter "oddpos [ a b c d e f ]`, ['a', 'c', 'e']);
   await this.assert_equals(`filter [(modulo # 2) <> 0] [ a b c d e f ]`, ['a', 'c', 'e']);
+  await this.assert_equals(`filter [[x] :x % 2] [ 1 2 3 ]`, ["1", "3"]);
   await this.assert_equals(`filter [[x] [output :x % 2]] [ 1 2 3 ]`, ["1", "3"]);
   await this.assert_equals(`make "s []
                             to note
@@ -2660,6 +2667,7 @@ QUnit.test("Control Structures", async function(t) {
   await this.assert_equals(`find [# = 3] [2 4 6 8]`, '6');
   await this.assert_equals(`to third :x output # = 3 end
                             find "third [2 4 6 8]`, '6');
+  await this.assert_equals(`find [[x] :x > 5] [2 4 6 8]`, '6');
   await this.assert_equals(`find [[x] [output :x > 5]] [2 4 6 8]`, '6');
   await this.assert_equals(`make "s []
                             to note
@@ -2677,12 +2685,19 @@ QUnit.test("Control Structures", async function(t) {
   await this.assert_equals(`(reduce [?1 * ?2] [ 1 2 3 4 ])`, 24);
   await this.assert_equals(`(reduce [?1 + ?2] [ 1 2 3 4 ])`, 10);
   await this.assert_equals(`(reduce [?1 - ?2] [ 1 2 3 4 ])`, -2);
+  await this.assert_equals(`reduce [[x y] :x + :y] [ 1 2 3 4 ]`, 10);
+  await this.assert_equals(`reduce [[x y] [output :x + :y]] [ 1 2 3 4 ]`, 10);
 
   await this.assert_equals(`(crossmap "word [a b c] [1 2 3 4])`,
                      ['a1', 'a2', 'a3', 'a4', 'b1', 'b2', 'b3', 'b4', 'c1', 'c2', 'c3', 'c4']);
   await this.assert_equals(`(crossmap "word [a b] [1 2])`, ['a1', 'a2', 'b1', 'b2']);
   await this.assert_equals(`crossmap "word [[a b] [1 2]]`, ['a1', 'a2', 'b1', 'b2']);
   await this.assert_equals(`crossmap [?1 * ?2 * ?3] [[2 3] [4 5] [6 7]]`, [48, 56, 60, 70, 72, 84, 90, 105]);
+  await this.assert_equals(`crossmap [[x y z] :x * :y * :z] [[2 3] [4 5] [6 7]]`, [48, 56, 60, 70, 72, 84, 90, 105]);
+  await this.assert_equals(`crossmap [[x y z] [output :x * :y * :z]] [[2 3] [4 5] [6 7]]`, [48, 56, 60, 70, 72, 84, 90, 105]);
+
+  const quine = `invoke [[x] print (list "invoke :x :x)] [[x] print (list "invoke :x :x)]`;
+  await this.assert_stream(quine, quine + '\n');
 
   // TODO: Order of operations
   // TODO: Structures, lists of lists

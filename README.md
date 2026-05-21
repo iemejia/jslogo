@@ -29,9 +29,9 @@ Logo Links
 * [Ian Bicking on Logo](http://blog.ianbicking.org/2007/10/19/logo/)
 * [PyLogo](http://pylogo.sourceforge.net/)
 * [Introduction to Computer Programming](http://www.bfoit.org/itp/itp.html)
+* [Logo 15-word challenge](http://www.mathcats.com/gallery/15wordcontest.html)
 
 To Do
 -----
 * Document deviations from UCB Logo standard
-* Make these examples all work: [Logo 15-word challenge](http://www.mathcats.com/gallery/15wordcontest.html) (only 1 is failing)
 * Tail-call optimization
