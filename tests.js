@@ -1045,7 +1045,7 @@ QUnit.test("Arithmetic", async function(t) {
 });
 
 QUnit.test("Logical Operations", async function(t) {
-  t.expect(29);
+  t.expect(45);
 
   await this.assert_equals(`true`, 1);
   await this.assert_equals(`false`, 0);
@@ -1073,13 +1073,47 @@ QUnit.test("Logical Operations", async function(t) {
   await this.assert_equals(`not 0`, 1);
   await this.assert_equals(`not 1`, 0);
 
+  // 'true' and 'false' strings
+  await this.assert_equals(`and false false`, 0);
+  await this.assert_equals(`and false true`, 0);
+  await this.assert_equals(`and true false`, 0);
+  await this.assert_equals(`and true true`, 1);
+  await this.assert_equals(`or false false`, 0);
+  await this.assert_equals(`or false true`, 1);
+  await this.assert_equals(`or true false`, 1);
+  await this.assert_equals(`or true true`, 1);
+  await this.assert_equals(`xor false false`, 0);
+  await this.assert_equals(`xor false true`, 1);
+  await this.assert_equals(`xor true false`, 1);
+  await this.assert_equals(`xor true true`, 0);
+  await this.assert_equals(`not true`, 0);
+  await this.assert_equals(`not false`, 1);
+
   // short circuits
 
   await this.assert_stream(`and 0 (print "nope)`, '');
   await this.assert_stream(`or 1 (print "nope)`, '');
 
-  await this.assert_stream(`and 1 (type "yup)`, 'yup');
-  await this.assert_stream(`or 0 (type "yup)`, 'yup');
+  await this.assert_stream(`to foo
+                              type "yup
+                              output 0
+                            end
+                            and 1 foo`, 'yup');
+  await this.assert_stream(`to foo
+                              type "yup
+                              output 0
+                            end
+                            and 0 foo`, '');
+  await this.assert_stream(`to foo
+                              type "yup
+                              output 0
+                            end
+                            or 0 foo`, 'yup');
+  await this.assert_stream(`to foo
+                              type "yup
+                              output 0
+                            end
+                            or 1 foo`, '');
 });
 
 QUnit.test("Graphics", async function(t) {
@@ -2241,7 +2275,7 @@ QUnit.test("Workspace Management", async function(t) {
 });
 
 QUnit.test("Control Structures", async function(t) {
-  t.expect(209);
+  t.expect(217);
   //
   // 8.1 Control
   //
@@ -2305,7 +2339,9 @@ QUnit.test("Control Structures", async function(t) {
                             if 0 [ make "r "b ]
                             :r`, 'a');
   await this.assert_equals(`if 1 [ "a ]`, 'a');
+  await this.assert_equals(`if true [ "a ]`, 'a');
   await this.assert_error(`show if 0 [ "a ]`, 'No output from procedure');
+  await this.assert_error(`show if false [ "a ]`, 'No output from procedure');
   await this.assert_equals(`make "r "a
                             if [1<2] [ make "r "b ]
                             :r`, 'b');
@@ -2330,7 +2366,11 @@ QUnit.test("Control Structures", async function(t) {
 
   await this.assert_equals(`ifelse 1 [ make "r "a ] [ make "r "b ]
                             :r`, 'a');
+  await this.assert_equals(`ifelse true [ make "r "a ] [ make "r "b ]
+                            :r`, 'a');
   await this.assert_equals(`ifelse 0 [ make "r "a ] [ make "r "b ]
+                            :r`, 'b');
+  await this.assert_equals(`ifelse false [ make "r "a ] [ make "r "b ]
                             :r`, 'b');
   await this.assert_equals(`ifelse 1 [ "a ] [ "b ]`, 'a');
   await this.assert_equals(`ifelse 0 [ "a ] [ "b ]`, 'b');
@@ -2370,6 +2410,14 @@ QUnit.test("Control Structures", async function(t) {
   await this.assert_equals(`test 1 > 2
                             iffalse [ "a ]`, 'a');
   await this.assert_error(`test 2 > 1
+                           show iffalse [ "a ]`, 'No output from procedure');
+  await this.assert_equals(`test true
+                            iftrue [ "a ]`, 'a');
+  await this.assert_error(`test false
+                            show iftrue [ "a ]`, 'No output from procedure');
+  await this.assert_equals(`test false
+                            iffalse [ "a ]`, 'a');
+  await this.assert_error(`test true
                            show iffalse [ "a ]`, 'No output from procedure');
 
   // Introduce new scope, since root scope persists across tests.
@@ -2911,6 +2959,12 @@ QUnit.test("Regression Tests", async function(t) {
 
   await this.assert_stream(`foreach [a] [show ?]`, 'a\n');
   await this.assert_error(`(list 1 2 3`, "Expected ')'");
+
+  await this.assert_equals(`and 1 "TRUE`, 1);
+  await this.assert_equals(`or 0 "TRUE`, 1);
+  await this.assert_equals(`and 1 "FALSE`, 0);
+  await this.assert_equals(`or 0 "FALSE`, 0);
+
 });
 
 QUnit.test("API Tests", async function(t) {

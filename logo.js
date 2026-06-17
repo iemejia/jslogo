@@ -981,6 +981,26 @@ function LogoInterpreter(turtle, stream, savehook) {
   }
 
   //----------------------------------------------------------------------
+  // Boolean expression convenience function
+  //----------------------------------------------------------------------
+  function bexpr(atom) {
+    if (atom === undefined) {
+      throw err("Expected true or false ", ERRORS.BAD_INPUT);
+    }
+    switch (Type(atom)) {
+    case 'word':
+      if (String(atom).toLowerCase() == 'true')
+        return true;
+      if (String(atom).toLowerCase() == 'false')
+        return false;
+      if (isNumber(atom))
+        return Boolean(parseFloat(atom));
+      break;
+    }
+    throw err("Expected true or false", ERRORS.BAD_INPUT);
+  }
+
+  //----------------------------------------------------------------------
   // String expression convenience function
   //----------------------------------------------------------------------
   function sexpr(atom) {
@@ -2026,18 +2046,19 @@ function LogoInterpreter(turtle, stream, savehook) {
 
   async function booleanReduce(args, test, value) {
     while (args.length) {
-      const result = await args.shift()();
+      console.log("calling bexpr");
+      const result = bexpr(await args.shift()());
       if (!test(result))
-        return result;
+        return result ? 1 : 0;
       value = result;
     }
-    return value;
+    return value ? 1 : 0;
   }
 
-  def("xor", (...args) => args.map(aexpr).reduce((a, b) => Boolean(a) !== Boolean(b), 0) ? 1 : 0,
+  def("xor", (...args) => args.map(bexpr).reduce((a, b) => a !== b, false) ? 1 : 0,
       {minimum: 0, default: 2, maximum: -1});
 
-  def("not", a => !aexpr(a) ? 1 : 0);
+  def("not", a => !bexpr(a) ? 1 : 0);
 
   //----------------------------------------------------------------------
   //
@@ -2960,7 +2981,7 @@ function LogoInterpreter(turtle, stream, savehook) {
     if (Type(tf) === 'list')
       tf = evaluateExpression(reparse(tf));
 
-    tf = aexpr(await tf);
+    tf = bexpr(await tf);
     if (!statements2) {
       return tf ? run(statements) : undefined;
     } else {
@@ -2972,7 +2993,7 @@ function LogoInterpreter(turtle, stream, savehook) {
     if (Type(tf) === 'list')
       tf = evaluateExpression(reparse(tf));
 
-    tf = aexpr(await tf);
+    tf = bexpr(await tf);
 
     return run(tf ? statements1 : statements2);
   });
@@ -2981,7 +3002,7 @@ function LogoInterpreter(turtle, stream, savehook) {
     if (Type(tf) === 'list')
       tf = evaluateExpression(reparse(tf));
 
-    tf = aexpr(await tf);
+    tf = bexpr(await tf);
     // NOTE: A property on the scope, not within the scope
     this.scopes.at(-1)._test = tf;
   });
